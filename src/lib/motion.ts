@@ -4,14 +4,31 @@ export const BRAND = 'G-Perspective-Spin';
 
 export type SpinDirection = 'left' | 'right';
 
+/** Putaran tidak berhenti mendadak saat kursor di atas gambar, hanya melambat. */
+export const FAKTOR_KURSI = 0.18;
+/** Konstanta waktu pendekatan ke kelajuan sasaran, per detik. */
+export const LAJU_EASE = 3.2;
+
+/**
+ * Menggerakkan satu nilai menuju sasaran secara eksponensial sehingga perubahan
+ * kelajuan terasa halus pada refresh rate berapa pun.
+ */
+export function easeFaktor(sekarang: number, sasaran: number, delta: number, laju = LAJU_EASE) {
+  const dt = Math.min(Math.max(delta, 0), 0.05);
+  const langkah = 1 - Math.exp(-laju * dt);
+  const berikut = sekarang + (sasaran - sekarang) * langkah;
+  return Math.abs(berikut - sasaran) < 0.002 ? sasaran : berikut;
+}
+
 export function advanceRotation(
   angle: number,
   delta: number,
   speed: number,
   direction: SpinDirection,
+  faktor = 1,
 ) {
   const sign = direction === 'left' ? -1 : 1;
-  return (angle + Math.min(delta, 0.05) * speed * 8 * sign + 360) % 360;
+  return (angle + Math.min(delta, 0.05) * speed * faktor * 8 * sign + 360) % 360;
 }
 
 /**

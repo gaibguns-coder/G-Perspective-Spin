@@ -33,9 +33,13 @@ import {
 } from '@/lib/settings';
 import { demoSlots, listGallery, type GalleryItem } from '@/lib/gallery';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
-import { advanceRotation, tileOpacity } from '@/lib/motion';
+import { FAKTOR_KURSI, advanceRotation, easeFaktor, tileOpacity } from '@/lib/motion';
 
 const awal = bacaPreferensi();
+// Sistem operasi meminta gerak minimal: putaran tidak dimulai sendiri, dan aturan
+// transisi di styles.css dimatikan. Disimpan di modul agar muat data dari basis
+// data tidak menimpa pilihan ini.
+const KURANGI_GERAK = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function Gallery() {
   const [items, setItems] = useState<GalleryItem[]>([]);
@@ -45,7 +49,7 @@ export function Gallery() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [direction, setDirection] = useState<'left' | 'right'>(awal.direction ?? 'left');
   const [speed, setSpeed] = useState(awal.speed ?? 1);
-  const [playing, setPlaying] = useState(awal.autoplay ?? true);
+  const [playing, setPlaying] = useState(awal.autoplay ?? !KURANGI_GERAK);
   const [hovering, setHovering] = useState(false);
   const [selected, setSelected] = useState<GalleryItem | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -55,10 +59,13 @@ export function Gallery() {
 
   const ring = useRef<HTMLDivElement>(null);
   const angle = useRef(0);
+  const faktor = useRef(1);
   const slotRef = useRef(content.motion.slotCount);
   slotRef.current = content.motion.slotCount;
   const count = items.length;
   const radius = count > 2 ? 105 / Math.tan(Math.PI / count) : 140;
+  const tertutup = selected !== null || adminOpen;
+  const mainKursor = hovering && content.motion.pauseOnHover;
 
   const reload = useCallback(async () => {
     if (NOT_CONFIGURED_MESSAGE) {
@@ -92,7 +99,7 @@ export function Gallery() {
         if (!pref.colorTheme) setColorTheme(next.appearance.colorTheme);
         if (!pref.direction) setDirection(next.motion.direction);
         if (pref.speed === undefined) setSpeed(next.motion.speed);
-        if (pref.autoplay === undefined) setPlaying(next.motion.autoplay);
+        if (pref.autoplay === undefined && !KURANGI_GERAK) setPlaying(next.motion.autoplay);
         if (!pref.theme && next.appearance.theme === 'light' && colorThemes[next.appearance.colorTheme]?.gelapSaja) {
           setColorTheme('cyan');
         }
@@ -136,19 +143,19 @@ export function Gallery() {
   }, [colorTheme, theme]);
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setPlaying(false);
-  }, []);
-
-  useEffect(() => {
     let id = 0;
     let last = 0;
-    const frozen = (hovering && content.motion.pauseOnHover) || selected !== null || adminOpen;
+    // Gambar penutup (viewer/panel) menghentikan putaran, kursor hanya memperlambatkannya.
+    const sasaran = tertutup ? 0 : mainKursor ? FAKTOR_KURSI : 1;
 
     function frame(time: number) {
-      if (last && playing && !frozen) {
-        angle.current = advanceRotation(angle.current, (time - last) / 1000, speed, direction);
-      }
+      const dt = last ? (time - last) / 1000 : 0;
+      if (dt > 0) faktor.current = easeFaktor(faktor.current, playing ? sasaran : 0, dt);
       last = time;
+
+      if (dt > 0 && faktor.current > 0.001) {
+        angle.current = advanceRotation(angle.current, dt, speed, direction, faktor.current);
+      }
 
       if (ring.current) {
         ring.current.style.transform = `rotateY(${angle.current}deg)`;
@@ -162,7 +169,7 @@ export function Gallery() {
     }
     id = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(id);
-  }, [playing, hovering, selected, adminOpen, speed, direction, count, content.motion.pauseOnHover]);
+  }, [playing, hovering, tertutup, mainKursor, speed, direction, count, content.motion.pauseOnHover]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -176,14 +183,13 @@ export function Gallery() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = selected || adminOpen ? 'hidden' : '';
+    document.body.style.overflow = tertutup ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selected, adminOpen]);
+  }, [tertutup]);
 
-  const jedaKursor = hovering && content.motion.pauseOnHover;
-  const rotating = playing && !jedaKursor && !selected && !adminOpen;
+  const rotating = playing && !tertutup;
   const statusKey: TextKey = rotating ? 'statusRunning' : 'statusPaused';
 
   const teks = (key: TextKey) => textOf(content, key);

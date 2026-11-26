@@ -290,10 +290,10 @@ export function ContentAdmin({ onSaved }: Props) {
           </div>
           <div className="content-row menu-row">
             <div>
-              <span className="content-label">Jeda saat kursor di atas foto</span>
-              <p className="menu-hint">Memudahkan membaca judul pada kartu yang sedang dilewati.</p>
+              <span className="content-label">Perlambat saat kursor di atas foto</span>
+              <p className="menu-hint">Putaran turun ke 18% secara halus ketika kursor menyinggung kartu, lalu naik kembali perlahan saat kursor pindah.</p>
             </div>
-            <Switch checked={draft.motion.pauseOnHover} onChange={pauseOnHover => ubahGerak({ pauseOnHover })} label="Jeda saat kursor di atas foto" />
+            <Switch checked={draft.motion.pauseOnHover} onChange={pauseOnHover => ubahGerak({ pauseOnHover })} label="Perlambat saat kursor di atas foto" />
           </div>
           <div className="content-row menu-row">
             <div>

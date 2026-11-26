@@ -12,7 +12,7 @@ cp .env.example .env      # lalu isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KE
 npm run dev               # http://localhost:5175
 ```
 
-`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px & 512px) untuk instalasi PWA.
+`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px, 512px, 180px untuk apple-touch-icon) sebagai ikon instalasi.
 
 ## Menyiapkan Supabase
 
@@ -46,14 +46,28 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `src/lib/gallery.ts` | Lapisan data Supabase (baca, simpan, hapus, unggah) |
 | `src/lib/settings.ts` | Baca/tulis lima tabel konten + preferensi perangkat |
 | `src/lib/theme.ts` | Lima palet warna dan varian terang/gelapnya |
-| `src/lib/pwa.ts` | Pemasangan aplikasi Chrome dan layar penuh |
-| `src/lib/motion.ts` | Aturan putaran bawaan dan gerbang peran admin |
+| `src/lib/pwa.ts` | Kenali peranti, petunjuk pasang, salin alamat, layar penuh |
+| `src/lib/motion.ts` | Aturan putaran bawaan, perlambatan hover, gerbang peran admin |
+| `public/sw.js` | Cache inti agar situs bisa dipasang dan dibuka luring |
 | `src/styles.css` | Token tema light/dark + palet + seluruh gaya galeri |
 
 Tabel konten: `site_texts`, `site_menus`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis ulang dari tab **Teks & Menu**.
+
+## Pasang sebagai aplikasi
+
+Panel pengaturan (ikon slider di kanan atas) punya grup **Aplikasi**.
+
+- **Chrome, Edge, Android**: bila peramban sudah menyiapkan pemasangan, tombol "Instal sebagai aplikasi …" aktif dan menampilkan dialog pemasangan resmi — hasilnya ikon sendiri di desktop, taskbar, atau layar utama.
+- **iPhone/iPad dan Safari**: peramban tidak pernah menawarkan pemasangan, jadi ikuti langkah manual yang dicetak di panel (Bagikan → "Add to Home Screen").
+- **Firefox**: tidak memasang situs sebagai aplikasi; panel menyarankan Chrome/Edge.
+- **Webview** (halaman yang dibuka di dalam aplikasi lain, termasuk jendela Qoder): tombol tetap nonaktif dan panel menampilkan peringatan serta kolom alamat siap salin. Buka alamat itu di Chrome/Edge untuk memasang.
+
+Persyaratannya sudah dipenuhi: `manifest.webmanifest`, ikon 192px dan 512px, HTTPS, dan service worker `sw.js` dengan handler `fetch`. Service worker hanya didaftarkan pada hasil build (`import.meta.env.PROD`) agar dev server tetap bisa hot reload.
 
 ## Aturan teknis
 
 - Publik hanya berhak membaca: tulis, sunting, dan hapus memerlukan peran `admin` yang dibuktikan oleh `has_role` di sisi database (RLS), bukan hanya disembunyikan di UI.
 - Rotasi carousel memakai CSS 3D ring dengan perhitungan berbasis delta waktu, bukan interval tetap, agar kecepatannya konsisten pada refresh rate berapa pun.
+- Kursor di atas foto tidak menghentikan putaran, hanya menurunkannya ke 18% lewat kurva eksponensial, lalu naik kembali secara perlahan saat kursor pindah. Pembesaran kartu ikut transisi `cubic-bezier` 1,1 detik.
+- `prefers-reduced-motion: reduce` mematikan seluruh transisi dan membuat galeri tidak berputar sendiri saat pertama dibuka; pengunjung tetap bisa menekan tombol putar.
 - Geometry scene (radius, sudut pandang, kanvas) dipisah dari token tema; palet warna hanya menulis ulang variabel CSS.

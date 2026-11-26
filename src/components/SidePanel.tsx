@@ -1,4 +1,4 @@
-import { Check, Download, Maximize, Minimize, Moon, Palette, SlidersHorizontal, Sun, X } from 'lucide-react';
+import { Check, Copy, Download, Maximize, Minimize, Moon, Palette, SlidersHorizontal, Sun, X } from 'lucide-react';
 import { Button } from './ui/Button';
 import { colorThemes, paletteColors, type ColorThemeKey } from '@/lib/theme';
 import { useFullscreen, usePwaInstall } from '@/lib/pwa';
@@ -97,20 +97,56 @@ export function SidePanel({ open, onClose, theme, onTheme, colorTheme, onColorTh
               <Download className="size-3.5" />
               Aplikasi
             </div>
-            <Button
-              className="panel-action"
-              variant={install.dapatPasang ? 'default' : 'outline'}
-              disabled={install.terpasang || !install.dapatPasang}
-              onClick={() => void install.pasang()}
-            >
-              {install.terpasang ? <Check className="size-4" /> : <Download className="size-4" />}
-              {install.terpasang ? 'Terpasang sebagai aplikasi' : 'Instal sebagai aplikasi Chrome'}
-            </Button>
-            {!install.terpasang && !install.dapatPasang && (
-              <p className="panel-hint">
-                Chrome belum menawarkan pemasangan. Buka situs ini lewat Chrome di alamat aman, lalu gunakan menu
-                titik tiga &rarr; <em>Install app</em>.
-              </p>
+            {install.terpasang ? (
+              <Button className="panel-action" variant="outline" disabled>
+                <Check className="size-4" />
+                Terpasang sebagai aplikasi
+              </Button>
+            ) : (
+              <>
+                <Button
+                  className="panel-action"
+                  variant={install.dapatPasang ? 'default' : 'outline'}
+                  disabled={!install.dapatPasang}
+                  onClick={() => void install.pasang()}
+                >
+                  <Download className="size-4" />
+                  {install.dapatPasang ? 'Instal sebagai aplikasi' : 'Instal sebagai aplikasi Chrome'}
+                </Button>
+                <Button className="panel-action" variant="outline" onClick={() => void install.salinAlamat()}>
+                  {install.tersalin ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {install.tersalin ? 'Alamat tersalin' : `Salin alamat: ${install.alamat}`}
+                </Button>
+                <input
+                  className="panel-address"
+                  readOnly
+                  value={install.alamatPenuh}
+                  onFocus={e => e.currentTarget.select()}
+                  aria-label="Alamat situs untuk dipasang"
+                />
+                {install.gagalSalin && (
+                  <p className="panel-hint">
+                    Peramban menolak menyalin otomatis. Klik kolom alamat di atas lalu salin sendiri (Ctrl+C).
+                  </p>
+                )}
+                <ol className="panel-steps">
+                  {install.langkah.map((t, i) => (
+                    <li key={i}>{t}</li>
+                  ))}
+                </ol>
+                {install.webview && (
+                  <p className="panel-hint">
+                    Situs ini sedang dibuka di dalam aplikasi, sehingga peramban tidak bisa menawarkan pemasangan.
+                    Salin alamatnya lalu buka lewat Chrome atau Safari.
+                  </p>
+                )}
+                {!install.webview && !install.dapatPasang && (
+                  <p className="panel-hint">
+                    Chrome belum menawarkan tombol pasang di jendela ini — ikuti langkah di atas, atau pasang lewat HP
+                    dengan alamat yang sama.
+                  </p>
+                )}
+              </>
             )}
             <Button className="panel-action" variant="outline" onClick={() => void fullscreen.ubah()}>
               {fullscreen.aktif ? <Minimize className="size-4" /> : <Maximize className="size-4" />}

@@ -39,3 +39,11 @@ createRoot(document.getElementById('root')!).render(
     </AppBoundary>
   </StrictMode>,
 );
+
+// Hanya versi hasil build: pada dev server, cache service worker akan menahan modul
+// lama dan mengganggu hot reload.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  });
+}

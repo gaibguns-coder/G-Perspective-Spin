@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { advanceRotation, canEditGallery, INITIAL_SLOT_COUNT, tileOpacity, VIEW_ANGLE } from '@/lib/motion';
+import { advanceRotation, canEditGallery, FAKTOR_KURSI, easeFaktor, INITIAL_SLOT_COUNT, tileOpacity, VIEW_ANGLE } from '@/lib/motion';
+import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
 import {
   DEFAULT_SETTINGS,
@@ -136,5 +137,48 @@ describe('pengaturan teks dan menu', () => {
     expect(fontStackOf('Pacifico')).toBe("'Pacifico', cursive");
     expect(fontStackOf('Comic Sans')).toBeUndefined();
     expect(fontStackOf('')).toBeUndefined();
+  });
+});
+
+describe('perlambatan hover dan pemasangan aplikasi', () => {
+  it('faktor tidak berubah tanpa delta dan bergerak bertahap ke sasaran', () => {
+    expect(easeFaktor(1, FAKTOR_KURSI, 0)).toBe(1);
+    const sekali = easeFaktor(1, FAKTOR_KURSI, 1 / 60);
+    expect(sekali).toBeLessThan(1);
+    expect(sekali).toBeGreaterThan(FAKTOR_KURSI + 0.5);
+  });
+
+  it('faktor mencapai sasaran setelah cukup waktu, tanpa melompat', () => {
+    let f = 1;
+    for (let i = 0; i < 200; i++) f = easeFaktor(f, FAKTOR_KURSI, 1 / 60);
+    expect(f).toBe(FAKTOR_KURSI);
+    expect(easeFaktor(FAKTOR_KURSI, 1, 1 / 60)).toBeLessThan(0.3);
+  });
+
+  it('delta waktu negatif tidak memundurkan faktor', () => {
+    expect(easeFaktor(0.5, 1, -2)).toBe(0.5);
+  });
+
+  it('faktor menurunkan langkah putaran sebanding', () => {
+    expect(advanceRotation(90, 0.05, 2, 'right', 0)).toBe(90);
+    expect(advanceRotation(0, 0.05, 1, 'right', 0.5)).toBeCloseTo(advanceRotation(0, 0.05, 1, 'right') * 0.5, 4);
+    expect(advanceRotation(0, 0.05, 1, 'right')).toBeCloseTo(advanceRotation(0, 0.05, 1, 'right', 1), 4);
+  });
+
+  it('peranti dikenali dari user agent', () => {
+    expect(kenaliPeranti('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1', 5)).toBe('ios');
+    expect(kenaliPeranti('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) Safari/605.1.15', 5)).toBe('ios');
+    expect(kenaliPeranti('Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/120 Mobile Safari/537.36', 5)).toBe('android');
+    expect(kenaliPeranti('Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120 Safari/537.36', 0)).toBe('chrome');
+    expect(kenaliPeranti('Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0', 0)).toBe('firefox');
+    expect(kenaliPeranti('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) Version/17.4 Safari/605.1.15', 0)).toBe('safari');
+    expect(dalamWebview('Mozilla/5.0 (Linux; Android 14; wv) Chrome/120')).toBe(true);
+    expect(dalamWebview('Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120 Safari/537.36')).toBe(false);
+  });
+
+  it('setiap peranti punya petunjuk pemasangan', () => {
+    for (const peranti of ['ios', 'android', 'chrome', 'safari', 'firefox', 'lain'] as const) {
+      expect(langkahPemasangan(peranti).length, peranti).toBeGreaterThan(0);
+    }
   });
 });
