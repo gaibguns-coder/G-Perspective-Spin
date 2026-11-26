@@ -11,6 +11,7 @@
 ## Berkas yang tidak boleh sembarangan diubah
 - `supabase/migrations/0001_init.sql` — idempoten dan boleh dijalankan ulang. Jika menambah kolom atau policy, tambahkan migrasi bernomor baru daripada mengubah yang sudah dijalankan.
 - `src/lib/motion.ts` — `VIEW_ANGLE` 17 derajat dan `INITIAL_SLOT_COUNT` 15 adalah aturan yang sudah divalidasi; ubah hanya bila diminta.
+- `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/icon-192.png` / `icon-512.png` dipakai bersama oleh `index.html`, `manifest.webmanifest`, dan `og_image` di `site_info`. Bila mengganti logo, perbarui keempat berkas itu agar ukurannya tetap sesuai `sizes` pada manifest.
 
 ## Verifikasi
 - `npm run build` harus bersih (TypeScript `strict` + `noUnusedLocals` aktif).

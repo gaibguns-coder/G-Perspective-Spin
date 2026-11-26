@@ -12,7 +12,7 @@ cp .env.example .env      # lalu isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KE
 npm run dev               # http://localhost:5175
 ```
 
-`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages).
+`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px & 512px) untuk instalasi PWA.
 
 ## Menyiapkan Supabase
 
