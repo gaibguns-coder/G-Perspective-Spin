@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { advanceRotation, canEditGallery, INITIAL_SLOT_COUNT, tileOpacity, VIEW_ANGLE } from '@/lib/motion';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
+import {
+  DEFAULT_SETTINGS,
+  fontStackOf,
+  gabung,
+  kontenBawaan,
+  menuOn,
+  textOf,
+  type MenuKey,
+  type TextKey,
+} from '@/lib/settings';
 
 describe('aturan gerak galeri', () => {
   it('berputar dua arah dan simetris', () => {
@@ -56,5 +66,75 @@ describe('geometri dan gerbang peran', () => {
     expect(ALLOWED_IMAGE_TYPES).not.toContain('image/svg+xml');
     expect(ALLOWED_AUDIO_EXT).toContain('flac');
     expect(ALLOWED_AUDIO_EXT).not.toContain('exe');
+  });
+});
+
+describe('pengaturan teks dan menu', () => {
+  it('bawaan memiliki teks, label, dan petunjuk untuk setiap kunci', () => {
+    for (const key of Object.keys(DEFAULT_SETTINGS.texts) as TextKey[]) {
+      const item = DEFAULT_SETTINGS.texts[key];
+      expect(item.text.length, key).toBeGreaterThan(0);
+      expect(item.label.length, key).toBeGreaterThan(0);
+      expect(item.visible, key).toBe(true);
+    }
+    for (const key of Object.keys(DEFAULT_SETTINGS.menus) as MenuKey[]) {
+      expect(DEFAULT_SETTINGS.menus[key].hint.length, key).toBeGreaterThan(0);
+      expect(DEFAULT_SETTINGS.menus[key].on, key).toBe(true);
+    }
+  });
+
+  it('tabel kosong menghasilkan bawaan dan tidak berbagi rujukan', () => {
+    const hasil = gabung([], []);
+    expect(hasil).toEqual(kontenBawaan());
+    hasil.texts.introTitle.text = 'Diubah';
+    expect(DEFAULT_SETTINGS.texts.introTitle.text).toBe('Galeri keluarga');
+  });
+
+  it('baris database menimpa bawaan per kolom', () => {
+    const hasil = gabung(
+      [{ key: 'introTitle', label: 'Judul utama', body: 'Keluarga', color: '#ff0000', font: '', visible: false, position: 3 }],
+      [{ key: 'music', label: 'Pemutar musik', hint: 'Kotak hijau.', enabled: false, position: 8 }],
+      { theme: 'light', color_theme: 'synthwave' },
+      { direction: 'right', speed: '2.5', autoplay: false, pause_on_hover: false, view_angle: 24, slot_count: 9 },
+      { page_title: 'Galeri Keluarga', lang: 'id' },
+    );
+    expect(hasil.texts.introTitle).toEqual({ label: 'Judul utama', text: 'Keluarga', color: '#ff0000', font: '', visible: false });
+    expect(hasil.texts.brand.text).toBe('G-Perspective-Spin');
+    expect(hasil.menus.music.on).toBe(false);
+    expect(hasil.menus.footer.on).toBe(true);
+    expect(hasil.appearance).toEqual({ theme: 'light', colorTheme: 'synthwave' });
+    expect(hasil.motion).toEqual({ direction: 'right', speed: 2.5, autoplay: false, pauseOnHover: false, viewAngle: 24, slotCount: 9 });
+    expect(hasil.info.pageTitle).toBe('Galeri Keluarga');
+    expect(hasil.info.ogImage).toBe('/logo.png');
+  });
+
+  it('nilai di luar rentang atau bertipe salah dikembalikan ke bawaan', () => {
+    const hasil = gabung(
+      [{ key: 'brand', body: 123 }, { key: 'tidakDikenal', body: 'x' }],
+      [{ key: 'footer', enabled: 'ya' }],
+      { theme: 'neon' },
+      { speed: 99, view_angle: -5, slot_count: 500 },
+      null,
+    );
+    expect(hasil.texts.brand.text).toBe('G-Perspective-Spin');
+    expect(Object.keys(hasil.texts)).toHaveLength(Object.keys(DEFAULT_SETTINGS.texts).length);
+    expect(hasil.menus.footer.on).toBe(true);
+    expect(hasil.appearance.theme).toBe('dark');
+    expect(hasil.motion.speed).toBe(3);
+    expect(hasil.motion.viewAngle).toBe(0);
+    expect(hasil.motion.slotCount).toBe(40);
+  });
+
+  it('penonton memakai nilai tersimpan lalu jatuh ke bawaan', () => {
+    const hasil = gabung([{ key: 'emptyGallery', body: 'Belum ada foto' }], []);
+    expect(textOf(hasil, 'emptyGallery').text).toBe('Belum ada foto');
+    expect(textOf(hasil, 'viewerEmpty').text).toBe('Belum ada gambar');
+    expect(menuOn(hasil, 'corridor')).toBe(true);
+  });
+
+  it('font asing tidak menghasilkan tumpukan CSS', () => {
+    expect(fontStackOf('Pacifico')).toBe("'Pacifico', cursive");
+    expect(fontStackOf('Comic Sans')).toBeUndefined();
+    expect(fontStackOf('')).toBeUndefined();
   });
 });

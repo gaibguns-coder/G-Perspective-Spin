@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -22,7 +22,21 @@ import { NOT_CONFIGURED_MESSAGE } from '@/lib/supabase';
 
 export type { SongItem };
 
-export function MusicPlayer({ adminAllowed = false, refreshKey = 0 }: { adminAllowed?: boolean; refreshKey?: number }) {
+interface PlayerProps {
+  adminAllowed?: boolean;
+  refreshKey?: number;
+  playlistTitle?: string;
+  playlistVisible?: boolean;
+  playlistStyle?: CSSProperties;
+}
+
+export function MusicPlayer({
+  adminAllowed = false,
+  refreshKey = 0,
+  playlistTitle = 'Daftar Lagu',
+  playlistVisible = true,
+  playlistStyle,
+}: PlayerProps) {
   const [songs, setSongs] = useState<SongItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -309,7 +323,9 @@ export function MusicPlayer({ adminAllowed = false, refreshKey = 0 }: { adminAll
           <div className="flex items-center justify-between border-b border-border pb-2">
             <div className="flex items-center gap-2">
               <ListMusic className="size-4 text-primary" />
-              <span className="text-xs font-semibold text-foreground">Daftar Lagu ({songs.length})</span>
+              <span className="text-xs font-semibold text-foreground">
+                {playlistVisible && <span style={playlistStyle}>{playlistTitle} </span>}({songs.length})
+              </span>
             </div>
             {adminAllowed && songs.length > 1 && <span className="pr-9 text-[10px] text-muted-foreground">Tarik untuk mengurutkan</span>}
             <Button variant="ghost" size="icon" className="size-6 rounded-full" onClick={() => setShowPlaylist(false)}>

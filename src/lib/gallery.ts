@@ -261,10 +261,11 @@ export function nextPosition(items: readonly { position: number }[]) {
 
 /**
  * Slot kosong bawaan untuk tampilan tanpa backend, supaya kerangka 3D tetap
- * bisa dinilai sebelum Supabase disambungkan.
+ * bisa dinilai sebelum Supabase disambungkan. Jumlahnya ikut tabel site_motion.
  */
-export function demoSlots(): GalleryItem[] {
-  return Array.from({ length: INITIAL_SLOT_COUNT }, (_, i) => ({
+export function demoSlots(jumlah: number = INITIAL_SLOT_COUNT): GalleryItem[] {
+  const pas = Math.min(40, Math.max(3, Math.round(jumlah)));
+  return Array.from({ length: pas }, (_, i) => ({
     id: `demo-${i + 1}`,
     title: `Gambar ${String(i + 1).padStart(2, '0')}`,
     description: '',

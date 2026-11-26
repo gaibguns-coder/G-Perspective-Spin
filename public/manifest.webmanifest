@@ -1,0 +1,21 @@
+{
+  "name": "G-Perspective-Spin — Galeri Gambar 3D",
+  "short_name": "G-Spin",
+  "description": "Koleksi gambar keluarga dalam koridor 3D berputar, dilihat dari sudut pandang baru.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c0f17",
+  "theme_color": "#0c0f17",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

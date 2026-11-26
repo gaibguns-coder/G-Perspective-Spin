@@ -13,10 +13,12 @@ import {
   Save,
   ShieldCheck,
   Trash2,
+  Type,
   Upload,
   X,
 } from 'lucide-react';
 import { Button } from './ui/Button';
+import { ContentAdmin } from './ContentAdmin';
 import {
   checkAdminAccess,
   deleteGalleryItem,
@@ -47,7 +49,7 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
   const [password, setPassword] = useState('');
   const [admin, setAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'gallery' | 'music'>('gallery');
+  const [activeTab, setActiveTab] = useState<'gallery' | 'music' | 'content'>('gallery');
 
   const [editing, setEditing] = useState<GalleryItem | 'new' | null>(null);
   const [title, setTitle] = useState('');
@@ -307,6 +309,10 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
                   <Music className="mr-1.5 size-4" />
                   Musik ({songs.length})
                 </Button>
+                <Button variant={activeTab === 'content' ? 'default' : 'ghost'} size="sm" onClick={() => { setActiveTab('content'); setError(''); setSuccess(''); }}>
+                  <Type className="mr-1.5 size-4" />
+                  Teks &amp; Menu
+                </Button>
               </div>
               <Button variant="ghost" size="sm" onClick={logout}>
                 <LogOut />
@@ -467,6 +473,8 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
                 )}
               </div>
             )}
+
+            {activeTab === 'content' && <ContentAdmin onSaved={onChanged} />}
           </>
         )}
 

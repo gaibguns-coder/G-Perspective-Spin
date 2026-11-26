@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { colorThemes, paletteColors, type ColorThemeKey } from './Gallery';
+import { colorThemes, paletteColors, type ColorThemeKey } from '@/lib/theme';
 
 interface CorridorProps {
   theme?: 'light' | 'dark';

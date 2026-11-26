@@ -1,16 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
   Circle,
   Expand,
   ImageIcon,
-  Moon,
-  Palette,
   Pause,
   Play,
   Settings,
-  Sun,
+  SlidersHorizontal,
   X,
 } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -18,61 +16,53 @@ import { Slider } from './ui/Slider';
 import { MusicPlayer } from './MusicPlayer';
 import { GalleryAdmin } from './GalleryAdmin';
 import { PerspectiveCorridor } from './PerspectiveCorridor';
+import { SidePanel } from './SidePanel';
+import { colorThemes, paletteColors, type ColorThemeKey } from '@/lib/theme';
+import {
+  bacaPreferensi,
+  fontStackOf,
+  kontenBawaan,
+  loadContent,
+  menuOn,
+  simpanPreferensi,
+  terapkanMeta,
+  textOf,
+  type MenuKey,
+  type SiteContent,
+  type TextKey,
+} from '@/lib/settings';
 import { demoSlots, listGallery, type GalleryItem } from '@/lib/gallery';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
-import { advanceRotation, BRAND, tileOpacity, VIEW_ANGLE } from '@/lib/motion';
+import { advanceRotation, tileOpacity } from '@/lib/motion';
 
-export type ColorThemeKey = 'cyan' | 'matrix' | 'synthwave' | 'blueprint' | 'monochrome';
-
-interface ColorTheme {
-  bg: string;
-  wall: string;
-  line: string;
-  glow: string;
-  name: string;
-  /** Varian untuk tema terang: warna neon asli hilang di atas latar putih. */
-  lineLight: string;
-  glowLight: string;
-  /** Palet gelap murni tidak punya padanan yang terbaca di latar terang. */
-  gelapSaja?: boolean;
-}
-
-export const colorThemes: Record<ColorThemeKey, ColorTheme> = {
-  cyan: { bg: '#0c0f17', wall: '#0f172a', line: '#38bdf8', glow: '#7dd3fc', name: 'CYAN ELECTRIC', lineLight: '#0e7490', glowLight: '#06b6d4' },
-  matrix: { bg: '#050b07', wall: '#09150d', line: '#22c55e', glow: '#4ade80', name: 'GREEN MATRIX', lineLight: '#15803d', glowLight: '#22c55e' },
-  synthwave: { bg: '#0a0514', wall: '#140a24', line: '#ec4899', glow: '#f472b6', name: 'SYNTHWAVE NEON', lineLight: '#be185d', glowLight: '#ec4899' },
-  blueprint: { bg: '#0f172a', wall: '#1e293b', line: '#38bdf8', glow: '#7dd3fc', name: 'CLASSIC BLUEPRINT', lineLight: '#1d4ed8', glowLight: '#3b82f6' },
-  monochrome: { bg: '#09090b', wall: '#18181b', line: '#f4f4f5', glow: '#ffffff', name: 'MONOCHROME RETRO', lineLight: '#18181b', glowLight: '#71717a', gelapSaja: true },
-};
-
-export function paletteColors(key: ColorThemeKey, dark: boolean) {
-  const theme = colorThemes[key] ?? colorThemes.cyan;
-  return dark ? { line: theme.line, glow: theme.glow } : { line: theme.lineLight, glow: theme.glowLight };
-}
+const awal = bacaPreferensi();
 
 export function Gallery() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loadError, setLoadError] = useState('');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [colorTheme, setColorTheme] = useState<ColorThemeKey>('cyan');
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [direction, setDirection] = useState<'left' | 'right'>('left');
-  const [speed, setSpeed] = useState(1);
-  const [playing, setPlaying] = useState(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>(awal.theme ?? 'dark');
+  const [colorTheme, setColorTheme] = useState<ColorThemeKey>(awal.colorTheme ?? 'cyan');
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [direction, setDirection] = useState<'left' | 'right'>(awal.direction ?? 'left');
+  const [speed, setSpeed] = useState(awal.speed ?? 1);
+  const [playing, setPlaying] = useState(awal.autoplay ?? true);
   const [hovering, setHovering] = useState(false);
   const [selected, setSelected] = useState<GalleryItem | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminAllowed, setAdminAllowed] = useState(false);
-  const [musicKey, setMusicKey] = useState(0);
+  const [contentKey, setContentKey] = useState(0);
+  const [content, setContent] = useState<SiteContent>(() => kontenBawaan());
 
   const ring = useRef<HTMLDivElement>(null);
   const angle = useRef(0);
+  const slotRef = useRef(content.motion.slotCount);
+  slotRef.current = content.motion.slotCount;
   const count = items.length;
   const radius = count > 2 ? 105 / Math.tan(Math.PI / count) : 140;
 
   const reload = useCallback(async () => {
     if (NOT_CONFIGURED_MESSAGE) {
-      setItems(demoSlots());
+      setItems(demoSlots(slotRef.current));
       return;
     }
     try {
@@ -86,6 +76,35 @@ export function Gallery() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // Setiap kelompok data dibaca dari tabelnya dan diulang setiap admin menyimpan,
+  // supaya perubahan berlaku untuk semua pengunjung, bukan hanya perangkat admin.
+  // Pengunjung yang pernah memilih sendiri tidak ditimpa oleh nilai server.
+  useEffect(() => {
+    let aktif = true;
+    void loadContent()
+      .then(next => {
+        if (!aktif) return;
+        setContent(next);
+        terapkanMeta(next.info);
+        const pref = bacaPreferensi();
+        if (!pref.theme) setTheme(next.appearance.theme);
+        if (!pref.colorTheme) setColorTheme(next.appearance.colorTheme);
+        if (!pref.direction) setDirection(next.motion.direction);
+        if (pref.speed === undefined) setSpeed(next.motion.speed);
+        if (pref.autoplay === undefined) setPlaying(next.motion.autoplay);
+        if (!pref.theme && next.appearance.theme === 'light' && colorThemes[next.appearance.colorTheme]?.gelapSaja) {
+          setColorTheme('cyan');
+        }
+        if (NOT_CONFIGURED_MESSAGE) setItems(demoSlots(next.motion.slotCount));
+      })
+      .catch(() => {
+        if (aktif) setContent(kontenBawaan());
+      });
+    return () => {
+      aktif = false;
+    };
+  }, [contentKey]);
 
   useEffect(() => {
     const {
@@ -123,7 +142,7 @@ export function Gallery() {
   useEffect(() => {
     let id = 0;
     let last = 0;
-    const frozen = hovering || selected !== null || adminOpen;
+    const frozen = (hovering && content.motion.pauseOnHover) || selected !== null || adminOpen;
 
     function frame(time: number) {
       if (last && playing && !frozen) {
@@ -143,14 +162,14 @@ export function Gallery() {
     }
     id = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(id);
-  }, [playing, hovering, selected, adminOpen, speed, direction, count]);
+  }, [playing, hovering, selected, adminOpen, speed, direction, count, content.motion.pauseOnHover]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return;
       setSelected(null);
       setAdminOpen(false);
-      setPaletteOpen(false);
+      setPanelOpen(false);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -163,94 +182,118 @@ export function Gallery() {
     };
   }, [selected, adminOpen]);
 
-  const rotating = playing && !hovering && !selected && !adminOpen;
+  const jedaKursor = hovering && content.motion.pauseOnHover;
+  const rotating = playing && !jedaKursor && !selected && !adminOpen;
+  const statusKey: TextKey = rotating ? 'statusRunning' : 'statusPaused';
+
+  const teks = (key: TextKey) => textOf(content, key);
+  /** Warna dan font hanya ditimpa bila admin mengisi nilainya; kosong berarti ikut tema. */
+  const gaya = (key: TextKey): CSSProperties => {
+    const { color, font } = teks(key);
+    return {
+      ...(color ? { color } : {}),
+      ...(fontStackOf(font) ? { fontFamily: fontStackOf(font) } : {}),
+    };
+  };
+  const tampil = (key: MenuKey) => menuOn(content, key);
+  const ada = (key: TextKey) => teks(key).visible;
+  const isi = (key: TextKey) => teks(key).text;
+
+  function pilihTheme(next: 'dark' | 'light') {
+    setTheme(next);
+    simpanPreferensi({ theme: next });
+    if (next === 'light') {
+      setColorTheme(k => {
+        const jatuh = colorThemes[k].gelapSaja ? 'cyan' : k;
+        simpanPreferensi({ colorTheme: jatuh });
+        return jatuh;
+      });
+    }
+  }
+
+  function pilihPalet(next: ColorThemeKey) {
+    setColorTheme(next);
+    simpanPreferensi({ colorTheme: next });
+  }
+
+  function pilihArah(next: 'left' | 'right') {
+    setDirection(next);
+    simpanPreferensi({ direction: next });
+  }
+
+  function pilihKecepatan(next: number) {
+    setSpeed(next);
+    simpanPreferensi({ speed: next });
+  }
+
+  function ubahPutar(aktif: boolean) {
+    setPlaying(aktif);
+    simpanPreferensi({ autoplay: aktif });
+  }
 
   return (
     <main className="gallery-app">
-      <header className="gallery-header">
-        <div className="brand">
-          <img src="/logo.png" alt={`Logo ${BRAND}`} className="brand-icon size-7 rounded-md object-contain" />
-          <span>{BRAND}</span>
-        </div>
-        <span className="header-caption" />
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
-            <strong className="text-sm font-semibold text-foreground">{String(count).padStart(2, '0')}</strong> Photo
-          </span>
-
-          <div className="theme-control relative" aria-label="Tema">
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Tema terang"
-              aria-label="Tema terang"
-              data-active={theme === 'light'}
-              onClick={() => {
-                setTheme('light');
-                setColorTheme(k => (colorThemes[k].gelapSaja ? 'cyan' : k));
-              }}
-            >
-              <Sun className="size-4" />
-            </Button>
-            <Button variant="ghost" size="icon" title="Tema gelap" aria-label="Tema gelap" data-active={theme === 'dark'} onClick={() => setTheme('dark')}>
-              <Moon className="size-4" />
-            </Button>
-            <Button variant="ghost" size="icon" title="Pilih warna tema" aria-label="Pilih warna tema" aria-expanded={paletteOpen} data-active={paletteOpen} onClick={() => setPaletteOpen(v => !v)}>
-              <Palette className="size-4" style={{ color: paletteColors(colorTheme, theme === 'dark').line }} />
-            </Button>
-
-            {paletteOpen && (
-              <div className="absolute right-0 top-12 z-50 flex w-48 flex-col gap-1 rounded-xl border border-border bg-card/95 p-2 shadow-2xl backdrop-blur-md">
-                <span className="px-2 py-1 text-[10px] font-semibold tracking-wider text-muted-foreground">PILIH WARNA TEMA</span>
-                {(Object.keys(colorThemes) as ColorThemeKey[]).map(key => {
-                  const item = colorThemes[key];
-                  const isActive = colorTheme === key;
-                  const terkunci = item.gelapSaja && theme === 'light';
-                  const swatch = paletteColors(key, theme === 'dark');
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      disabled={terkunci}
-                      title={terkunci ? 'Tidak terlihat pada tema terang' : undefined}
-                      onClick={() => {
-                        setColorTheme(key);
-                        setPaletteOpen(false);
-                      }}
-                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium transition-all ${
-                        isActive ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                      } ${terkunci ? 'cursor-not-allowed opacity-40 hover:bg-transparent' : ''}`}
-                    >
-                      <span
-                        className={`size-3.5 shrink-0 rounded-full border shadow-sm ${theme === 'dark' ? 'border-white/20' : 'border-black/15'}`}
-                        style={{ backgroundColor: swatch.line, boxShadow: `0 0 8px ${swatch.glow}` }}
-                      />
-                      <span className="truncate">{item.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
+      {tampil('header') && (
+        <header className="gallery-header">
+          <div className="brand">
+            <img src="/logo.png" alt={`Logo ${isi('brand')}`} className="brand-icon size-7 rounded-md object-contain" />
+            {ada('brand') && (
+              <span style={gaya('brand')}>{isi('brand')}</span>
             )}
           </div>
-        </div>
-      </header>
+          <span className="header-caption" />
+          <div className="flex items-center gap-3">
+            {ada('photoLabel') && (
+              <span className="text-xs text-muted-foreground" style={gaya('photoLabel')}>
+                <strong className="text-sm font-semibold text-foreground">{String(count).padStart(2, '0')}</strong> {isi('photoLabel')}
+              </span>
+            )}
 
-      <section className="gallery-intro">
-        <div>
-          <h1>Galeri keluarga<span className="wordmark-dot" /></h1>
-          <p className="intro-subtitle">
-            <span className="wordmark-dot">Keluarga adalah tempat terhangat dalam hidupmu.</span>
-          </p>
-        </div>
-      </section>
+            {tampil('sidePanel') && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="theme-control"
+                title="Pengaturan tampilan"
+                aria-label="Pengaturan tampilan"
+                aria-expanded={panelOpen}
+                data-active={panelOpen}
+                onClick={() => setPanelOpen(v => !v)}
+              >
+                <SlidersHorizontal className="size-4" style={{ color: paletteColors(colorTheme, theme === 'dark').line }} />
+              </Button>
+            )}
+          </div>
+        </header>
+      )}
+
+      {tampil('intro') && (
+        <section className="gallery-intro">
+          <div>
+            {ada('introTitle') && (
+              <h1 style={gaya('introTitle')}>
+                {isi('introTitle')}
+                <span className="wordmark-dot" />
+              </h1>
+            )}
+            {ada('introSubtitle') && (
+              <p className="intro-subtitle">
+                <span className="wordmark-dot" style={gaya('introSubtitle')}>
+                  {isi('introSubtitle')}
+                </span>
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {(NOT_CONFIGURED_MESSAGE || loadError) && (
         <p className="notice">{NOT_CONFIGURED_MESSAGE || loadError}</p>
       )}
 
       <section className="scene" aria-label="Carousel gambar 3D">
-        <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />
-        <div className="carousel-orbit" data-view-angle={VIEW_ANGLE}>
+        {tampil('corridor') && <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />}
+        <div className="carousel-orbit" data-view-angle={content.motion.viewAngle}>
           <div ref={ring} className="carousel-ring">
             {items.map((item, index) => (
               <div
@@ -273,14 +316,16 @@ export function Gallery() {
                   ) : (
                     <>
                       <ImageIcon />
-                      <span className="tile-label">Belum ada gambar</span>
+                      {ada('tileEmpty') && <span className="tile-label" style={gaya('tileEmpty')}>{isi('tileEmpty')}</span>}
                     </>
                   )}
                   <span className="tile-number">{String(index + 1).padStart(2, '0')}</span>
                   <Expand className="tile-corner" />
                   <div className="tile-info">
                     <strong>{item.title}</strong>
-                    <p>{item.description || 'Belum ada deskripsi.'}</p>
+                    {(item.description || ada('tileNoDesc')) && (
+                      <p style={item.description ? undefined : gaya('tileNoDesc')}>{item.description || isi('tileNoDesc')}</p>
+                    )}
                   </div>
                 </Button>
               </div>
@@ -288,71 +333,89 @@ export function Gallery() {
           </div>
         </div>
 
-        {count === 0 && !NOT_CONFIGURED_MESSAGE && (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-            Galeri belum memiliki gambar.
+        {count === 0 && !NOT_CONFIGURED_MESSAGE && ada('emptyGallery') && (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground" style={gaya('emptyGallery')}>
+            {isi('emptyGallery')}
           </div>
         )}
 
-        <div className="scene-bottom">
-          <span>
-            <Circle className="size-2 text-primary" />
-            {rotating ? 'Sedang berputar' : 'Dijeda'}
-          </span>
-          <span>
-            {BRAND} / {String(count).padStart(2, '0')}
-          </span>
-        </div>
+        {tampil('status') && (
+          <div className="scene-bottom">
+            {ada(statusKey) && (
+              <span>
+                <Circle className="size-2 text-primary" />
+                <span style={gaya(statusKey)}>{isi(statusKey)}</span>
+              </span>
+            )}
+            <span style={gaya('brand')}>
+              {isi('brand')} / {String(count).padStart(2, '0')}
+            </span>
+          </div>
+        )}
       </section>
 
-      <section className="playback" aria-label="Kontrol carousel">
-        <div>
-          <div className="control-label">Arah putaran</div>
-          <div className="direction-buttons">
-            <Button variant="ghost" size="icon" aria-label="Putar ke kiri" title="Putar ke kiri" data-active={direction === 'left'} onClick={() => setDirection('left')}>
-              <ArrowLeft />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Putar ke kanan" title="Putar ke kanan" data-active={direction === 'right'} onClick={() => setDirection('right')}>
-              <ArrowRight />
-            </Button>
-          </div>
-        </div>
-        <div className="control-divider" />
-        <div className="speed-control">
-          <div className="speed-heading">
-            <div className="control-label">Kecepatan</div>
-            <span className="speed-value">{speed.toFixed(1)}×</span>
-          </div>
-          <Slider aria-label="Kecepatan putaran" min={0.2} max={3} step={0.1} value={[speed]} onValueChange={v => setSpeed(v[0] ?? 1)} />
-        </div>
-        <div className="control-divider" />
-        <Button
-          className="pause-control"
-          size="icon"
-          aria-label={playing ? 'Jeda putaran' : 'Lanjutkan putaran'}
-          title={playing ? 'Jeda' : 'Lanjutkan'}
-          onClick={() => setPlaying(v => !v)}
-        >
-          {playing ? <Pause /> : <Play />}
-        </Button>
-      </section>
-
-      <footer className="gallery-footer">
-        <span>{BRAND}</span>
-        <span className="flex items-center gap-3">
-          <span>{count} Photo</span>
-          <Button className="settings-button" variant="ghost" size="icon" aria-label="Kelola galeri" title="Kelola galeri" onClick={() => setAdminOpen(true)}>
-            <Settings />
+      {tampil('playback') && (
+        <section className="playback" aria-label="Kontrol carousel">
+          {tampil('direction') && (
+            <div>
+              <div className="control-label" style={gaya('directionLabel')}>
+                {ada('directionLabel') ? isi('directionLabel') : '\u00a0'}
+              </div>
+              <div className="direction-buttons">
+                <Button variant="ghost" size="icon" aria-label="Putar ke kiri" title="Putar ke kiri" data-active={direction === 'left'} onClick={() => pilihArah('left')}>
+                  <ArrowLeft />
+                </Button>
+                <Button variant="ghost" size="icon" aria-label="Putar ke kanan" title="Putar ke kanan" data-active={direction === 'right'} onClick={() => pilihArah('right')}>
+                  <ArrowRight />
+                </Button>
+              </div>
+            </div>
+          )}
+          {tampil('direction') && tampil('speed') && <div className="control-divider" />}
+          {tampil('speed') && (
+            <div className="speed-control">
+              <div className="speed-heading">
+                <div className="control-label" style={gaya('speedLabel')}>
+                  {ada('speedLabel') ? isi('speedLabel') : '\u00a0'}
+                </div>
+                <span className="speed-value">{speed.toFixed(1)}×</span>
+              </div>
+              <Slider aria-label="Kecepatan putaran" min={0.2} max={3} step={0.1} value={[speed]} onValueChange={v => pilihKecepatan(v[0] ?? 1)} />
+            </div>
+          )}
+          {(tampil('direction') || tampil('speed')) && <div className="control-divider" />}
+          <Button
+            className="pause-control"
+            size="icon"
+            aria-label={playing ? 'Jeda putaran' : 'Lanjutkan putaran'}
+            title={playing ? 'Jeda' : 'Lanjutkan'}
+            onClick={() => ubahPutar(!playing)}
+          >
+            {playing ? <Pause /> : <Play />}
           </Button>
-        </span>
-      </footer>
+        </section>
+      )}
+
+      {tampil('footer') && (
+        <footer className="gallery-footer">
+          <span style={gaya('brand')}>{isi('brand')}</span>
+          <span className="flex items-center gap-3">
+            <span>{ada('photoLabel') ? `${count} ${isi('photoLabel')}` : count}</span>
+            {tampil('adminButton') && (
+              <Button className="settings-button" variant="ghost" size="icon" aria-label="Kelola galeri" title="Kelola galeri" onClick={() => setAdminOpen(true)}>
+                <Settings />
+              </Button>
+            )}
+          </span>
+        </footer>
+      )}
 
       {selected && (
         <section className="viewer" role="dialog" aria-modal="true" aria-label={selected.title}>
           <div className="viewer-header">
             <div className="brand">
-              <img src="/logo.png" alt={`Logo ${BRAND}`} className="brand-icon size-5 rounded-sm object-contain" />
-              {BRAND}
+              <img src="/logo.png" alt={`Logo ${isi('brand')}`} className="brand-icon size-5 rounded-sm object-contain" />
+              {ada('brand') && <span style={gaya('brand')}>{isi('brand')}</span>}
             </div>
             <Button variant="ghost" size="icon" autoFocus aria-label="Tutup gambar" onClick={() => { setSelected(null); setHovering(false); }}>
               <X />
@@ -364,18 +427,37 @@ export function Gallery() {
             ) : (
               <div className="viewer-empty">
                 <ImageIcon />
-                <span>Belum ada gambar</span>
+                {ada('viewerEmpty') && <span style={gaya('viewerEmpty')}>{isi('viewerEmpty')}</span>}
               </div>
             )}
           </div>
           <div className="viewer-details">
             <h2>{selected.title}</h2>
-            <p>{selected.description || 'Belum ada deskripsi.'}</p>
+            {(selected.description || ada('tileNoDesc')) && (
+              <p style={selected.description ? undefined : gaya('tileNoDesc')}>{selected.description || isi('tileNoDesc')}</p>
+            )}
           </div>
         </section>
       )}
 
-      <MusicPlayer adminAllowed={adminAllowed} refreshKey={musicKey} />
+      {tampil('music') && (
+        <MusicPlayer
+          adminAllowed={adminAllowed}
+          refreshKey={contentKey}
+          playlistTitle={isi('playlistHeading')}
+          playlistVisible={ada('playlistHeading')}
+          playlistStyle={gaya('playlistHeading')}
+        />
+      )}
+
+      <SidePanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        theme={theme}
+        onTheme={pilihTheme}
+        colorTheme={colorTheme}
+        onColorTheme={pilihPalet}
+      />
 
       {adminOpen && (
         <GalleryAdmin
@@ -387,7 +469,7 @@ export function Gallery() {
           onAccessChange={setAdminAllowed}
           onChanged={() => {
             void reload();
-            setMusicKey(k => k + 1);
+            setContentKey(k => k + 1);
           }}
         />
       )}
