@@ -152,7 +152,7 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
     setBusy(true);
     setError('');
     try {
-      await saveGalleryItem(
+      const yatim = await saveGalleryItem(
         editing === 'new' ? null : editing,
         { title, description, file, removeImage },
         nextPosition(items),
@@ -160,6 +160,7 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
       onChanged();
       setEditing(null);
       setSuccess('Perubahan tersimpan.');
+      if (yatim.length) setError('Perubahan tersimpan, tapi gambar lama gagal dibersihkan dari penyimpanan.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan perubahan.');
     } finally {
@@ -172,10 +173,11 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
     setBusy(true);
     setError('');
     try {
-      await deleteGalleryItem(deleting);
+      const yatim = await deleteGalleryItem(deleting);
       onChanged();
       setDeleting(null);
       setSuccess('Gambar dihapus.');
+      if (yatim.length) setError('Baris gambar terhapus, tapi berkasnya gagal dibersihkan dari penyimpanan.');
     } catch {
       setError('Gambar tidak dapat dihapus.');
     } finally {
@@ -225,10 +227,11 @@ export function GalleryAdmin({ items, onClose, onChanged, onAccessChange }: Admi
     setError('');
     try {
       if (previewId === deletingSong.id) stopPreview();
-      await deleteSong(deletingSong);
+      const yatim = await deleteSong(deletingSong);
       await loadSongs();
       setDeletingSong(null);
       setSuccess('Lagu berhasil dihapus.');
+      if (yatim.length) setError('Baris lagu terhapus, tapi berkasnya gagal dibersihkan dari penyimpanan.');
       onChanged();
     } catch {
       setError('Gagal menghapus lagu.');

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { colorThemes, type ColorThemeKey } from './Gallery';
+import { colorThemes, paletteColors, type ColorThemeKey } from './Gallery';
 
 interface CorridorProps {
   theme?: 'light' | 'dark';
@@ -30,12 +30,19 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
 
     const isDark = theme === 'dark';
     const palette = colorThemes[colorTheme] ?? colorThemes.cyan;
+    const { line, glow } = paletteColors(colorTheme, isDark);
+
+    // Di latar terang garis dan glow perlu alpha supaya 56 sinar tidak menumpuk jadi blok warna.
+    const toRgba = (hex: string, alpha: number) => {
+      const nilai = parseInt(hex.slice(1), 16);
+      return `rgba(${(nilai >> 16) & 255}, ${(nilai >> 8) & 255}, ${nilai & 255}, ${alpha})`;
+    };
 
     const colors = {
       bg: isDark ? palette.bg : '#f8fafc',
       wall: isDark ? palette.wall : 'rgba(241, 245, 249, 0.45)',
-      line: isDark ? palette.line : 'rgba(14, 116, 144, 0.65)',
-      glow: isDark ? palette.glow : 'transparent',
+      line: isDark ? line : toRgba(line, 0.5),
+      glow: isDark ? glow : toRgba(glow, 0.4),
     };
 
     let radialGradient: CanvasGradient | null = null;
@@ -111,7 +118,7 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       ctx.strokeStyle = radialGradient ?? colors.line;
       ctx.lineWidth = 1;
       ctx.shadowColor = colors.glow;
-      ctx.shadowBlur = isDark ? 4 : 0;
+      ctx.shadowBlur = isDark ? 4 : 3;
 
       const rayLength = Math.max(width, height) * 1.5;
       ctx.beginPath();

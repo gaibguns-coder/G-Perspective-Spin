@@ -107,11 +107,22 @@ export interface GalleryDraft {
   removeImage: boolean;
 }
 
+/**
+ * Hapus berkas dari bucket. Baris data dan berkas storage tidak terikat asing,
+ * jadi kegagalan penghapusan berkas dikembalikan sebagai daftar path yatim agar
+ * UI bisa memperingatkan pengguna alih-alih berpura-pura bersih.
+ */
+async function removeFiles(bucket: string, paths: string[]): Promise<string[]> {
+  if (!paths.length) return [];
+  const { error } = await supabase.storage.from(bucket).remove(paths);
+  return error ? paths : [];
+}
+
 export async function saveGalleryItem(
   existing: GalleryItem | null,
   draft: GalleryDraft,
   nextPosition: number,
-) {
+): Promise<string[]> {
   if (!draft.file && !draft.title.trim()) throw new Error('Judul wajib diisi.');
 
   let newPath: string | null = null;
@@ -145,18 +156,20 @@ export async function saveGalleryItem(
 
   const { error } = await query;
   if (error) {
-    if (newPath) await supabase.storage.from(IMAGE_BUCKET).remove([newPath]);
+    if (newPath) {
+      const yatim = await removeFiles(IMAGE_BUCKET, [newPath]);
+      if (yatim.length) console.warn('Bekas unggahan gagal dibersihkan:', yatim);
+    }
     throw new Error('Perubahan tidak dapat disimpan.');
   }
-  if (oldPath && (newPath || draft.removeImage)) {
-    await supabase.storage.from(IMAGE_BUCKET).remove([oldPath]);
-  }
+  if (oldPath && (newPath || draft.removeImage)) return removeFiles(IMAGE_BUCKET, [oldPath]);
+  return [];
 }
 
-export async function deleteGalleryItem(item: GalleryItem) {
+export async function deleteGalleryItem(item: GalleryItem): Promise<string[]> {
   const { error } = await supabase.from('gallery_items').delete().eq('id', item.id);
   if (error) throw new Error('Gambar tidak dapat dihapus.');
-  if (item.image_path) await supabase.storage.from(IMAGE_BUCKET).remove([item.image_path]);
+  return item.image_path ? removeFiles(IMAGE_BUCKET, [item.image_path]) : [];
 }
 
 /**
@@ -210,7 +223,8 @@ export async function uploadSongs(files: FileList | File[], startPos: number): P
       position,
     });
     if (insertErr) {
-      await supabase.storage.from(SONG_BUCKET).remove([safeName]);
+      const yatim = await removeFiles(SONG_BUCKET, [safeName]);
+      if (yatim.length) console.warn('Bekas unggahan musik gagal dibersihkan:', yatim);
       throw new Error(`Rekaman "${musicFile.name}" gagal disimpan.`);
     }
     position += 1;
@@ -218,10 +232,10 @@ export async function uploadSongs(files: FileList | File[], startPos: number): P
   return position;
 }
 
-export async function deleteSong(song: SongItem) {
+export async function deleteSong(song: SongItem): Promise<string[]> {
   const { error } = await supabase.from('songs').delete().eq('id', song.id);
   if (error) throw new Error('Gagal menghapus lagu.');
-  await supabase.storage.from(SONG_BUCKET).remove([song.file_path]);
+  return removeFiles(SONG_BUCKET, [song.file_path]);
 }
 
 export async function renameSong(id: string, title: string) {

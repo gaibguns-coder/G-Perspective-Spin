@@ -24,13 +24,31 @@ import { advanceRotation, BRAND, tileOpacity, VIEW_ANGLE } from '@/lib/motion';
 
 export type ColorThemeKey = 'cyan' | 'matrix' | 'synthwave' | 'blueprint' | 'monochrome';
 
-export const colorThemes: Record<ColorThemeKey, { bg: string; wall: string; line: string; glow: string; name: string }> = {
-  cyan: { bg: '#0c0f17', wall: '#0f172a', line: '#38bdf8', glow: '#7dd3fc', name: 'CYAN ELECTRIC' },
-  matrix: { bg: '#050b07', wall: '#09150d', line: '#22c55e', glow: '#4ade80', name: 'GREEN MATRIX' },
-  synthwave: { bg: '#0a0514', wall: '#140a24', line: '#ec4899', glow: '#f472b6', name: 'SYNTHWAVE NEON' },
-  blueprint: { bg: '#0f172a', wall: '#1e293b', line: '#38bdf8', glow: '#7dd3fc', name: 'CLASSIC BLUEPRINT' },
-  monochrome: { bg: '#09090b', wall: '#18181b', line: '#f4f4f5', glow: '#ffffff', name: 'MONOCHROME RETRO' },
+interface ColorTheme {
+  bg: string;
+  wall: string;
+  line: string;
+  glow: string;
+  name: string;
+  /** Varian untuk tema terang: warna neon asli hilang di atas latar putih. */
+  lineLight: string;
+  glowLight: string;
+  /** Palet gelap murni tidak punya padanan yang terbaca di latar terang. */
+  gelapSaja?: boolean;
+}
+
+export const colorThemes: Record<ColorThemeKey, ColorTheme> = {
+  cyan: { bg: '#0c0f17', wall: '#0f172a', line: '#38bdf8', glow: '#7dd3fc', name: 'CYAN ELECTRIC', lineLight: '#0e7490', glowLight: '#06b6d4' },
+  matrix: { bg: '#050b07', wall: '#09150d', line: '#22c55e', glow: '#4ade80', name: 'GREEN MATRIX', lineLight: '#15803d', glowLight: '#22c55e' },
+  synthwave: { bg: '#0a0514', wall: '#140a24', line: '#ec4899', glow: '#f472b6', name: 'SYNTHWAVE NEON', lineLight: '#be185d', glowLight: '#ec4899' },
+  blueprint: { bg: '#0f172a', wall: '#1e293b', line: '#38bdf8', glow: '#7dd3fc', name: 'CLASSIC BLUEPRINT', lineLight: '#1d4ed8', glowLight: '#3b82f6' },
+  monochrome: { bg: '#09090b', wall: '#18181b', line: '#f4f4f5', glow: '#ffffff', name: 'MONOCHROME RETRO', lineLight: '#18181b', glowLight: '#71717a', gelapSaja: true },
 };
+
+export function paletteColors(key: ColorThemeKey, dark: boolean) {
+  const theme = colorThemes[key] ?? colorThemes.cyan;
+  return dark ? { line: theme.line, glow: theme.glow } : { line: theme.lineLight, glow: theme.glowLight };
+}
 
 export function Gallery() {
   const [items, setItems] = useState<GalleryItem[]>([]);
@@ -45,6 +63,7 @@ export function Gallery() {
   const [selected, setSelected] = useState<GalleryItem | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminAllowed, setAdminAllowed] = useState(false);
+  const [musicKey, setMusicKey] = useState(0);
 
   const ring = useRef<HTMLDivElement>(null);
   const angle = useRef(0);
@@ -84,13 +103,16 @@ export function Gallery() {
   }, [theme]);
 
   // Palet aktif ditulis ke variabel CSS agar tombol, glow, border, dan slider ikut berubah.
+  // Tema terang memakai varian gelap palet supaya garis dan glow tetap terbaca di atas putih.
   useEffect(() => {
     const active = colorThemes[colorTheme] ?? colorThemes.cyan;
+    const dark = theme === 'dark';
+    const { line, glow } = paletteColors(colorTheme, dark);
     const root = document.documentElement;
-    root.style.setProperty('--primary', active.line);
+    root.style.setProperty('--primary', line);
     root.style.setProperty('--primary-foreground', colorTheme === 'monochrome' ? '#09090b' : '#ffffff');
-    root.style.setProperty('--card-glow', active.glow);
-    if (theme === 'dark') root.style.setProperty('--background', active.bg);
+    root.style.setProperty('--card-glow', dark ? glow : `color-mix(in srgb, ${glow} 45%, transparent)`);
+    if (dark) root.style.setProperty('--background', active.bg);
     else root.style.removeProperty('--background');
   }, [colorTheme, theme]);
 
@@ -157,14 +179,24 @@ export function Gallery() {
           </span>
 
           <div className="theme-control relative" aria-label="Tema">
-            <Button variant="ghost" size="icon" title="Tema terang" aria-label="Tema terang" data-active={theme === 'light'} onClick={() => setTheme('light')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Tema terang"
+              aria-label="Tema terang"
+              data-active={theme === 'light'}
+              onClick={() => {
+                setTheme('light');
+                setColorTheme(k => (colorThemes[k].gelapSaja ? 'cyan' : k));
+              }}
+            >
               <Sun className="size-4" />
             </Button>
             <Button variant="ghost" size="icon" title="Tema gelap" aria-label="Tema gelap" data-active={theme === 'dark'} onClick={() => setTheme('dark')}>
               <Moon className="size-4" />
             </Button>
             <Button variant="ghost" size="icon" title="Pilih warna tema" aria-label="Pilih warna tema" aria-expanded={paletteOpen} data-active={paletteOpen} onClick={() => setPaletteOpen(v => !v)}>
-              <Palette className="size-4" style={{ color: colorThemes[colorTheme].line }} />
+              <Palette className="size-4" style={{ color: paletteColors(colorTheme, theme === 'dark').line }} />
             </Button>
 
             {paletteOpen && (
@@ -173,19 +205,26 @@ export function Gallery() {
                 {(Object.keys(colorThemes) as ColorThemeKey[]).map(key => {
                   const item = colorThemes[key];
                   const isActive = colorTheme === key;
+                  const terkunci = item.gelapSaja && theme === 'light';
+                  const swatch = paletteColors(key, theme === 'dark');
                   return (
                     <button
                       key={key}
                       type="button"
+                      disabled={terkunci}
+                      title={terkunci ? 'Tidak terlihat pada tema terang' : undefined}
                       onClick={() => {
                         setColorTheme(key);
                         setPaletteOpen(false);
                       }}
                       className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium transition-all ${
                         isActive ? 'bg-primary/15 text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                      }`}
+                      } ${terkunci ? 'cursor-not-allowed opacity-40 hover:bg-transparent' : ''}`}
                     >
-                      <span className="size-3.5 shrink-0 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: item.line, boxShadow: `0 0 8px ${item.glow}` }} />
+                      <span
+                        className={`size-3.5 shrink-0 rounded-full border shadow-sm ${theme === 'dark' ? 'border-white/20' : 'border-black/15'}`}
+                        style={{ backgroundColor: swatch.line, boxShadow: `0 0 8px ${swatch.glow}` }}
+                      />
                       <span className="truncate">{item.name}</span>
                     </button>
                   );
@@ -336,7 +375,7 @@ export function Gallery() {
         </section>
       )}
 
-      <MusicPlayer adminAllowed={adminAllowed} />
+      <MusicPlayer adminAllowed={adminAllowed} refreshKey={musicKey} />
 
       {adminOpen && (
         <GalleryAdmin
@@ -346,7 +385,10 @@ export function Gallery() {
             setHovering(false);
           }}
           onAccessChange={setAdminAllowed}
-          onChanged={() => void reload()}
+          onChanged={() => {
+            void reload();
+            setMusicKey(k => k + 1);
+          }}
         />
       )}
     </main>
