@@ -1,0 +1,261 @@
+import { supabase } from './supabase';
+import { INITIAL_SLOT_COUNT } from './motion';
+
+export interface GalleryItem {
+  id: string;
+  title: string;
+  description: string;
+  image_path: string | null;
+  position: number;
+  image_url: string | null;
+}
+
+export interface SongItem {
+  id: string;
+  title: string;
+  file_path: string;
+  file_url: string;
+  position: number;
+}
+
+const IMAGE_BUCKET = 'gallery-images';
+const SONG_BUCKET = 'songs';
+
+export const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+];
+
+export const ALLOWED_AUDIO_EXT = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'webm'];
+export const ALLOWED_AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/ogg',
+  'audio/aac',
+  'audio/m4a',
+  'audio/x-m4a',
+  'audio/mp4',
+  'audio/flac',
+  'audio/webm',
+];
+
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+export const MAX_SONG_SIZE = 25 * 1024 * 1024;
+
+function publicUrl(bucket: string, path: string) {
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
+export async function listGallery(): Promise<GalleryItem[]> {
+  const { data, error } = await supabase
+    .from('gallery_items')
+    .select('id,title,description,image_path,position')
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) throw new Error('Galeri tidak dapat dimuat.');
+  return (data ?? []).map(item => ({
+    ...item,
+    image_url: item.image_path ? publicUrl(IMAGE_BUCKET, item.image_path) : null,
+  }));
+}
+
+export async function listSongs(): Promise<SongItem[]> {
+  const { data, error } = await supabase
+    .from('songs')
+    .select('id,title,file_path,file_url,position')
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) return [];
+  return (data ?? []).map(song => ({
+    ...song,
+    file_url: song.file_url || publicUrl(SONG_BUCKET, song.file_path),
+  }));
+}
+
+export async function checkAdminAccess(): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data, error } = await supabase.rpc('has_role', {
+    _user_id: user.id,
+    _role: 'admin',
+  });
+  if (error) throw new Error('Tidak dapat memeriksa akses.');
+  return Boolean(data);
+}
+
+export async function signIn(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error('Login gagal. Periksa email dan password Anda.');
+}
+
+export async function signOut() {
+  await supabase.auth.signOut();
+}
+
+export interface GalleryDraft {
+  title: string;
+  description: string;
+  file: File | null;
+  removeImage: boolean;
+}
+
+export async function saveGalleryItem(
+  existing: GalleryItem | null,
+  draft: GalleryDraft,
+  nextPosition: number,
+) {
+  if (!draft.file && !draft.title.trim()) throw new Error('Judul wajib diisi.');
+
+  let newPath: string | null = null;
+  const oldPath = existing?.image_path ?? null;
+
+  if (draft.file) {
+    if (!ALLOWED_IMAGE_TYPES.includes(draft.file.type)) {
+      throw new Error('Pilih gambar JPG, PNG, WebP, GIF, atau AVIF.');
+    }
+    if (draft.file.size > MAX_IMAGE_SIZE) throw new Error('Ukuran gambar maksimal 10 MB.');
+    const ext = draft.file.type.split('/')[1] ?? 'png';
+    newPath = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(newPath, draft.file, { contentType: draft.file.type });
+    if (error) {
+      newPath = null;
+      throw new Error('Gambar tidak dapat diunggah.');
+    }
+  }
+
+  const values = {
+    title: draft.title.trim().slice(0, 160),
+    description: draft.description.trim().slice(0, 5000),
+    image_path: newPath ?? (draft.removeImage ? null : oldPath),
+  };
+
+  const query = existing
+    ? supabase.from('gallery_items').update(values).eq('id', existing.id)
+    : supabase.from('gallery_items').insert({ ...values, position: nextPosition });
+
+  const { error } = await query;
+  if (error) {
+    if (newPath) await supabase.storage.from(IMAGE_BUCKET).remove([newPath]);
+    throw new Error('Perubahan tidak dapat disimpan.');
+  }
+  if (oldPath && (newPath || draft.removeImage)) {
+    await supabase.storage.from(IMAGE_BUCKET).remove([oldPath]);
+  }
+}
+
+export async function deleteGalleryItem(item: GalleryItem) {
+  const { error } = await supabase.from('gallery_items').delete().eq('id', item.id);
+  if (error) throw new Error('Gambar tidak dapat dihapus.');
+  if (item.image_path) await supabase.storage.from(IMAGE_BUCKET).remove([item.image_path]);
+}
+
+/**
+ * Validasi header biner supaya file yang menyamar sebagai audio (mis. .exe
+ * diberi nama .mp3) tidak ikut terunggah.
+ */
+export async function verifyAudioHeader(file: File): Promise<boolean> {
+  const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const b = (i: number) => bytes[i] ?? -1;
+
+  const isMp3 = (b(0) === 0x49 && b(1) === 0x44 && b(2) === 0x33) || (b(0) === 0xff && (b(1) & 0xe0) === 0xe0);
+  const isWav = b(0) === 0x52 && b(1) === 0x49 && b(2) === 0x46 && b(3) === 0x46;
+  const isOgg = b(0) === 0x4f && b(1) === 0x67 && b(2) === 0x67 && b(3) === 0x53;
+  const isFlac = b(0) === 0x66 && b(1) === 0x4c && b(2) === 0x61 && b(3) === 0x43;
+  const isM4a = b(4) === 0x66 && b(5) === 0x74 && b(6) === 0x79 && b(7) === 0x70;
+  const isWebm = b(0) === 0x1a && b(1) === 0x45 && b(2) === 0xdf && b(3) === 0xa3;
+
+  return isMp3 || isWav || isOgg || isFlac || isM4a || isWebm;
+}
+
+export async function uploadSongs(files: FileList | File[], startPos: number): Promise<number> {
+  let position = startPos;
+  for (const musicFile of Array.from(files)) {
+    if (musicFile.size > MAX_SONG_SIZE) {
+      throw new Error(`Ukuran file "${musicFile.name}" melebihi batas 25 MB.`);
+    }
+    if (musicFile.type && !ALLOWED_AUDIO_TYPES.includes(musicFile.type.toLowerCase())) {
+      throw new Error(`File "${musicFile.name}" bukan format audio yang didukung.`);
+    }
+    if (!(await verifyAudioHeader(musicFile))) {
+      throw new Error(`File "${musicFile.name}" bukan file audio yang valid.`);
+    }
+
+    const rawExt = musicFile.name.split('.').pop()?.toLowerCase() ?? 'mp3';
+    const safeExt = ALLOWED_AUDIO_EXT.includes(rawExt) ? rawExt : 'mp3';
+    const safeName = `${crypto.randomUUID()}.${safeExt}`;
+    const cleanTitle = musicFile.name.replace(/\.[^/.]+$/, '').trim().slice(0, 160) || 'Lagu Tanpa Judul';
+
+    const { error: uploadErr } = await supabase.storage
+      .from(SONG_BUCKET)
+      .upload(safeName, musicFile, {
+        contentType: `audio/${safeExt === 'mp3' ? 'mpeg' : safeExt}`,
+        upsert: false,
+      });
+    if (uploadErr) throw new Error(`Gagal mengunggah "${musicFile.name}".`);
+
+    const { error: insertErr } = await supabase.from('songs').insert({
+      title: cleanTitle,
+      file_path: safeName,
+      file_url: publicUrl(SONG_BUCKET, safeName),
+      position,
+    });
+    if (insertErr) {
+      await supabase.storage.from(SONG_BUCKET).remove([safeName]);
+      throw new Error(`Rekaman "${musicFile.name}" gagal disimpan.`);
+    }
+    position += 1;
+  }
+  return position;
+}
+
+export async function deleteSong(song: SongItem) {
+  const { error } = await supabase.from('songs').delete().eq('id', song.id);
+  if (error) throw new Error('Gagal menghapus lagu.');
+  await supabase.storage.from(SONG_BUCKET).remove([song.file_path]);
+}
+
+export async function renameSong(id: string, title: string) {
+  const clean = title.trim().slice(0, 160);
+  if (!clean) throw new Error('Judul musik tidak boleh kosong.');
+  const { error } = await supabase.from('songs').update({ title: clean }).eq('id', id);
+  if (error) throw new Error('Gagal mengubah judul musik.');
+  return clean;
+}
+
+export async function persistSongOrder(songs: SongItem[]) {
+  await Promise.all(
+    songs
+      .map((song, index) => ({ song, order: index + 1 }))
+      .filter(({ song, order }) => song.position !== order)
+      .map(({ song, order }) => supabase.from('songs').update({ position: order }).eq('id', song.id)),
+  );
+}
+
+export function nextPosition(items: readonly { position: number }[]) {
+  return Math.max(0, ...items.map(item => item.position)) + 1;
+}
+
+/**
+ * Slot kosong bawaan untuk tampilan tanpa backend, supaya kerangka 3D tetap
+ * bisa dinilai sebelum Supabase disambungkan.
+ */
+export function demoSlots(): GalleryItem[] {
+  return Array.from({ length: INITIAL_SLOT_COUNT }, (_, i) => ({
+    id: `demo-${i + 1}`,
+    title: `Gambar ${String(i + 1).padStart(2, '0')}`,
+    description: '',
+    image_path: null,
+    position: i + 1,
+    image_url: null,
+  }));
+}

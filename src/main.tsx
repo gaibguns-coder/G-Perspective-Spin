@@ -1,0 +1,41 @@
+import { Component, StrictMode, type ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { Gallery } from './components/Gallery';
+import './styles.css';
+
+interface BoundaryState {
+  failed: boolean;
+}
+
+class AppBoundary extends Component<{ children: ReactNode }, BoundaryState> {
+  state: BoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): BoundaryState {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('G-Perspective-Spin:', error);
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div style={{ display: 'grid', placeItems: 'center', minHeight: '100svh', padding: 24, textAlign: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: 24, margin: '0 0 8px' }}>G-Perspective-Spin gagal dimuat</h1>
+          <p style={{ opacity: 0.7, margin: '0 0 16px' }}>Muat ulang halaman untuk mencoba lagi.</p>
+          <button onClick={() => location.reload()}>Muat ulang</button>
+        </div>
+      </div>
+    );
+  }
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <AppBoundary>
+      <Gallery />
+    </AppBoundary>
+  </StrictMode>,
+);
