@@ -158,8 +158,8 @@ export function SidePanel({ open, onClose, theme, onTheme, colorTheme, onColorTh
         <div className="panel-foot" style={{ borderColor: `${glow}33` }}>
           <span className="size-2 rounded-full" style={{ backgroundColor: line, boxShadow: `0 0 8px ${glow}` }} />
           Palet aktif: {palet.name}
-          <a className="panel-link" href="/produk.html" target="_blank" rel="noopener">
-            Paket &amp; harga
+          <a className="panel-link" href="/portofolio.html" target="_blank" rel="noopener">
+            Portofolio karya
           </a>
         </div>
       </aside>

@@ -10,10 +10,12 @@
 - Instalasi aplikasi memakai `beforeinstallprompt` (Chrome/Edge/Android). Webview, iOS, dan Firefox tidak pernah mengirim event tersebut, jadi `src/lib/pwa.ts` wajib tetap memberi petunjuk manual per peranti dan salin alamat sebagai jalan pintas — jangan menghilangkan fallback itu meski tombol instal sudah aktif.
 - Setiap teks antarmuka, judul meta, dan nama brand memakai **G-Perspective-Spin**. Jangan memperkenalkan kembali nama atau dependensi pembangun pihak ketiga lama.
 
-## Halaman produk
+## Halaman portofolio
 
-- `produk.html` adalah entri build kedua (`utama` + `produk` di `vite.config.ts`) dan sengaja **bukan** React: seluruh isinya harus tetap terbaca di HTML awal supaya mesin cari dan pratinjau tautan bekerja. Memindahkan teks harga atau FAQ ke komponen yang di-render saat runtime adalah kesalahan yang harus dicegah, bukan fitur.
-- Isinya tidak diambil dari lima tabel konten. Angka harga, batas foto, lama pengerjaan, dan nomor WhatsApp adalah klaim pemilik: jangan mengarang nilai baru, dan jangan menghapus `628xxxxxxxxxx` tanpa menggantinya dengan nomor nyata — tautan `wa.me` yang salah membuat tombol pesan mati.
+- `portofolio.html` adalah entri build kedua (`utama` + `portofolio` di `vite.config.ts`) dan sengaja **bukan** React: seluruh isinya harus tetap terbaca di HTML awal supaya mesin cari dan pratinjau tautan bekerja. Memindahkan teks karya atau FAQ ke komponen yang di-render saat runtime adalah kesalahan yang harus dicegah, bukan fitur.
+- Isinya tidak diambil dari lima tabel konten. Nama karya, tautan, dan status akses harus sesuai kenyataan: tautan hanya dipasang ke situs yang menjawab 200, situs privat diberi label "perlu akun", dan proyek yang belum tayang ditulis tanpa tautan. Jangan mengarang harga, jumlah klien, atau rating.
+- Jangan menghapus `628xxxxxxxxxx` tanpa menggantinya dengan nomor WhatsApp nyata — tautan `wa.me` yang salah membuat tombol kontak mati, dan nomor itu adalah klaim pemilik yang hanya boleh diisi oleh pemiliknya.
+- Gambar pada kartu adalah tangkapan layar asli hasil `tools/gambar.cjs` (sumber 1440×900 → 800×500, kuantisasi 6-bit). Jangan mengganti isinya dengan mockup; kalau sebuah karya belum punya screenshot, tandai sebagai ilustrasi seperti pada kartu galeri 3D.
 - `public/sw.js` menyimpan kedua halaman secara terpisah (`url.pathname` sebagai kunci cache), jadi menambah halaman baru berarti menaikkan `INTI` sekaligus `NAMA_CACHE`.
 
 ## Berkas yang tidak boleh sembarangan diubah

@@ -50,10 +50,12 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `src/lib/motion.ts` | Aturan putaran bawaan, perlambatan hover, gerbang peran admin |
 | `public/sw.js` | Cache inti agar situs bisa dipasang dan dibuka luring |
 | `src/styles.css` | Token tema light/dark + palet + seluruh gaya galeri |
-| `produk.html` | Halaman produk: nilai jual, dua paket harga, FAQ, JSON-LD |
-| `src/produk.css` | Gaya halaman produk, menyalin token warna galeri |
-| `src/produk.ts` | Pengisi tahun di kaki halaman produk (satu-satunya skrip di sana) |
-| `tools/og-produk.cjs` | Pemotong kartu berbagi 1200×630 tanpa dependensi gambar |
+| `portofolio.html` | Halaman portofolio: empat karya tayang + dua proyek internal, FAQ, JSON-LD |
+| `src/portofolio.css` | Gaya halaman portofolio, menyalin token warna galeri |
+| `src/portofolio.ts` | Pengisi tahun di kaki halaman portofolio (satu-satunya skrip di sana) |
+| `public/karya/*.png` | Tangkapan layar asli tiap karya (800×500, 6-bit) untuk kartu portofolio |
+| `tools/png.cjs` | Pustaka dekode/resample/encode PNG murni Node tanpa dependensi luar |
+| `tools/gambar.cjs` | Pembuat thumbnail tangkapan layar, ilustrasi koridor, dan kartu berbagi 1200×630 |
 
 Tabel konten: `site_texts`, `site_menus`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis ulang dari tab **Teks & Menu**.
 
@@ -68,15 +70,20 @@ Panel pengaturan (ikon slider di kanan atas) punya grup **Aplikasi**.
 
 Persyaratannya sudah dipenuhi: `manifest.webmanifest`, ikon 192px dan 512px, HTTPS, dan service worker `sw.js` dengan handler `fetch`. Service worker hanya didaftarkan pada hasil build (`import.meta.env.PROD`) agar dev server tetap bisa hot reload.
 
-## Halaman produk (pemasaran)
+## Halaman portofolio
 
-`produk.html` adalah halaman penjualan terpisah yang dibangun dari entri kedua di `vite.config.ts` (`utama` + `produk`). Seluruh isinya — judul, dua paket harga, FAQ, dan data terstruktur JSON-LD — ditulis langsung di HTML, jadi mesin cari dan pratinjau tautan membacanya tanpa menjalankan JavaScript; `src/produk.ts` hanya mengisi tahun di kaki halaman dan `src/produk.css` menyalin token warna galeri.
+`portofolio.html` adalah halaman karya yang dibangun dari entri kedua di `vite.config.ts` (`utama` + `portofolio`). Seluruh isinya — judul, kartu karya, FAQ, dan data terstruktur JSON-LD (`ItemList` + `FAQPage`) — ditulis langsung di HTML, jadi mesin cari dan pratinjau tautan membacanya tanpa menjalankan JavaScript; `src/portofolio.ts` hanya mengisi tahun di kaki halaman dan `src/portofolio.css` menyalin token warna galeri.
 
-Sebelum halaman ini dipakai beriklan:
+Tautan pada kartu hanya dipasang ke situs yang benar-benar menjawab HTTP 200. Editor Pola Jahit diberi label "perlu akun" karena situs itu memang privat (401), dan G-Perspective AI Web Builder serta G-Tutorial ditulis sebagai proyek internal tanpa tautan karena belum tayang.
 
-- Ganti seluruh `628xxxxxxxxxx` di `produk.html` dengan nomor WhatsApp asli berkode negara (contoh `6281234567890`). Ada enam tempat: empat tombol, satu teks catatan, satu tautan kaki.
-- Sesuaikan angka `Rp 850.000` / `Rp 1.750.000`, batas jumlah foto, lama pengerjaan, dan masa tayang dengan layanan yang benar-benar Anda berikan — angka sekarang contoh bawaan, bukan janji.
-- `public/og-produk.png` (1200×630, 499 kB) adalah kartu berbagi. Untuk menggantinya: `node tools/og-produk.cjs gambar-asli.png "" public/og-produk.png 6` — perkakas itu memotong gambar 16:9 apa pun menjadi 1200×630 dan mengompresnya, tanpa dependensi gambar pihak ketiga.
+Sebelum halaman ini dipakai promosi:
+
+- Ganti seluruh `628xxxxxxxxxx` di `portofolio.html` dengan nomor WhatsApp asli berkode negara (contoh `6281234567890`). Ada dua tempat: tombol di hero dan tombol di bagian Kontak.
+- Galeri 3D masih menampilkan "Galeri belum memiliki gambar" sampai foto asli diunggah dari halaman admin. Kartu pertama sengaja memakai ilustrasi koridor (`public/karya/galeri-3d.png`) karena tangkapan layar situsnya masih kosong — begitu foto terpasang, ganti gambar itu dengan screenshot asli.
+- Gambar kartu dibuat ulang dari tangkapan layar 1440×900 dengan perkakas sendiri:
+  `node tools/gambar.cjs kecil sumber.png public/karya/nama.png 800 6` lalu
+  `node tools/gambar.cjs kartu public/og-portofolio.png 6 public/karya/galeri-3d.png public/karya/deconstruction-store.png public/karya/harvest-days.png public/karya/pola-jahit.png`
+- Jangan menambahkan angka harga, jumlah klien, atau rating yang tidak bisa dibuktikan. FAQ sengaja tidak mencantumkan harga karena belum ada daftar tarif yang disepakati.
 
 ## Aturan teknis
 

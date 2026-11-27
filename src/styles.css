@@ -837,6 +837,21 @@ h1 {
 .panel-link:hover {
   border-bottom-color: var(--primary);
 }
+.header-portfolio {
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.header-portfolio:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
 .panel-hint em {
   font-style: normal;
   color: var(--foreground);

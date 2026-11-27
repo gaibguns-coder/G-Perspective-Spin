@@ -1,18 +1,10 @@
-// Perkakas sekali jalan: pangkas gambar hasil generate menjadi kartu berbagi 1200x630
-// lalu tempel logo. Tidak memakai dependensi gambar karena `convert` di mesin ini
-// adalah utilitas disk Windows, bukan ImageMagick.
+// Pustaka gambar PNG murni Node — dipakai tools/gambar.cjs untuk membuat thumbnail
+// tangkapan layar dan kartu berbagi. Tidak ada dependensi luar karena `convert` di
+// mesin ini adalah utilitas disk Windows, bukan ImageMagick, dan tidak ada Pillow/ffmpeg.
 const fs = require('node:fs');
 const zlib = require('node:zlib');
 
-const SUMBER = process.argv[2];
-const LOGO = process.argv[3];
-const TUJUAN = process.argv[4];
-const bits = process.argv[5] ? Number(process.argv[5]) : 8;
-
-const T_W = 1200;
-const T_H = 630;
-
-/* ---------- dekode PNG ---------- */
+/* ---------- dekode PNG 8-bit ---------- */
 function bacaPng(jalur) {
   const b = fs.readFileSync(jalur);
   if (b.readUInt32BE(0) !== 0x89504e47) throw new Error('bukan png: ' + jalur);
@@ -109,7 +101,32 @@ function kubus(gambar, tw, th, premultiplied) {
   return { w: tw, h: th, channels, data: out };
 }
 
-/* ---------- tempel logo dengan alpa ---------- */
+/* ---------- potong tengah ---------- */
+function potong(gambar, tw, th, biasY) {
+  const { w, h, channels, data } = gambar;
+  if (tw > w || th > h) throw new Error(`potong ${tw}x${th} melebihi sumber ${w}x${h}`);
+  const oy = Math.round((h - th) * biasY);
+  const ox = Math.round((w - tw) / 2);
+  const out = Buffer.alloc(tw * th * channels);
+  for (let y = 0; y < th; y++) {
+    for (let x = 0; x < channels * tw; x++) out[y * channels * tw + x] = data[((y + oy) * w + ox) * channels + x];
+  }
+  return { w: tw, h: th, channels, data: out };
+}
+
+/* ---------- skala-isi lalu potong tengah ----------
+   Sumber harus diperbesar sampai KEDUA dimensi menutupi sasaran; kalau sisi yang
+   dipilih salah, potong() membaca piksel di luar gambar. */
+function penuhi(gambar, tw, th, biasY = 0.5) {
+  const alpha = gambar.channels === 4;
+  const skala =
+    gambar.w / gambar.h > tw / th
+      ? kubus(gambar, Math.max(tw, Math.round((tw * gambar.h) / th)), th, alpha)
+      : kubus(gambar, tw, Math.max(th, Math.round((th * gambar.w) / tw)), alpha);
+  return potong(skala, tw, th, biasY);
+}
+
+/* ---------- tempel gambar RGBA ber-alpa ---------- */
 function tempel(dasar, atas, dx, dy) {
   for (let y = 0; y < atas.h; y++) {
     for (let x = 0; x < atas.w; x++) {
@@ -117,7 +134,7 @@ function tempel(dasar, atas, dx, dy) {
       const ty = dy + y;
       if (tx < 0 || ty < 0 || tx >= dasar.w || ty >= dasar.h) continue;
       const i = (y * atas.w + x) * atas.channels;
-      const alpa = atas.data[i + 3] / 255;
+      const alpa = atas.channels === 4 ? atas.data[i + 3] / 255 : 1;
       if (alpa <= 0.002) continue;
       const j = (ty * dasar.w + tx) * dasar.channels;
       for (let ch = 0; ch < 3; ch++) dasar.data[j + ch] = dasar.data[j + ch] * (1 - alpa) + atas.data[i + ch] * alpa;
@@ -125,19 +142,27 @@ function tempel(dasar, atas, dx, dy) {
   }
 }
 
-/* ---------- potong tengah ---------- */
-function potong(gambar, tw, th, biasY) {
-  const { w, h, channels, data } = gambar;
-  const oy = Math.round((h - th) * biasY);
-  const ox = Math.round((w - tw) / 2);
-  const out = Buffer.alloc(tw * th * channels);
-  for (let y = 0; y < th; y++) {
-    for (let x = 0; x < channels * tw; x++) out[(y * channels * tw + x)] = data[((y + oy) * w + ox) * channels + x];
+/* ---------- salin blok RGB tanpa alpa ---------- */
+function salin(dasar, atas, dx, dy) {
+  const stride = atas.w * 3;
+  for (let y = 0; y < atas.h; y++) {
+    const ty = dy + y;
+    if (ty < 0 || ty >= dasar.h) continue;
+    atas.data.copy(dasar.data, (ty * dasar.w + dx) * 3, y * stride, y * stride + stride);
   }
-  return { w: tw, h: th, channels, data: out };
 }
 
-/* ---------- enkripsi PNG RGB dengan filter per baris ---------- */
+function kanvas(w, h, warna) {
+  const data = Buffer.alloc(w * h * 3);
+  for (let i = 0; i < w * h; i++) {
+    data[i * 3] = warna[0];
+    data[i * 3 + 1] = warna[1];
+    data[i * 3 + 2] = warna[2];
+  }
+  return { w, h, channels: 3, data };
+}
+
+/* ---------- enkripsi PNG RGB, filter dipilih per baris ---------- */
 const crcTabel = (() => {
   const t = new Int32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -161,7 +186,7 @@ function potongan(tipe, isi) {
   return Buffer.concat([len, badan, crc]);
 }
 
-function tulisPng(gambar, tujuannya, kedalamanBit) {
+function tulisPng(gambar, tujuan, kedalamanBit) {
   const { w, h, channels, data } = gambar;
   const stride = w * 3;
   const baris = [];
@@ -217,20 +242,8 @@ function tulisPng(gambar, tujuannya, kedalamanBit) {
     potongan('IDAT', zlib.deflateSync(Buffer.concat(baris), { level: 9 })),
     potongan('IEND', Buffer.alloc(0)),
   ]);
-  fs.writeFileSync(tujuannya, png);
+  fs.writeFileSync(tujuan, png);
   return png.length;
 }
 
-/* ---------- jalankan ---------- */
-const sumber = bacaPng(SUMBER);
-// scale-to-cover: rasio sumber 1.75, sasaran 1.905 → lebar jadi patokan
-const skala = kubus(sumber, T_W, Math.round((T_W * sumber.h) / sumber.w), false);
-const hasil = potong(skala, T_W, T_H, 0.5);
-console.log('skala', sumber.w + 'x' + sumber.h, '->', skala.w + 'x' + skala.h, '-> potong', hasil.w + 'x' + hasil.h);
-if (LOGO) {
-  const logo = bacaPng(LOGO);
-  const ukuran = 124;
-  tempel(hasil, kubus(logo, ukuran, ukuran, true), 52, T_H - ukuran - 52);
-}
-const ukuran = tulisPng(hasil, TUJUAN, bits);
-console.log('tertulis', TUJUAN, (ukuran / 1024).toFixed(0) + ' kB');
+module.exports = { bacaPng, kubus, potong, penuhi, tempel, salin, kanvas, tulisPng };

@@ -255,6 +255,10 @@ export function Gallery() {
               </span>
             )}
 
+            <a className="header-portfolio" href="/portofolio.html" rel="noopener">
+              Portofolio
+            </a>
+
             {tampil('sidePanel') && (
               <Button
                 variant="ghost"

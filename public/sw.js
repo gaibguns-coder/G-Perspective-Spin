@@ -2,15 +2,19 @@
    pemasangan aplikasi (ikon sendiri di HP/desktop) dan situs tetap terbuka tanpa jaringan.
    Hanya berkas dari alamat situs ini yang disimpan; gambar dan musik dari Supabase
    selalu diambil segar agar suntingan admin langsung terlihat. */
-const NAMA_CACHE = 'gspin-v2';
+const NAMA_CACHE = 'gspin-v3';
 const INTI = [
   '/',
   '/index.html',
-  '/produk.html',
+  '/portofolio.html',
   '/manifest.webmanifest',
   '/logo.png',
-  '/og-produk.png',
+  '/og-portofolio.png',
   '/favicon.png',
+  '/karya/galeri-3d.png',
+  '/karya/deconstruction-store.png',
+  '/karya/harvest-days.png',
+  '/karya/pola-jahit.png',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -43,7 +47,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   if (permintaan.mode === 'navigate') {
-    // Halaman galeri dan halaman produk disimpan terpisah, supaya luring membuka
+    // Halaman galeri dan halaman portofolio disimpan terpisah, supaya luring membuka
     // halaman yang terakhir dilihat, bukan selalu index.
     const kunci = url.pathname;
     event.respondWith(
