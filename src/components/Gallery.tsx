@@ -16,16 +16,20 @@ import { Slider } from './ui/Slider';
 import { MusicPlayer } from './MusicPlayer';
 import { PerspectiveCorridor } from './PerspectiveCorridor';
 import { SidePanel } from './SidePanel';
+import { TampilanHalaman } from './HalamanKustom';
 import { colorThemes, paletteColors, type ColorThemeKey } from '@/lib/theme';
 import {
   bacaPreferensi,
   blokOf,
+  daftarHalaman,
   fontStackOf,
   gayaBlok,
   kontenBawaan,
   loadContent,
   menuOn,
+  ruteHal,
   simpanPreferensi,
+  slugDariAlamat,
   terapkanMeta,
   textOf,
   type BlockKey,
@@ -57,6 +61,17 @@ export function Gallery() {
   const [adminAllowed, setAdminAllowed] = useState(false);
   const [contentKey, setContentKey] = useState(0);
   const [content, setContent] = useState<SiteContent>(() => kontenBawaan());
+  /** Halaman kustom dipakai lewat #/hal/<slug> supaya host tidak mengembalikan 404. */
+  const [hal, setHal] = useState<string | null>(() => slugDariAlamat());
+
+  useEffect(() => {
+    const onHash = () => {
+      setHal(slugDariAlamat());
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   const ring = useRef<HTMLDivElement>(null);
   const angle = useRef(0);
@@ -234,6 +249,11 @@ export function Gallery() {
   const ada = (key: TextKey) => teks(key).visible;
   const isi = (key: TextKey) => teks(key).text;
 
+  /** Menu bilah atas: hanya halaman yang menyala, urutannya mengikuti posisi baris. */
+  const daftarHal = daftarHalaman(content).filter(h => h.menu.on);
+  const halamanAktif = hal === null ? null : daftarHalaman(content).find(h => h.slug === hal) ?? null;
+  const membuka = hal !== null;
+
   function pilihTheme(next: 'dark' | 'light') {
     setTheme(next);
     simpanPreferensi({ theme: next });
@@ -284,6 +304,16 @@ export function Gallery() {
               </span>
             )}
 
+            {daftarHal.length > 0 && (
+              <nav className="header-nav" aria-label="Menu halaman">
+                {daftarHal.map(h => (
+                  <a key={h.slug} className="header-link" href={ruteHal(h.slug)} data-aktif={hal === h.slug || undefined}>
+                    {h.menu.label}
+                  </a>
+                ))}
+              </nav>
+            )}
+
             <a className="header-portfolio" href="/portofolio.html" rel="noopener">
               Portofolio
             </a>
@@ -306,6 +336,10 @@ export function Gallery() {
         </header>
       )}
 
+      {membuka ? (
+        <TampilanHalaman halaman={halamanAktif} />
+      ) : (
+        <>
       {tampil('intro') && (
         <section className="gallery-intro" style={letak('intro')}>
           <div>
@@ -433,6 +467,8 @@ export function Gallery() {
             {playing ? <Pause /> : <Play />}
           </Button>
         </section>
+      )}
+        </>
       )}
 
       {tampil('footer') && (

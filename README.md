@@ -66,6 +66,18 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 
 Tabel konten: `site_texts`, `site_menus`, `site_blocks`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis dari konsol. `site_blocks` hanya menyimpan geometri; menyala/matinya bagian tetap milik `site_menus.enabled` supaya tidak ada dua kebenaran untuk hal yang sama.
 
+### Membuat menu dan halaman baru
+
+Panel **Halaman** di konsol membuat halaman sendiri tanpa menyentuh database secara manual. Karena kolom `key` pada `site_texts` dan `site_menus` berupa `text primary key` bebas (bukan enum), satu halaman baru hanya menulis tiga baris biasa — **tidak perlu migrasi SQL**:
+
+| Baris | Tabel | `key` | Isi |
+| --- | --- | --- | --- |
+| Menu | `site_menus` | `hal:<slug>` | nama di bilah atas, urutan, dan tuasa tampil |
+| Judul | `site_texts` | `hal:<slug>:judul` | judul + warna + jenis huruf |
+| Isi | `site_texts` | `hal:<slug>:isi` | paragraf; baris kosong berpindah paragraf |
+
+`slug` diturunkan dari nama menu (`slugBersih()`), dan bila sudah dipakai akan diberi akhiran `-2`, `-3`. Halaman dibuka lewat **rute hash** `#/hal/<slug>`, bukan path: host hanya mem-fallback path yang berakhiran garis miring, sehingga path dalam bentuk apa pun berisiko balas 404, sedangkan hash tidak pernah dikirim ke server. Galeri membaca hash di `src/components/Gallery.tsx` dan merender `src/components/HalamanKustom.tsx`; tautan **Kembali** mengembalikan pengunjung ke galeri. Menekan Simpan setelah menghapus halaman ikut membuang baris `hal:%` yang tidak ada lagi di draf (`saveContent()` menyapu baris yatim), jadi halaman tidak meninggalkan sisa.
+
 ## Konsol `/ceopusat`
 
 Pengelolaan berada di alamat sendiri, **`/ceopusat`** — tanpa `.html`. Konsol bukan entri build ketiga: `src/main.tsx` mengenali alamat itu lewat `ruteKonsol()` dan memuat `src/admin/boot.tsx` sebagai chunk terpisah, sehingga pengunjung galeri tetap tidak menanggung kode pengelola. Konsol memasang `noindex, nofollow` sendiri sehingga tidak dirayapi.

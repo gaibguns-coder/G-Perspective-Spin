@@ -14,14 +14,23 @@ import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
 import { ruteKonsol } from '@/lib/routes';
 import {
+  adalahHal,
   DEFAULT_MOTION,
   DEFAULT_BLOCKS,
   DEFAULT_SETTINGS,
+  daftarHalaman,
   blokOf,
   fontStackOf,
   gabung,
   kontenBawaan,
+  kunciHal,
+  kunciIsi,
+  kunciJudul,
   menuOn,
+  ruteHal,
+  slugBersih,
+  slugUnik,
+  tautanHal,
   textOf,
   type MenuKey,
   type TextKey,
@@ -264,5 +273,80 @@ describe('alamat konsol', () => {
     expect(ruteKonsol('/portofolio.html')).toBe(false);
     expect(ruteKonsol('/ceopusat/gerak')).toBe(false);
     expect(ruteKonsol('/situs/ceopusat/')).toBe(false);
+  });
+});
+
+describe('halaman buatan pengelola', () => {
+  it('menurunkan slug dari nama menu', () => {
+    expect(slugBersih('Tentang Kami')).toBe('tentang-kami');
+    expect(slugBersih('  Kontak  ')).toBe('kontak');
+    expect(slugBersih('Layanan & Harga')).toBe('layanan-harga');
+    expect(slugBersih('Áksèn Terkùnci')).toBe('aksen-terkunci');
+    expect(slugBersih('!!!')).toBe('halaman');
+    expect(slugBersih('x'.repeat(60))).toHaveLength(40);
+  });
+
+  it('tiga baris per halaman dan tidak bentrok dengan bagian bawaan', () => {
+    expect(kunciHal('tentang')).toBe('hal:tentang');
+    expect(kunciJudul('tentang')).toBe('hal:tentang:judul');
+    expect(kunciIsi('tentang')).toBe('hal:tentang:isi');
+    expect(adalahHal('hal:tentang')).toBe(true);
+    expect(adalahHal('introTitle')).toBe(false);
+    expect(ruteHal('tentang')).toBe('#/hal/tentang');
+    // Tombol "Buka" di konsol harus keluar dari dokumen konsol, bukan membuka konsol itu sendiri.
+    expect(tautanHal('tentang')).toBe('/#/hal/tentang');
+  });
+
+  it('slug unik menambah akhiran, bukan menimpa halaman lama', () => {
+    const content = kontenBawaan();
+    expect(slugUnik(content, 'Tentang')).toBe('tentang');
+    content.menus[kunciHal('tentang')] = { label: 'Tentang', hint: '', on: true };
+    expect(slugUnik(content, 'Tentang')).toBe('tentang-2');
+    content.menus[kunciHal('tentang-2')] = { label: 'Tentang', hint: '', on: true };
+    expect(slugUnik(content, 'Tentang')).toBe('tentang-3');
+  });
+
+  it('daftar halaman hanya melihat halaman, bukan baris judul dan isinya', () => {
+    const content = kontenBawaan();
+    expect(daftarHalaman(content)).toEqual([]);
+    content.menus[kunciHal('tentang')] = { label: 'Tentang', hint: '', on: true };
+    content.texts[kunciJudul('tentang')] = { label: 'Judul', text: 'Tentang Kami', color: '', font: '', visible: true };
+    content.texts[kunciIsi('tentang')] = { label: 'Isi', text: 'Halo', color: '', font: '', visible: true };
+    const daftar = daftarHalaman(content);
+    expect(daftar).toHaveLength(1);
+    expect(daftar[0].slug).toBe('tentang');
+    expect(daftar[0].judul.text).toBe('Tentang Kami');
+    expect(daftar[0].isi.text).toBe('Halo');
+  });
+
+  it('urutan baris database yang dibaca ulang mengikuti position, bukan bawaan', () => {
+    const bawaan = Object.keys(kontenBawaan().menus);
+    const terbalik = [...bawaan].reverse();
+    const hasil = gabung([], terbalik.map(k => ({ key: k, label: k, hint: '', enabled: true, position: 1 })));
+    expect(Object.keys(hasil.menus).slice(0, terbalik.length)).toEqual(terbalik);
+    // Halaman baru menempel di belakang baris bawaan, tidak menyisip di tengah.
+    const dua = gabung([], [
+      { key: 'hal:satu', label: 'Satu', hint: '', enabled: true, position: 1 },
+      { key: bawaan[0], label: bawaan[0], hint: '', enabled: true, position: 2 },
+    ]);
+    expect(Object.keys(dua.menus)[0]).toBe('hal:satu');
+    expect(Object.keys(dua.menus)[1]).toBe(bawaan[0]);
+  });
+
+  it('baris asing hanya diterima bila bermula hal:', () => {
+    const hasil = gabung(
+      [
+        { key: 'hal:baru:judul', label: 'Judul', body: 'Baru', color: '', font: '', visible: true, position: 1 },
+        { key: 'entriLama', label: 'Asing', body: 'buang', color: '', font: '', visible: true, position: 2 },
+      ],
+      [
+        { key: 'hal:baru', label: 'Baru', hint: '', enabled: true, position: 1 },
+        { key: 'menuLama', label: 'Asing', hint: '', enabled: false, position: 2 },
+      ],
+    );
+    expect(hasil.texts['hal:baru:judul'].text).toBe('Baru');
+    expect(hasil.texts.entriLama).toBeUndefined();
+    expect(hasil.menus['hal:baru'].label).toBe('Baru');
+    expect(hasil.menus.menuLama).toBeUndefined();
   });
 });

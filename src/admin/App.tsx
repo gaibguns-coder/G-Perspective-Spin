@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, LogOut, Menu, Save, ShieldCheck, X } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import { ExternalLink, Eye, EyeOff, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Save, ShieldCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { BRAND } from '@/lib/motion';
 import { colorThemes, terapkanPalet } from '@/lib/theme';
 import { NOT_CONFIGURED_MESSAGE } from '@/lib/supabase';
 import { useAdmin, useSesi } from './store';
 import { GRUP, PANEL, type PanelDef } from './registry';
+import { useBilah } from './bilah';
 import './shell.css';
 
 function idDariAlamat(): string {
@@ -13,11 +15,27 @@ function idDariAlamat(): string {
   return PANEL.some(p => p.id === mentah) ? mentah : PANEL[0].id;
 }
 
+/** Pesan Supabase diterjemahkan ke tindakan yang bisa dilakukan pengelola. */
+function petunjukGalat(galat: string) {
+  if (/too many|rate limit/i.test(galat)) return 'Terlalu banyak percobaan dari alamat ini. Tunggu sekitar satu menit, lalu coba sekali lagi.';
+  if (/not confirmed/i.test(galat)) return 'Akunnya ada tapi email belum dikonfirmasi. Di Supabase → Authentication → Users, tekan "Confirm email".';
+  if (/invalid_credentials|Invalid login/i.test(galat))
+    return 'Email itu tidak terdaftar di project Supabase yang dipakai situs ini, atau sandinya berbeda. Cek Supabase → Authentication → Users dan pastikan alamatnya sama persis.';
+  if (/Failed to fetch|NetworkError|fetch/i.test(galat))
+    return 'Permintaan tidak sampai ke Supabase — biasanya diblokir perluasan pemblokir iklan atau jaringan.';
+  if (/42P01|42703|Could not find the table|does not exist/i.test(galat))
+    return 'Kolom atau tabelnya belum ada di project ini: jalankan isi supabase/migrations/0004_carousel_layout.sql di Supabase → SQL Editor, lalu tekan Simpan lagi. Skripnya boleh diulang dan tidak menimpa suntingan.';
+  if (/42501|row-level security|permission denied/i.test(galat))
+    return 'Policy menolak tulisan: akun ini belum punya peran admin. Jalankan insert public.admins pada project ini, lalu masuk ulang.';
+  return '';
+}
+
 /** Pintu masuk: tanpa peran admin, konsol tidak menampilkan apa-apa selain formulir. */
 function Pintu() {
   const { gerbang, masuk, keluar, email } = useSesi();
   const [alamat, setAlamat] = useState('');
   const [sandi, setSandi] = useState('');
+  const [lihatSandi, setLihatSandi] = useState(false);
   const [sedang, setSedang] = useState(false);
   const [galat, setGalat] = useState('');
 
@@ -31,7 +49,7 @@ function Pintu() {
 
   return (
     <main className="ad-pintu">
-      <form className="ad-pintu-kartu" onSubmit={kirim}>
+      <div className="ad-pintu-kartu">
         <ShieldCheck className="size-8 text-primary" />
         <h1>Konsol {BRAND}</h1>
         {gerbang === 'tanpa-backend' ? (
@@ -62,11 +80,29 @@ function Pintu() {
               </label>
               <label>
                 Kata sandi
-                <input type="password" autoComplete="current-password" required value={sandi} onChange={e => setSandi(e.target.value)} />
+                <span className="ad-pintu-sandi">
+                  <input
+                    type={lihatSandi ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    value={sandi}
+                    onChange={e => setSandi(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setLihatSandi(v => !v)}
+                    aria-label={lihatSandi ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                    aria-pressed={lihatSandi}
+                    title={lihatSandi ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  >
+                    {lihatSandi ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </span>
               </label>
               {galat && (
                 <p role="alert" className="ad-pintu-galat">
                   {galat}
+                  {petunjukGalat(galat) && <small>{petunjukGalat(galat)}</small>}
                 </p>
               )}
               <Button disabled={sedang} type="submit">
@@ -78,7 +114,7 @@ function Pintu() {
             </a>
           </>
         )}
-      </form>
+      </div>
     </main>
   );
 }
@@ -89,6 +125,15 @@ export function Konsol() {
   const [aktif, setAktif] = useState(idDariAlamat);
   const [bilah, setBilah] = useState(false);
   const [luar, setLuar] = useState(0);
+  const bilahKiri = useBilah('panel', 212);
+  const [luas, setLuas] = useState(() => window.matchMedia('(min-width: 900px)').matches);
+
+  useEffect(() => {
+    const medan = window.matchMedia('(min-width: 900px)');
+    const on = () => setLuas(medan.matches);
+    medan.addEventListener('change', on);
+    return () => medan.removeEventListener('change', on);
+  }, []);
 
   useEffect(() => {
     const onHash = () => setAktif(idDariAlamat());
@@ -125,8 +170,25 @@ export function Konsol() {
   return (
     <div className="ad-ruang">
       <header className="ad-atas">
-        <button type="button" className="ad-bilah-tombol" aria-label="Buka daftar panel" aria-expanded={bilah} onClick={() => setBilah(v => !v)}>
-          {bilah ? <X className="size-4" /> : <Menu className="size-4" />}
+        <button
+          type="button"
+          className="ad-bilah-tombol"
+          aria-label={luas ? (bilahKiri.sembunyi ? 'Tampilkan daftar panel' : 'Sembunyikan daftar panel') : 'Buka daftar panel'}
+          aria-expanded={luas ? !bilahKiri.sembunyi : bilah}
+          title={luas ? (bilahKiri.sembunyi ? 'Tampilkan daftar panel' : 'Sembunyikan daftar panel') : 'Daftar panel'}
+          onClick={() => (luas ? bilahKiri.toggelSembunyi() : setBilah(v => !v))}
+        >
+          {luas ? (
+            bilahKiri.sembunyi ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )
+          ) : bilah ? (
+            <X className="size-4" />
+          ) : (
+            <Menu className="size-4" />
+          )}
         </button>
         <a className="ad-merek" href="/">
           <img src="/logo.png" alt="" className="size-5 rounded-md object-contain" />
@@ -147,7 +209,12 @@ export function Konsol() {
       </header>
 
       <div className="ad-badan">
-        <nav className={`ad-bilah${bilah ? ' is-buka' : ''}`} aria-label="Panel konsol">
+        <nav
+          ref={bilahKiri.isiRef}
+          className={`ad-bilah${bilah ? ' is-buka' : ''}${bilahKiri.sembunyi ? ' is-sembunyi' : ''}`}
+          style={{ '--ad-bilah-w': `${Math.round(bilahKiri.lebar)}px` } as CSSProperties}
+          aria-label="Panel konsol"
+        >
           {GRUP.map(grup => {
             const isi = PANEL.filter(p => p.grup === grup);
             if (!isi.length) return null;
@@ -159,7 +226,7 @@ export function Konsol() {
                   return (
                     <button key={p.id} type="button" data-active={p.id === aktif} title={p.petunjuk} onClick={() => pilih(p.id)}>
                       <Ikon className="size-4" />
-                      <span>{p.label}</span>
+                      <span data-ukur>{p.label}</span>
                     </button>
                   );
                 })}
@@ -174,6 +241,8 @@ export function Konsol() {
           </div>
         </nav>
 
+        {!bilahKiri.sembunyi && <div className="ad-pegang" {...bilahKiri.pegangan} />}
+
         {bilah && <div className="ad-bilah-layar" onClick={() => setBilah(false)} aria-hidden="true" />}
 
         <main className="ad-utama">
@@ -185,6 +254,7 @@ export function Konsol() {
           {galat && (
             <p role="alert" className="ad-papan is-galat">
               {galat}
+              {petunjukGalat(galat) && <small>{petunjukGalat(galat)}</small>}
             </p>
           )}
           {sukses && (

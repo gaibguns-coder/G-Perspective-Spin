@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Ban, Search, Type, ToggleRight } from 'lucide-react';
+import { Ban, ExternalLink, FilePlus2, Globe, Search, Trash2, Type, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { FONT_OPTIONS, menuOn, type MenuKey, type TextKey } from '@/lib/settings';
-import { Baris, Grup, Penanda, Sakelar } from '../fields';
+import { adalahHal, daftarHalaman, kunciHal, kunciIsi, kunciJudul, menuOn, ruteHal, tautanHal, type MenuKey, type MenuSetting, type TextKey } from '@/lib/settings';
+import { Switch } from '@/components/ui/Switch';
+import { Baris, FontKeping, Grup, Isian, Sakelar } from '../fields';
 import { useAdmin } from '../store';
 import './konten.css';
 
@@ -10,9 +11,10 @@ export function PanelTeks() {
   const { draft, teksBaru } = useAdmin();
   const [cari, setCari] = useState('');
 
+  // Baris halaman kustom disunting di panel Halaman, bukan menumpuk di daftar ini.
   const kunci = useMemo(() => {
     const s = cari.trim().toLowerCase();
-    const semua = Object.keys(draft.texts) as TextKey[];
+    const semua = (Object.keys(draft.texts) as TextKey[]).filter(k => !adalahHal(k));
     if (!s) return semua;
     return semua.filter(k => {
       const t = draft.texts[k];
@@ -47,13 +49,15 @@ export function PanelTeks() {
 
       {kunci.map(key => {
         const t = draft.texts[key];
-        const tumpukan = FONT_OPTIONS.find(f => f.name === t.font)?.stack;
         return (
           <details key={key} className="ad-teks" open={!!cari}>
             <summary>
               <span className="ad-teks-nama">{t.label}</span>
               <span className="ad-teks-isi">{t.text || '— kosong —'}</span>
-              <Penanda on={t.visible} />
+              {/* Tuas di baris ringkas: klik di sini tidak membuka/menutup rinciannya. */}
+              <span className="ad-teks-tuas" onClick={e => e.preventDefault()}>
+                <Switch checked={t.visible} onChange={visible => teksBaru(key, { visible })} label={`Tampilkan ${t.label}`} />
+              </span>
             </summary>
             <div className="ad-teks-badan">
               <Baris label="Teks" petunjuk="Isi yang dilihat pengunjung.">
@@ -86,21 +90,12 @@ export function PanelTeks() {
                   )}
                 </span>
               </Baris>
-              <Baris label="Jenis huruf" petunjuk="Muatan font sudah disiapkan di halaman.">
-                <span className="ad-teks-font">
-                  <select value={t.font} disabled={!t.visible} onChange={e => teksBaru(key, { font: e.target.value })}>
-                    <option value="">Font bawaan</option>
-                    {FONT_OPTIONS.map(f => (
-                      <option key={f.name} value={f.name}>
-                        {f.name}
-                      </option>
-                    ))}
-                  </select>
-                  <b className="ad-teks-contoh" style={tumpukan ? { fontFamily: tumpukan } : undefined}>
-                    {t.text.slice(0, 18) || t.label}
-                  </b>
-                </span>
-              </Baris>
+              <FontKeping
+                value={t.font}
+                contoh={t.text || t.label}
+                disabled={!t.visible}
+                onChange={font => teksBaru(key, { font })}
+              />
               <Baris label="Tampilkan" petunjuk="Sembunyikan tanpa menghapus bagian depannya.">
                 <Sakelar checked={t.visible} onChange={visible => teksBaru(key, { visible })} label={`Tampilkan ${t.label}`} />
               </Baris>
@@ -115,7 +110,6 @@ export function PanelTeks() {
 export function PanelMenu() {
   const { draft, menuBaru, urutkan } = useAdmin();
   const kunci = Object.keys(draft.menus) as MenuKey[];
-
   return (
     <div className="ad-isi">
       <div className="ad-kepala">
@@ -151,6 +145,161 @@ export function PanelMenu() {
           );
         })}
       </Grup>
+    </div>
+  );
+}
+
+/** Tukar posisi dua kunci tanpa mengubah isinya; urutan inilah yang jadi nomor baris di database. */
+function tukarKunci(menus: Record<string, MenuSetting>, a: string, b: string): Record<string, MenuSetting> {
+  const keys = Object.keys(menus);
+  const ia = keys.indexOf(a);
+  const ib = keys.indexOf(b);
+  if (ia < 0 || ib < 0) return menus;
+  [keys[ia], keys[ib]] = [keys[ib], keys[ia]];
+  return Object.fromEntries(keys.map(k => [k, menus[k]]));
+}
+
+export function PanelHalaman() {
+  const { draft, teksBaru, menuBaru, setSemua, tambahHalaman, hapusHalaman } = useAdmin();
+  const halaman = daftarHalaman(draft);
+  const [nama, setNama] = useState('');
+  const [terbuka, setTerbuka] = useState<string | null>(null);
+  const [konfirmasi, setKonfirmasi] = useState<string | null>(null);
+
+  function buat(e: React.FormEvent) {
+    e.preventDefault();
+    const bersih = nama.trim();
+    if (!bersih) return;
+    setTerbuka(tambahHalaman(bersih));
+    setNama('');
+  }
+
+  return (
+    <div className="ad-isi">
+      <div className="ad-kepala">
+        <Globe className="size-4 text-primary" />
+        <div>
+          <h2>Halaman &amp; menu</h2>
+          <p>
+            Setiap halaman baru langsung menulis tiga baris: satu di <code>site_menus</code> untuk nama menu dan urutannya, dua
+            di <code>site_texts</code> untuk judul dan isinya. Tekan Simpan, halaman itu sudah bisa dibuka.
+          </p>
+        </div>
+      </div>
+
+      <form className="ad-hal-buat" onSubmit={buat}>
+        <input
+          type="text"
+          maxLength={60}
+          value={nama}
+          placeholder="Nama menu, mis. Tentang, Layanan, Kontak"
+          onChange={e => setNama(e.target.value)}
+          aria-label="Nama halaman baru"
+        />
+        <Button size="sm" type="submit" disabled={!nama.trim()}>
+          <FilePlus2 className="size-3.5" />
+          Buat halaman
+        </Button>
+      </form>
+
+      {!halaman.length ? (
+        <p className="ad-kosong">Belum ada halaman tambahan. Galeri tetap menjadi halaman utama.</p>
+      ) : (
+        <Grup judul={`Daftar halaman (${halaman.length})`} petunjuk="Panah menyusun urutan menu di bilah atas. Halaman yang menyala tampil di bilah itu dan bisa dibuka tanpa memuat ulang; tombol Kembali di halaman menuju galeri.">
+          {halaman.map((h, i) => (
+            <details key={h.slug} className="ad-teks" open={terbuka === h.slug}>
+              <summary onClick={() => setTerbuka(h.slug)}>
+                <span className="ad-teks-nama">{h.menu.label}</span>
+                <span className="ad-teks-isi">{h.judul.text || '— tanpa judul —'}</span>
+                <span className="ad-hal-slug">#/hal/{h.slug}</span>
+                <span className="ad-teks-tuas" onClick={e => e.preventDefault()}>
+                  <Switch checked={h.menu.on} onChange={on => menuBaru(kunciHal(h.slug), { on })} label={h.menu.label} />
+                </span>
+              </summary>
+              <div className="ad-teks-badan">
+                <Isian
+                  label="Nama pada menu"
+                  petunjuk="Muncul di bilah atas galeri."
+                  max={60}
+                  value={h.menu.label}
+                  onChange={label => menuBaru(kunciHal(h.slug), { label })}
+                />
+                <Baris label="Alamat" petunjuk="Dibuka dari bilah atas, tanpa memuat ulang halaman.">
+                  <span className="ad-hal-alamat">
+                    <code>{ruteHal(h.slug)}</code>
+                    <a href={tautanHal(h.slug)} target="_blank" rel="noopener" title="Buka halaman ini">
+                      <ExternalLink className="size-3.5" />
+                      Buka
+                    </a>
+                  </span>
+                </Baris>
+                <Isian
+                  label="Judul halaman"
+                  petunjuk={`Baris teks ${kunciJudul(h.slug)} di site_texts.`}
+                  max={160}
+                  value={h.judul.text}
+                  onChange={text => teksBaru(kunciJudul(h.slug), { text })}
+                />
+                <Isian
+                  label="Warna judul"
+                  petunjuk="Kosong berarti ikut warna teks tema."
+                  jenis="warna"
+                  value={h.judul.color}
+                  onChange={color => teksBaru(kunciJudul(h.slug), { color })}
+                />
+                <FontKeping value={h.judul.font} contoh={h.judul.text || h.menu.label} onChange={font => teksBaru(kunciJudul(h.slug), { font })} />
+                <Isian
+                  label="Isi halaman"
+                  petunjuk={`Baris kosong berpindah paragraf. Baris ${kunciIsi(h.slug)} di site_texts.`}
+                  jenis="uraian"
+                  max={5000}
+                  value={h.isi.text}
+                  onChange={text => teksBaru(kunciIsi(h.slug), { text })}
+                />
+                <Baris label="Urutan dan bahaya">
+                  <span className="ad-hal-aksi">
+                    <button
+                      type="button"
+                      title="Tukar dengan halaman di atasnya"
+                      disabled={i === 0}
+                      onClick={() => setSemua({ ...draft, menus: tukarKunci(draft.menus, kunciHal(h.slug), kunciHal(halaman[i - 1].slug)) })}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      title="Tukar dengan halaman di bawahnya"
+                      disabled={i === halaman.length - 1}
+                      onClick={() => setSemua({ ...draft, menus: tukarKunci(draft.menus, kunciHal(h.slug), kunciHal(halaman[i + 1].slug)) })}
+                    >
+                      ↓
+                    </button>
+                    {konfirmasi === h.slug ? (
+                      <>
+                        <button type="button" className="is-berbahaya" onClick={() => { hapusHalaman(h.slug); setKonfirmasi(null); setTerbuka(null); }}>
+                          Yakin, hapus
+                        </button>
+                        <button type="button" onClick={() => setKonfirmasi(null)}>Batal</button>
+                      </>
+                    ) : (
+                      <button type="button" className="is-berbahaya" title="Hapus halaman beserta barisnya" onClick={() => setKonfirmasi(h.slug)}>
+                        <Trash2 className="size-3.5" />
+                        Hapus
+                      </button>
+                    )}
+                  </span>
+                </Baris>
+                {konfirmasi === h.slug && (
+                  <p className="ad-hal-wanti">
+                    Menghapus halaman juga membuang baris <code>site_menus</code> dan dua baris <code>site_texts</code> miliknya
+                    setelah tombol Simpan ditekan.
+                  </p>
+                )}
+              </div>
+            </details>
+          ))}
+        </Grup>
+      )}
     </div>
   );
 }

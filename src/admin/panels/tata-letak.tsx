@@ -19,12 +19,18 @@ const KANVAS: Record<BlockKey, { x: number; y: number; w: number; h: number; cat
 
 const URUTAN = Object.keys(KANVAS) as BlockKey[];
 const BATAS = { x: 50, y: 40 };
+const SKALA = { min: 0.5, max: 2, langkah: 0.05 };
 
 export function PanelLetak() {
   const { draft, blokBaru, menuBaru, urutkan } = useAdmin();
   const kanvas = useRef<HTMLDivElement>(null);
   const seret = useRef<{ key: BlockKey; px: number; py: number; x: number; y: number } | null>(null);
+  const ubah = useRef<{ key: BlockKey; cx: number; cy: number; jarak: number; skala: number } | null>(null);
   const [aktif, setAktif] = useState<BlockKey | null>(null);
+
+  function aturSkala(key: BlockKey, next: number) {
+    blokBaru(key, { scale: Math.round(Math.min(SKALA.max, Math.max(SKALA.min, next)) * 100) / 100 });
+  }
 
   function turun(e: React.PointerEvent<HTMLDivElement>) {
     const key = e.currentTarget.dataset.blok as BlockKey;
@@ -36,6 +42,39 @@ export function PanelLetak() {
     } catch {
       /* penangkapan pointer tidak selalu tersedia (Safari, event sintetis) */
     }
+  }
+
+  /** Tuas sudut: jarak kursor ke pusat kotak menentukan besar kecilnya, jadi menyeret
+   *  ke luar selalu memperbesar tanpa perlu menghitung selisih piksel per sumbu. */
+  function pegang(e: React.PointerEvent<HTMLSpanElement>) {
+    e.stopPropagation();
+    const blok = e.currentTarget.closest('.ad-kanvas-blok') as HTMLDivElement | null;
+    const key = blok?.dataset.blok as BlockKey | undefined;
+    if (!key || !blok) return;
+    const kotak = blok.getBoundingClientRect();
+    const cx = kotak.left + kotak.width / 2;
+    const cy = kotak.top + kotak.height / 2;
+    const jarak = Math.max(12, Math.hypot(e.clientX - cx, e.clientY - cy));
+    ubah.current = { key, cx, cy, jarak, skala: draft.blocks[key].scale };
+    setAktif(key);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* sama seperti di atas */
+    }
+  }
+
+  function seretUbah(e: React.PointerEvent<HTMLSpanElement>) {
+    const awal = ubah.current;
+    if (!awal) return;
+    e.stopPropagation();
+    const kini = Math.hypot(e.clientX - awal.cx, e.clientY - awal.cy);
+    aturSkala(awal.key, awal.skala * (kini / awal.jarak));
+  }
+
+  function lepasUbah(e: React.PointerEvent<HTMLSpanElement>) {
+    ubah.current = null;
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
 
   function gerak(e: React.PointerEvent<HTMLDivElement>) {
@@ -57,7 +96,11 @@ export function PanelLetak() {
     if (blok?.hasPointerCapture?.(e.pointerId)) blok.releasePointerCapture(e.pointerId);
   }
 
-  function geser1(key: BlockKey, sumbu: 'x' | 'y', arah: -1 | 1) {
+  function geser1(key: BlockKey, sumbu: 'x' | 'y', arah: -1 | 1, skala = false) {
+    if (skala) {
+      aturSkala(key, draft.blocks[key].scale + arah * SKALA.langkah);
+      return;
+    }
     const langkah = sumbu === 'x' ? 1 : 0.5;
     const nilai = draft.blocks[key][sumbu] + arah * langkah;
     const batas = sumbu === 'x' ? BATAS.x : BATAS.y;
@@ -71,8 +114,9 @@ export function PanelLetak() {
         <div>
           <h2>Tata letak</h2>
           <p>
-            Seret bagian pada kanvas untuk menggesernya, atau pakai tombol panah untuk langkah presisi. Posisi disimpan sebagai
-            pergeseran dari tempat semula, jadi tampilan tetap rapi pada layar lain.
+            Seret bagian untuk menggesernya, tarik sudut kanannya untuk memperbesar atau memperkecil, atau pakai panah
+            (Shift+panah untuk ukuran). Posisi dan ukuran disimpan sebagai perubahan dari tempat semula, jadi tampilan tetap
+            rapi pada layar lain.
           </p>
         </div>
       </div>
@@ -82,9 +126,13 @@ export function PanelLetak() {
           <div className="ad-letak-head">
             <span className="ad-letak-ket">Kanvas perkiraan</span>
             {aktif && (
-              <Button variant="ghost" size="sm" onClick={() => blokBaru(aktif, { x: 0, y: 0 })}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => blokBaru(aktif, { x: 0, y: 0, scale: DEFAULT_BLOCKS[aktif].scale })}
+              >
                 <Move className="size-3.5" />
-                Pusatkan “{draft.blocks[aktif].label}”
+                Atur ulang “{draft.blocks[aktif].label}”
               </Button>
             )}
           </div>
@@ -100,7 +148,7 @@ export function PanelLetak() {
                   data-blok={key}
                   role="button"
                   tabIndex={0}
-                  aria-label={`Geser ${b.label}`}
+                  aria-label={`Geser ${b.label}, Shift dan panah mengubah ukurannya`}
                   title={`${b.label} — ${t.catatan}`}
                   style={{
                     left: `${t.x + b.x}%`,
@@ -115,18 +163,64 @@ export function PanelLetak() {
                   onPointerUp={lepas}
                   onPointerCancel={lepas}
                   onKeyDown={e => {
+                    if (e.key === 'Escape') setAktif(null);
+                    if (e.shiftKey) {
+                      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        geser1(key, 'x', 1, true);
+                      }
+                      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        geser1(key, 'x', -1, true);
+                      }
+                      return;
+                    }
                     if (e.key === 'ArrowLeft') geser1(key, 'x', -1);
                     if (e.key === 'ArrowRight') geser1(key, 'x', 1);
                     if (e.key === 'ArrowUp') geser1(key, 'y', -1);
                     if (e.key === 'ArrowDown') geser1(key, 'y', 1);
                   }}
                 >
-                  <span>{b.label}</span>
-                  {(b.x !== 0 || b.y !== 0) && <em>
-                    {b.x > 0 ? '+' : ''}
-                    {b.x} / {b.y > 0 ? '+' : ''}
-                    {b.y}
-                  </em>}
+                  <span className="ad-letak-jul">{b.label}</span>
+                  {(b.x !== 0 || b.y !== 0 || Math.abs(b.scale - 1) > 0.01) && (
+                    <em>
+                      {b.x > 0 ? '+' : ''}
+                      {b.x} / {b.y > 0 ? '+' : ''}
+                      {b.y}
+                      {Math.abs(b.scale - 1) > 0.01 && ` · ${Math.round(b.scale * 100)}%`}
+                    </em>
+                  )}
+                  <span className="ad-letak-klik" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      title="Perkecil 5%"
+                      aria-label={`Perkecil ${b.label}`}
+                      disabled={b.scale <= SKALA.min}
+                      onClick={() => aturSkala(key, b.scale - SKALA.langkah)}
+                    >
+                      −
+                    </button>
+                    <button
+                      type="button"
+                      title="Perbesar 5%"
+                      aria-label={`Perbesar ${b.label}`}
+                      disabled={b.scale >= SKALA.max}
+                      onClick={() => aturSkala(key, b.scale + SKALA.langkah)}
+                    >
+                      +
+                    </button>
+                  </span>
+                  <span
+                    className="ad-letak-grip"
+                    role="separator"
+                    aria-label={`Ubah ukuran ${b.label}`}
+                    title="Seret untuk memperbesar atau memperkecil"
+                    tabIndex={-1}
+                    onPointerDown={pegang}
+                    onPointerMove={seretUbah}
+                    onPointerUp={lepasUbah}
+                    onPointerCancel={lepasUbah}
+                  />
                 </div>
               );
             })}

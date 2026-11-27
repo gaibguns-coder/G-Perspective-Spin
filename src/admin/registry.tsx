@@ -1,9 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import { Database, ImageIcon, Info, LayoutGrid, Move3d, Music, Palette, ToggleRight, Type } from 'lucide-react';
+import { Database, Globe, ImageIcon, Info, LayoutGrid, Move3d, Music, Palette, ToggleRight, Type } from 'lucide-react';
 import { PanelGerak } from './panels/gerak';
 import { PanelLetak } from './panels/tata-letak';
 import { PanelLagu, PanelGambar } from './panels/pustaka';
-import { PanelMenu, PanelTeks } from './panels/konten';
+import { PanelHalaman, PanelMenu, PanelTeks } from './panels/konten';
 import { PanelBasisData, PanelMeta, PanelTampilan } from './panels/situs';
 import type { ReactNode } from 'react';
 
@@ -41,6 +41,15 @@ export const PANEL: PanelDef[] = [
     petunjuk: 'Tuas menyala/matinya tiap bagian',
     jenis: 'draf',
     render: () => <PanelMenu />,
+  },
+  {
+    id: 'halaman',
+    label: 'Halaman',
+    grup: 'Konten',
+    ikon: Globe,
+    petunjuk: 'Buat menu dan halaman baru',
+    jenis: 'draf',
+    render: () => <PanelHalaman />,
   },
   {
     id: 'gerak',

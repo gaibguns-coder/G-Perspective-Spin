@@ -81,19 +81,29 @@ export async function listSongs(): Promise<SongItem[]> {
 export async function checkAdminAccess(): Promise<boolean> {
   const {
     data: { user },
+    error: galatSesi,
   } = await supabase.auth.getUser();
+  if (galatSesi) throw new Error(`Sesi tidak dapat dibaca: ${galatSesi.message}`);
   if (!user) return false;
   const { data, error } = await supabase.rpc('has_role', {
     _user_id: user.id,
     _role: 'admin',
   });
-  if (error) throw new Error('Tidak dapat memeriksa akses.');
+  if (error) throw new Error(`Peran admin tidak dapat diperiksa: ${error.message}`);
   return Boolean(data);
 }
 
+/**
+ * Kesalahan Supabase diteruskan apa adanya. Pesan umum dipakai sebelumnya
+ * ("periksa email dan password") menutupi tiga sebab berbeda: sandi memang salah,
+ * email belum terdaftar di project ini, atau terlalu banyak percobaan.
+ */
 export async function signIn(email: string, password: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error('Login gagal. Periksa email dan password Anda.');
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+  if (error) {
+    const kode = (error as { error_code?: string }).error_code;
+    throw new Error(kode ? `${error.message} (${kode})` : error.message);
+  }
 }
 
 export async function signOut() {

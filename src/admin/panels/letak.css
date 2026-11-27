@@ -67,7 +67,7 @@
   background: none;
 }
 
-.ad-kanvas-blok > span {
+.ad-kanvas-blok > .ad-letak-jul {
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
@@ -81,6 +81,72 @@
   color: var(--muted-foreground);
   margin-left: auto;
   white-space: nowrap;
+}
+
+/* Tombol besar/kecil dan tuas sudut hanya muncul saat kotak dipilih, supaya kanvas tidak ramai. */
+.ad-letak-klik {
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  gap: 2px;
+}
+
+.ad-letak-klik button {
+  font: 700 11px/1 ui-monospace, monospace;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.ad-letak-klik button:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.ad-letak-klik button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ad-letak-grip {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 13px;
+  height: 13px;
+  display: none;
+  cursor: nwse-resize;
+  touch-action: none;
+  border-radius: 0 0 7px 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0 45%,
+    var(--primary) 45% 100%
+  );
+  opacity: 0.75;
+}
+
+.ad-kanvas-blok:hover .ad-letak-klik,
+.ad-kanvas-blok.is-aktif .ad-letak-klik {
+  display: flex;
+}
+
+.ad-kanvas-blok:hover .ad-letak-grip,
+.ad-kanvas-blok.is-aktif .ad-letak-grip {
+  display: block;
+}
+
+.ad-letak-grip:hover {
+  opacity: 1;
 }
 
 /* ── Daftar angka per bagian ───────────────────────────────────────────── */

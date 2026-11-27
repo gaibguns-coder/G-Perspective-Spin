@@ -1,6 +1,8 @@
-import { RotateCcw } from 'lucide-react';
+import { Ban, RotateCcw } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/Button';
 import { Switch } from '@/components/ui/Switch';
+import { FONT_GROUPS, FONT_OPTIONS } from '@/lib/settings';
 import './fields.css';
 
 /** Kelompok bidang dengan judul dan satu baris petunjuk. */
@@ -178,7 +180,59 @@ export function Isian({
   );
 }
 
-/** Tanda bahwa sebuah baris ikut ditampilkan atau disembunyikan. */
-export function Penanda({ on }: { on: boolean }) {
-  return <span className={`ad-tanda${on ? ' is-nyala' : ''}`}>{on ? 'tampil' : 'sembunyi'}</span>;
+/**
+ * Keping jenis huruf: setiap nama ditulis dengan huruf itu sendiri, jadi admin
+ * memilih dari contoh, bukan dari daftar teks datar.
+ */
+export function FontKeping({
+  value,
+  contoh,
+  disabled,
+  onChange,
+}: {
+  value: string;
+  contoh: string;
+  disabled?: boolean;
+  onChange: (next: string) => void;
+}) {
+  const tumpukan = FONT_OPTIONS.find(f => f.name === value)?.stack;
+  return (
+    <Baris
+      label="Jenis huruf"
+      petunjuk="Tulisan besar di atas memakai huruf terpilih. Muatannya sudah disiapkan di halaman."
+      lebar="lebar"
+    >
+      <span className="ad-font">
+        <span className="ad-font-contoh" style={tumpukan ? { fontFamily: tumpukan } : undefined}>
+          {contoh.slice(0, 34) || 'Abc'}
+        </span>
+        {FONT_GROUPS.map(g => (
+          <span key={g.kelompok} className="ad-font-kel">
+            <b>{g.kelompok}</b>
+            <span className="ad-font-kisi">
+              {g.opsi.map(f => (
+                <button
+                  key={f.name}
+                  type="button"
+                  title={f.name}
+                  data-active={value === f.name}
+                  disabled={disabled}
+                  style={{ fontFamily: f.stack }}
+                  onClick={() => onChange(value === f.name ? '' : f.name)}
+                >
+                  {f.name}
+                </button>
+              ))}
+            </span>
+          </span>
+        ))}
+        {value && (
+          <Button variant="ghost" size="sm" disabled={disabled} onClick={() => onChange('')}>
+            <Ban className="size-3.5" />
+            Ikut font tema
+          </Button>
+        )}
+      </span>
+    </Baris>
+  );
 }

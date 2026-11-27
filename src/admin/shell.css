@@ -123,11 +123,42 @@
 .ad-bilah {
   display: none;
   flex-direction: column;
-  width: 212px;
+  /* Lebar dikendalikan bilah geser; bawaannya 212px bila belum pernah digeser. */
+  width: var(--ad-bilah-w, 212px);
   flex: none;
   border-right: 1px solid var(--border);
   background: color-mix(in srgb, var(--card) 45%, transparent);
   padding: 12px 10px 10px;
+}
+
+/* ── Pegangan geser antara bilah dan isi ───────────────────────────────── */
+.ad-pegang {
+  display: none;
+  flex: none;
+  width: 10px;
+  margin: 0 -5px;
+  cursor: col-resize;
+  position: relative;
+  z-index: 21;
+  touch-action: none;
+}
+
+.ad-pegang::after {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  border-radius: 3px;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.ad-pegang:hover::after,
+.ad-pegang:focus-visible::after {
+  background: color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+.ad-pegang:focus-visible {
+  outline: none;
 }
 
 .ad-bilah-grup + .ad-bilah-grup {
@@ -358,6 +389,45 @@ div.ad-catat {
   outline-offset: 1px;
 }
 
+/* Mata penyandian: tombol di dalam kotak, bukan kolom kedua. */
+.ad-pintu-sandi {
+  position: relative;
+  display: flex;
+}
+
+.ad-pintu-sandi input {
+  flex: 1;
+  min-width: 0;
+  padding-right: 36px;
+}
+
+.ad-pintu-sandi button {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.ad-pintu-sandi button:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.ad-pintu-sandi button:focus-visible {
+  outline: 1.5px solid var(--primary);
+  outline-offset: 1px;
+}
+
 .ad-pintu-galat {
   width: 100%;
   font-size: 11.5px !important;
@@ -366,6 +436,15 @@ div.ad-catat {
   border-radius: 8px;
   padding: 7px 10px;
   background: color-mix(in srgb, var(--destructive) 10%, transparent);
+  text-align: left;
+}
+
+.ad-pintu-galat small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
 }
 
 .ad-pintu-balik {
@@ -386,11 +465,14 @@ div.ad-catat {
     height: 100%;
     overflow-y: auto;
   }
+  .ad-bilah.is-sembunyi {
+    display: none;
+  }
+  .ad-pegang {
+    display: block;
+  }
   .ad-utama > .ad-isi > .ad-2 {
     flex: 1;
-  }
-  .ad-bilah-tombol {
-    display: none;
   }
   .ad-alur {
     display: flex;

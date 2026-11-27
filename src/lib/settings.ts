@@ -53,6 +53,51 @@ export type BlockKey =
   | 'sidePanel'
   | 'footer';
 
+/**
+ * Halaman buatan admin sendiri. Satu halaman memakai tiga baris yang sama-sama
+ * berawalan `hal:`, sehingga tabel dan policy yang ada sudah cukup tanpa migrasi:
+ *   site_menus      hal:<slug>          → teks menu, urutan, dan tuas tampil
+ *   site_texts      hal:<slug>:judul    → judul besar halaman
+ *   site_texts      hal:<slug>:isi      → paragraf isi
+ */
+export const HAL_AWAL = 'hal:';
+
+export function slugBersih(nama: string): string {
+  const tanpaAksen = nama
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return tanpaAksen.slice(0, 40) || 'halaman';
+}
+
+export const kunciJudul = (slug: string) => `${HAL_AWAL}${slug}:judul`;
+export const kunciIsi = (slug: string) => `${HAL_AWAL}${slug}:isi`;
+export const kunciHal = (slug: string) => `${HAL_AWAL}${slug}`;
+export const adalahHal = (key: string) => key.startsWith(HAL_AWAL);
+/** Alamat di dalam dokumen yang sama: host hanya mem-fallback jalur berakhiran garis miring. */
+export const ruteHal = (slug: string) => `#/hal/${slug}`;
+
+/**
+ * Alamat halaman dilihat dari dokumen lain, misalnya tombol "Buka" di konsol.
+ * `ruteHal()` saja akan membuka konsol itu sendiri karena hash tidak pernah
+ * berpindah dokumen, jadi path galeri harus ditulis lebih dulu.
+ */
+export const tautanHal = (slug: string) => `/${ruteHal(slug)}`;
+
+/** Slug halaman dari alamat saat ini; `null` berarti pengunjung melihat galeri. */
+export function slugDariAlamat(): string | null {
+  const jalur = window.location.hash.replace(/^#\/?/, '');
+  if (!jalur.startsWith('hal/')) return null;
+  const slug = jalur.slice(4).split('/')[0];
+  try {
+    return decodeURIComponent(slug) || null;
+  } catch {
+    return slug || null;
+  }
+}
+
 export interface TextSetting {
   label: string;
   text: string;
@@ -62,7 +107,6 @@ export interface TextSetting {
   font: string;
   visible: boolean;
 }
-
 export interface MenuSetting {
   label: string;
   hint: string;
@@ -121,8 +165,9 @@ export interface SiteInfo {
 }
 
 export interface SiteContent {
-  texts: Record<TextKey, TextSetting>;
-  menus: Record<MenuKey, MenuSetting>;
+  /** Kunci bawaan ada pada union; halaman buatan admin memakai kunci berawalan `hal:`. */
+  texts: Record<string, TextSetting>;
+  menus: Record<string, MenuSetting>;
   appearance: Appearance;
   motion: Motion;
   info: SiteInfo;
@@ -130,24 +175,52 @@ export interface SiteContent {
 }
 
 /** Pasangan nama keluarga → tumpukan CSS. Muatannya mengikuti <link> di index.html. */
-export const FONT_OPTIONS: { name: string; stack: string }[] = [
-  { name: 'Manrope', stack: "'Manrope', sans-serif" },
-  { name: 'Space Grotesk', stack: "'Space Grotesk', sans-serif" },
-  { name: 'Poppins', stack: "'Poppins', sans-serif" },
-  { name: 'Inter', stack: "'Inter', sans-serif" },
-  { name: 'Montserrat', stack: "'Montserrat', sans-serif" },
-  { name: 'Outfit', stack: "'Outfit', sans-serif" },
-  { name: 'Sora', stack: "'Sora', sans-serif" },
-  { name: 'Playfair Display', stack: "'Playfair Display', serif" },
-  { name: 'Lora', stack: "'Lora', serif" },
-  { name: 'Cormorant Garamond', stack: "'Cormorant Garamond', serif" },
-  { name: 'Bebas Neue', stack: "'Bebas Neue', sans-serif" },
-  { name: 'Oswald', stack: "'Oswald', sans-serif" },
-  { name: 'Righteous', stack: "'Righteous', cursive" },
-  { name: 'Pacifico', stack: "'Pacifico', cursive" },
-  { name: 'Caveat', stack: "'Caveat', cursive" },
-  { name: 'JetBrains Mono', stack: "'JetBrains Mono', monospace" },
+/** Keluarga huruf, dikelompokkan supaya panel Teks bisa menampilkannya sebagai keping. */
+export const FONT_GROUPS: { kelompok: string; opsi: { name: string; stack: string }[] }[] = [
+  {
+    kelompok: 'Bersih',
+    opsi: [
+      { name: 'Manrope', stack: "'Manrope', sans-serif" },
+      { name: 'Inter', stack: "'Inter', sans-serif" },
+      { name: 'Poppins', stack: "'Poppins', sans-serif" },
+      { name: 'Outfit', stack: "'Outfit', sans-serif" },
+      { name: 'Sora', stack: "'Sora', sans-serif" },
+      { name: 'Montserrat', stack: "'Montserrat', sans-serif" },
+    ],
+  },
+  {
+    kelompok: 'Tegas',
+    opsi: [
+      { name: 'Space Grotesk', stack: "'Space Grotesk', sans-serif" },
+      { name: 'Bebas Neue', stack: "'Bebas Neue', sans-serif" },
+      { name: 'Oswald', stack: "'Oswald', sans-serif" },
+    ],
+  },
+  {
+    kelompok: 'Tekno',
+    opsi: [
+      // Chakra Petch: kotak miring seperti huruf "DECONSTRUCTION"; Michroma dan
+      // Orbitron: lebar berpita renggang untuk judul bergaya mesin.
+      { name: 'Chakra Petch', stack: "'Chakra Petch', sans-serif" },
+      { name: 'Michroma', stack: "'Michroma', sans-serif" },
+      { name: 'Orbitron', stack: "'Orbitron', sans-serif" },
+      { name: 'Righteous', stack: "'Righteous', cursive" },
+      { name: 'JetBrains Mono', stack: "'JetBrains Mono', monospace" },
+    ],
+  },
+  {
+    kelompok: 'Naskah',
+    opsi: [
+      { name: 'Playfair Display', stack: "'Playfair Display', serif" },
+      { name: 'Lora', stack: "'Lora', serif" },
+      { name: 'Cormorant Garamond', stack: "'Cormorant Garamond', serif" },
+      { name: 'Pacifico', stack: "'Pacifico', cursive" },
+      { name: 'Caveat', stack: "'Caveat', cursive" },
+    ],
+  },
 ];
+
+export const FONT_OPTIONS: { name: string; stack: string }[] = FONT_GROUPS.flatMap(g => g.opsi);
 
 export function fontStackOf(name: string): string | undefined {
   return FONT_OPTIONS.find(f => f.name === name)?.stack;
@@ -254,8 +327,50 @@ export function textOf(content: SiteContent, key: TextKey): TextSetting {
   return content.texts[key] ?? DEFAULT_SETTINGS.texts[key];
 }
 
+/** Baris buatan admin tidak punya bawaan, jadi kunci baru dimulai dari kosong. */
+export function teksBebas(content: SiteContent, key: string, label: string): TextSetting {
+  return content.texts[key] ?? teks(label, '');
+}
+
 export function menuOn(content: SiteContent, key: MenuKey): boolean {
   return content.menus[key]?.on ?? DEFAULT_SETTINGS.menus[key].on;
+}
+
+/** Tuas halaman kustom: barisnya baru ada setelah admin menyimpan, jadi bawaannya tampil. */
+export function menuBebas(content: SiteContent, key: string): boolean {
+  return content.menus[key]?.on ?? true;
+}
+
+/** Satu halaman buatan admin, dirangkai dari tiga baris bertanda `hal:`. */
+export interface HalamanKustom {
+  slug: string;
+  menu: MenuSetting;
+  judul: TextSetting;
+  isi: TextSetting;
+}
+
+/** Daftar slug halaman buatan admin, urutan sama dengan posisi baris di site_menus. */
+export function daftarHalaman(content: SiteContent): HalamanKustom[] {
+  return Object.keys(content.menus)
+    .filter(k => adalahHal(k) && !k.includes(':judul') && !k.includes(':isi'))
+    .map(k => {
+      const slug = k.slice(HAL_AWAL.length);
+      return {
+        slug,
+        menu: content.menus[k],
+        judul: teksBebas(content, kunciJudul(slug), 'Judul halaman'),
+        isi: teksBebas(content, kunciIsi(slug), 'Isi halaman'),
+      };
+    });
+}
+
+/** Slug yang belum dipakai, supaya dua halaman tidak berbagi alamat. */
+export function slugUnik(content: SiteContent, nama: string): string {
+  const dasar = slugBersih(nama);
+  let slug = dasar;
+  let i = 2;
+  while (kunciHal(slug) in content.menus) slug = `${dasar}-${i++}`;
+  return slug;
 }
 
 /** Geometri satu bagian; kunci yang belum punya baris tetap berada di tempatnya. */
@@ -281,6 +396,18 @@ export function gayaBlok(b: Block): CSSProperties {
  * Rangkai konten dari baris mentah. Baris yang tidak ada tetap memakai bawaan,
  * sehingga menambah kunci baru tidak memerlukan migrasi isian.
  */
+/**
+ * Susun ulang peta mengikuti urutan baris database. Tanpa ini, urutan hasil muat
+ * selalu urutan bawaan, sehingga nomor posisi yang ditulis konsol tidak pernah
+ * benar-benar dibaca kembali dan draf terlihat "belum disimpan" selamanya.
+ */
+function ikutUrutan<T>(dasar: Record<string, T>, urutan: string[]): Record<string, T> {
+  const hasil: Record<string, T> = {};
+  for (const k of urutan) if (k in dasar && !(k in hasil)) hasil[k] = dasar[k];
+  for (const k of Object.keys(dasar)) if (!(k in hasil)) hasil[k] = dasar[k];
+  return hasil;
+}
+
 export function gabung(
   textRows: unknown,
   menuRows: unknown,
@@ -300,26 +427,38 @@ export function gabung(
     return Math.min(max, Math.max(min, Math.round(n * pangkat) / pangkat));
   };
 
+  // Baris bawaan dipulihkan dari DEFAULT, sedangkan baris berawalan `hal:` diterima
+  // apa adanya: inilah jalan masuk halaman buatan admin tanpa menambah tabel.
+  const urutanTeks: string[] = [];
   for (const row of Array.isArray(textRows) ? (textRows as Record<string, unknown>[]) : []) {
-    const key = row.key as TextKey;
-    if (!(key in hasil.texts)) continue;
+    const key = String(row.key ?? '');
+    const lama = hasil.texts[key];
+    if (!lama && !adalahHal(key)) continue;
+    urutanTeks.push(key);
+    const dasar = lama ?? teks(key, '');
     hasil.texts[key] = {
-      label: str(row.label, hasil.texts[key].label),
-      text: typeof row.body === 'string' ? row.body : hasil.texts[key].text,
+      label: str(row.label, dasar.label),
+      text: typeof row.body === 'string' ? row.body : dasar.text,
       color: typeof row.color === 'string' ? row.color : '',
       font: typeof row.font === 'string' ? row.font : '',
       visible: bool(row.visible, true),
     };
   }
+  hasil.texts = ikutUrutan(hasil.texts, urutanTeks);
+  const urutanMenu: string[] = [];
   for (const row of Array.isArray(menuRows) ? (menuRows as Record<string, unknown>[]) : []) {
-    const key = row.key as MenuKey;
-    if (!(key in hasil.menus)) continue;
+    const key = String(row.key ?? '');
+    const lama = hasil.menus[key];
+    if (!lama && !adalahHal(key)) continue;
+    urutanMenu.push(key);
+    const dasar = lama ?? menu(key, '');
     hasil.menus[key] = {
-      label: str(row.label, hasil.menus[key].label),
-      hint: str(row.hint, hasil.menus[key].hint),
+      label: str(row.label, dasar.label),
+      hint: str(row.hint, dasar.hint),
       on: bool(row.enabled, true),
     };
   }
+  hasil.menus = ikutUrutan(hasil.menus, urutanMenu);
 
   const tema = appearance?.theme;
   if (tema === 'dark' || tema === 'light') hasil.appearance.theme = tema;
@@ -345,9 +484,11 @@ export function gabung(
   hasil.motion.fadePct = angka(motion?.fade_pct, 0, 90, DEFAULT_MOTION.fadePct);
   hasil.motion.degPerSec = angka(motion?.deg_per_sec, 1, 30, DEFAULT_MOTION.degPerSec, 1);
 
+  const urutanBlok: BlockKey[] = [];
   for (const row of Array.isArray(blockRows) ? (blockRows as Record<string, unknown>[]) : []) {
     const key = row.key as BlockKey;
     if (!(key in hasil.blocks)) continue;
+    urutanBlok.push(key);
     hasil.blocks[key] = {
       label: str(row.label, hasil.blocks[key].label),
       hint: str(row.hint, hasil.blocks[key].hint),
@@ -357,6 +498,7 @@ export function gabung(
       z: angka(row.z, 0, 30, 0),
     };
   }
+  hasil.blocks = ikutUrutan(hasil.blocks, urutanBlok) as SiteContent['blocks'];
 
   hasil.info = {
     pageTitle: str(info?.page_title, DEFAULT_INFO.pageTitle),
@@ -392,13 +534,30 @@ export async function loadContent(): Promise<SiteContent> {
   return gabung(textRows, menuRows, appearance, motion, info, blockRows);
 }
 
+/**
+ * Bentuk error PostgREST yang dipakai bersama. Pesan server sengaja ikut ditampilkan:
+ * "gagal" tanpa sebab membuat pengelola menebak-nebak, padahal biasanya hanya satu
+ * kolom atau tabel yang belum ada karena migrasi belum dijalankan.
+ */
+interface GalatSisa {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+}
+
+function sebabGalat(error: GalatSisa): string {
+  const pesan = error.message?.trim() || 'tanpa pesan dari server';
+  return `${pesan}${error.code ? ` (${error.code})` : ''}`;
+}
+
 /** Simpan setiap kelompok ke tabelnya sendiri; kegagalan dikumpulkan, bukan dihentikan di baris pertama. */
 export async function saveContent(next: SiteContent): Promise<void> {
   if (NOT_CONFIGURED_MESSAGE) throw new Error('Backend belum disambungkan, pengaturan tidak dapat disimpan.');
   const waktu = new Date().toISOString();
   const gagal: string[] = [];
 
-  const textRows = (Object.keys(next.texts) as TextKey[]).map((key, index) => ({
+  const textRows = Object.keys(next.texts).map((key, index) => ({
     key,
     label: next.texts[key].label,
     body: next.texts[key].text,
@@ -408,7 +567,7 @@ export async function saveContent(next: SiteContent): Promise<void> {
     position: index + 1,
     updated_at: waktu,
   }));
-  const menuRows = (Object.keys(next.menus) as MenuKey[]).map((key, index) => ({
+  const menuRows = Object.keys(next.menus).map((key, index) => ({
     key,
     label: next.menus[key].label,
     hint: next.menus[key].hint,
@@ -430,7 +589,7 @@ export async function saveContent(next: SiteContent): Promise<void> {
   }));
 
   // Satu entri per tabel: menambah jenis data baru cukup menambah baris di daftar ini.
-  const tugas: [string, PromiseLike<{ error: unknown }>][] = [
+  const tugas: [string, PromiseLike<{ error: GalatSisa | null }>][] = [
     ['teks', supabase.from('site_texts').upsert(textRows, { onConflict: 'key' })],
     ['menu', supabase.from('site_menus').upsert(menuRows, { onConflict: 'key' })],
     ['blok', supabase.from('site_blocks').upsert(blockRows, { onConflict: 'key' })],
@@ -489,8 +648,23 @@ export async function saveContent(next: SiteContent): Promise<void> {
 
   for (const [nama, jalan] of tugas) {
     const { error } = await jalan;
-    if (error) gagal.push(nama);
+    if (error) gagal.push(`${nama} — ${sebabGalat(error)}`);
   }
+
+  // Halaman yang dihapus di konsol harus ikut hilang dari database: upsert saja tidak
+  // pernah menghapus baris. Hanya kunci berawalan `hal:` yang disentuh di sini.
+  for (const [tabel, dipakai] of [
+    ['site_menus', Object.keys(next.menus)],
+    ['site_texts', Object.keys(next.texts)],
+  ] as [string, string[]][]) {
+    const { data, error } = await supabase.from(tabel).select('key').like('key', `${HAL_AWAL}%`);
+    if (error) continue;
+    const yatim = (data ?? []).map(r => String(r.key)).filter(k => !dipakai.includes(k));
+    if (!yatim.length) continue;
+    const { error: buang } = await supabase.from(tabel).delete().in('key', yatim);
+    if (buang) gagal.push(`penghapusan yatim di ${tabel} — ${sebabGalat(buang)}`);
+  }
+
   if (gagal.length) throw new Error(`Gagal menyimpan: ${gagal.join(', ')}.`);
 }
 

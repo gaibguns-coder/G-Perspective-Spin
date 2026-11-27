@@ -91,6 +91,12 @@
   white-space: nowrap;
 }
 
+/* Tuas di ringkasan: area klik sendiri supaya baris tidak ikut membuka rincian. */
+.ad-teks-tuas {
+  display: inline-flex;
+  flex: none;
+}
+
 .ad-teks-badan {
   border-top: 1px solid var(--border);
   padding: 2px 12px 10px;
@@ -154,30 +160,108 @@
   color: var(--muted-foreground);
 }
 
-.ad-teks-font {
+/* ── Halaman kustom ────────────────────────────────────────────────────── */
+.ad-hal-buat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ad-hal-buat input {
+  font: inherit;
+  font-size: 12.5px;
+  flex: 1;
+  min-width: 0;
+  max-width: 340px;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.ad-hal-buat input:focus-visible {
+  outline: 1.5px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.ad-hal-slug {
+  font: 500 10px/1 ui-monospace, monospace;
+  color: var(--muted-foreground);
+  flex: none;
+}
+
+.ad-hal-alamat {
   display: inline-flex;
   align-items: center;
   gap: 9px;
 }
 
-.ad-teks-font select {
-  font: inherit;
-  font-size: 12.5px;
+.ad-hal-alamat code {
+  font-size: 11.5px;
   color: var(--foreground);
-  background: var(--background);
+  background: var(--secondary);
   border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px 9px;
+  border-radius: 6px;
+  padding: 3px 7px;
 }
 
-.ad-teks-contoh {
-  font-size: 14px;
-  font-weight: 600;
+.ad-hal-alamat a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
   color: var(--primary);
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-decoration: none;
+}
+
+.ad-hal-alamat a:hover {
+  text-decoration: underline;
+}
+
+.ad-hal-aksi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ad-hal-aksi button {
+  font: inherit;
+  font-size: 11.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.ad-hal-aksi button:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ad-hal-aksi button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.ad-hal-aksi button.is-berbahaya:hover:not(:disabled) {
+  color: var(--destructive);
+  border-color: var(--destructive);
+}
+
+.ad-hal-wanti {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--destructive);
+  border: 1px dashed color-mix(in srgb, var(--destructive) 45%, transparent);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 /* ── Baris menu ────────────────────────────────────────────────────────── */

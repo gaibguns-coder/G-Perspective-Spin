@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
-  ArrowLeft,
   Check,
   ImageIcon,
   Loader2,
   Music,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pause,
   Pencil,
   Play,
@@ -27,6 +29,7 @@ import {
   type GalleryItem,
   type SongItem,
 } from '@/lib/gallery';
+import { useBilah } from '../bilah';
 import { Grup } from '../fields';
 import './pustaka.css';
 
@@ -47,9 +50,10 @@ function usePapan(): [(pesan: string, jenis?: 'galat' | 'sukses') => void, strin
 }
 
 export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
+  const rel = useBilah('gambar', 208);
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [muat, setMuat] = useState(true);
-  const [editing, setEditing] = useState<GalleryItem | 'new' | null>(null);
+  const [terpilih, setTerpilih] = useState<string | 'baru' | null>(null);
   const [judul, setJudul] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
   const [berkas, setBerkas] = useState<File | null>(null);
@@ -60,7 +64,9 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
 
   const baca = useCallback(async () => {
     try {
-      setItems(await listGallery());
+      const data = await listGallery();
+      setItems(data);
+      setTerpilih(w => (w && w !== 'baru' && !data.some(i => i.id === w) ? null : w));
     } catch {
       setPapan('Daftar gambar gagal dimuat.');
     } finally {
@@ -72,27 +78,36 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
     void baca();
   }, [baca]);
 
-  function sunting(item: GalleryItem | 'new') {
-    setEditing(item);
-    setJudul(item === 'new' ? '' : item.title);
-    setDeskripsi(item === 'new' ? '' : item.description);
+  const bentuk = (item: GalleryItem | 'baru') => {
+    setTerpilih(item === 'baru' ? 'baru' : item.id);
+    setJudul(item === 'baru' ? '' : item.title);
+    setDeskripsi(item === 'baru' ? '' : item.description);
     setBerkas(null);
     setHapusGambar(false);
     setPapan('');
-  }
+  };
+
+  const rapi = (item: GalleryItem | 'baru') => (item === 'baru' ? null : item);
+  const aktif = terpilih === 'baru' ? 'baru' : terpilih === null ? null : items.find(i => i.id === terpilih) ?? null;
+  /* Judul terpanjang menentukan lantai lebar bilah, jadi diukur ulang setiap daftar berubah. */
+  useEffect(() => {
+    rel.muatUkur();
+  }, [items, rel.muatUkur]);
+  /* Pratinjau berkas yang belum diunggah: URL objek dibuat dan dilepas bersama berkasnya. */
+  const pratinjau = useMemo(() => (berkas ? URL.createObjectURL(berkas) : ''), [berkas]);
+  useEffect(() => () => void (pratinjau && URL.revokeObjectURL(pratinjau)), [pratinjau]);
 
   async function simpan(e: React.FormEvent) {
     e.preventDefault();
-    if (editing === null) return;
+    if (aktif === null) return;
     setSedang(true);
     try {
       const yatim = await saveGalleryItem(
-        editing === 'new' ? null : editing,
+        rapi(aktif),
         { title: judul, description: deskripsi, file: berkas, removeImage: hapusGambar },
         nextPosition(items),
       );
       await baca();
-      setEditing(null);
       padaBerubah();
       setPapan(yatim.length ? 'Perubahan tersimpan, tapi gambar lama gagal dibersihkan dari penyimpanan.' : 'Perubahan tersimpan.', yatim.length ? 'galat' : 'sukses');
     } catch (err) {
@@ -107,6 +122,7 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
     setSedang(true);
     try {
       const yatim = await deleteGalleryItem(menghapus);
+      if (terpilih === menghapus.id) setTerpilih(null);
       await baca();
       setMenghapus(null);
       padaBerubah();
@@ -118,55 +134,7 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
     }
   }
 
-  if (editing !== null) {
-    return (
-      <div className="ad-isi">
-        <div className="ad-kepala">
-          <ImageIcon className="size-4 text-primary" />
-          <div>
-            <h2>{editing === 'new' ? 'Gambar baru' : 'Sunting gambar'}</h2>
-            <p>Berkas masuk ke bucket gallery-images, barisnya ke tabel gallery_items.</p>
-          </div>
-        </div>
-        <form className="ad-form" onSubmit={simpan}>
-          <Button type="button" variant="ghost" size="sm" className="ad-form-kembali" onClick={() => setEditing(null)}>
-            <ArrowLeft className="size-3.5" />
-            Kembali ke daftar
-          </Button>
-          <label>
-            Judul
-            <input required maxLength={160} value={judul} onChange={e => setJudul(e.target.value)} />
-          </label>
-          <label>
-            Deskripsi
-            <textarea maxLength={5000} value={deskripsi} onChange={e => setDeskripsi(e.target.value)} />
-          </label>
-          <label>
-            <span className="ad-form-berkas">
-              <Upload className="size-3.5" />
-              Gambar
-            </span>
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={e => setBerkas(e.target.files?.[0] ?? null)} />
-          </label>
-          {editing !== 'new' && editing.image_path && (
-            <label className="ad-form-centang">
-              <input type="checkbox" checked={hapusGambar} onChange={e => setHapusGambar(e.target.checked)} />
-              Kosongkan gambar, pertahankan judul dan deskripsi
-            </label>
-          )}
-          <Button disabled={sedang} type="submit">
-            <Save className="size-4" />
-            {sedang ? 'Menyimpan…' : 'Simpan perubahan'}
-          </Button>
-          {galat && (
-            <p role="alert" className="ad-form-galat">
-              {galat}
-            </p>
-          )}
-        </form>
-      </div>
-    );
-  }
+  const nomor = aktif && aktif !== 'baru' ? items.findIndex(i => i.id === aktif.id) + 1 : items.length + 1;
 
   return (
     <div className="ad-isi">
@@ -174,43 +142,133 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
         <ImageIcon className="size-4 text-primary" />
         <div>
           <h2>Gambar galeri</h2>
-          <p>Urutan kartu mengikuti posisi baris; foto pertama yang tampil adalah posisi teratas.</p>
+          <p>Daftar di kiri bisa disembunyikan dan dilebarkan; kartu mengikuti posisi barisnya.</p>
         </div>
-        <Button size="sm" className="ad-kepala-aksi" onClick={() => sunting('new')}>
+        <Button size="sm" className="ad-kepala-aksi" onClick={() => bentuk('baru')}>
           <Plus className="size-3.5" />
           Tambah gambar
         </Button>
       </div>
 
       {sukses && <p role="status" className="ad-papan is-sukses">{sukses}</p>}
-      {galat && <p role="alert" className="ad-papan is-galat">{galat}</p>}
+      {galat && aktif === null && <p role="alert" className="ad-papan is-galat">{galat}</p>}
 
       {muat ? (
         <p className="ad-kosong">
           <Loader2 className="size-4 animate-spin" /> Memuat daftar…
         </p>
       ) : (
-        <div className="ad-kisi">
-          {items.map(item => (
-            <figure key={item.id} className="ad-kartu">
-              <div className="ad-kartu-gambar">
-                {item.image_url ? <img src={item.image_url} alt="" loading="lazy" /> : <ImageIcon className="size-6 opacity-40" />}
-              </div>
-              <figcaption>
-                <strong title={item.title}>{item.title || 'Tanpa judul'}</strong>
-                <small>{item.description || 'Belum ada deskripsi.'}</small>
-              </figcaption>
-              <div className="ad-kartu-aksi">
-                <Button size="icon" variant="ghost" aria-label={`Sunting ${item.title}`} onClick={() => sunting(item)}>
-                  <Pencil className="size-3.5" />
+        <div className="ad-pustaka">
+          <aside
+            ref={rel.isiRef}
+            className={`ad-rel${rel.sembunyi ? ' is-sembunyi' : ''}`}
+            style={{ '--ad-rel-w': `${Math.round(rel.lebar)}px` } as CSSProperties}
+            aria-label="Daftar gambar"
+          >
+            <div className="ad-rel-kepala">
+              <span>{items.length} gambar</span>
+              <Button variant="ghost" size="icon" className="size-6" aria-label="Sembunyikan daftar gambar" title="Sembunyikan daftar" onClick={rel.toggelSembunyi}>
+                <PanelLeftClose className="size-3.5" />
+              </Button>
+            </div>
+            <div className="ad-rel-isi">
+              <button type="button" className="ad-rel-item" data-active={terpilih === 'baru'} onClick={() => bentuk('baru')}>
+                <span className="ad-rel-kotak is-baru">
+                  <Plus className="size-4" />
+                </span>
+                <span className="ad-rel-nama">Gambar baru</span>
+              </button>
+              {items.map((item, i) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="ad-rel-item"
+                  data-active={terpilih === item.id}
+                  title={item.title}
+                  onClick={() => bentuk(item)}
+                >
+                  <span className="ad-rel-kotak">
+                    {item.image_url ? <img src={item.image_url} alt="" loading="lazy" /> : <ImageIcon className="size-4 opacity-40" />}
+                    <em>{String(i + 1).padStart(2, '0')}</em>
+                  </span>
+                  <span className="ad-rel-nama">{item.title || 'Tanpa judul'}</span>
+                </button>
+              ))}
+              {!items.length && <p className="ad-rel-kosong">Belum ada gambar di galeri.</p>}
+            </div>
+          </aside>
+
+          {!rel.sembunyi && <div className="ad-rel-pegang" {...rel.pegangan} />}
+
+          <div className="ad-rinci">
+            {rel.sembunyi && (
+              <Button variant="outline" size="sm" onClick={rel.toggelSembunyi}>
+                <PanelLeftOpen className="size-3.5" />
+                Tampilkan daftar
+              </Button>
+            )}
+            {aktif === null ? (
+              <p className="ad-rinci-kosong">
+                <ImageIcon className="size-6" />
+                Pilih gambar di daftar kiri, atau tekan “Tambah gambar”, untuk mengubah judul, deskripsi, dan filenya.
+              </p>
+            ) : (
+              <form className="ad-form" onSubmit={simpan}>
+                <div className="ad-kepala-rinci">
+                  <span className="ad-kepala-kotak">
+                    {pratinjau ? (
+                      <img src={pratinjau} alt="" />
+                    ) : aktif !== 'baru' && aktif.image_url && !hapusGambar ? (
+                      <img src={aktif.image_url} alt="" />
+                    ) : (
+                      <ImageIcon className="size-5 opacity-40" />
+                    )}
+                  </span>
+                  <div>
+                    <strong>{aktif === 'baru' ? 'Gambar baru' : aktif.title || 'Tanpa judul'}</strong>
+                    <small>
+                      Posisi {nomor} {aktif === 'baru' ? '(akan ditambahkan di belakang)' : `dari ${items.length}`}
+                    </small>
+                  </div>
+                  {aktif !== 'baru' && (
+                    <Button type="button" variant="ghost" size="icon" className="size-7" aria-label={`Hapus ${aktif.title}`} onClick={() => setMenghapus(aktif)}>
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
+                </div>
+                <label>
+                  Judul
+                  <input required maxLength={160} value={judul} onChange={e => setJudul(e.target.value)} />
+                </label>
+                <label>
+                  Deskripsi
+                  <textarea maxLength={5000} value={deskripsi} onChange={e => setDeskripsi(e.target.value)} />
+                </label>
+                <label>
+                  <span className="ad-form-berkas">
+                    <Upload className="size-3.5" />
+                    Gambar
+                  </span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={e => setBerkas(e.target.files?.[0] ?? null)} />
+                </label>
+                {aktif !== 'baru' && aktif.image_path && (
+                  <label className="ad-form-centang">
+                    <input type="checkbox" checked={hapusGambar} onChange={e => setHapusGambar(e.target.checked)} />
+                    Kosongkan gambar, pertahankan judul dan deskripsi
+                  </label>
+                )}
+                <Button disabled={sedang} type="submit">
+                  <Save className="size-4" />
+                  {sedang ? 'Menyimpan…' : 'Simpan perubahan'}
                 </Button>
-                <Button size="icon" variant="ghost" aria-label={`Hapus ${item.title}`} onClick={() => setMenghapus(item)}>
-                  <Trash2 className="size-3.5" />
-                </Button>
-              </div>
-            </figure>
-          ))}
-          {!items.length && <p className="ad-kosong">Belum ada gambar di galeri.</p>}
+                {galat && (
+                  <p role="alert" className="ad-form-galat">
+                    {galat}
+                  </p>
+                )}
+              </form>
+            )}
+          </div>
         </div>
       )}
 

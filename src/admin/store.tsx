@@ -1,7 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { checkAdminAccess, signIn as masukSupabase, signOut } from '@/lib/gallery';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
-import { kontenBawaan, loadContent, saveContent, type BlockKey, type MenuKey, type SiteContent, type TextKey } from '@/lib/settings';
+import {
+  kontenBawaan,
+  kunciHal,
+  kunciIsi,
+  kunciJudul,
+  loadContent,
+  saveContent,
+  slugUnik,
+  type BlockKey,
+  type MenuKey,
+  type MenuSetting,
+  type SiteContent,
+  type TextSetting,
+} from '@/lib/settings';
 
 /**
  * Satu draf untuk seluruh panel konten: setiap panel mengubah bagian yang sama,
@@ -15,13 +28,16 @@ export interface AdminDraft {
   galat: string;
   sukses: string;
   kotor: boolean;
-  teksBaru: (key: TextKey, ubah: Partial<SiteContent['texts'][TextKey]>) => void;
-  menuBaru: (key: MenuKey, ubah: Partial<SiteContent['menus'][MenuKey]>) => void;
+  teksBaru: (key: string, ubah: Partial<TextSetting>) => void;
+  menuBaru: (key: string, ubah: Partial<MenuSetting>) => void;
   gerakBaru: (ubah: Partial<SiteContent['motion']>) => void;
   blokBaru: (key: BlockKey, ubah: Partial<SiteContent['blocks'][BlockKey]>) => void;
   tampilanBaru: (ubah: Partial<SiteContent['appearance']>) => void;
   infoBaru: (ubah: Partial<SiteContent['info']>) => void;
   urutkan: (key: 'menus' | 'blocks', index: number, arah: -1 | 1) => void;
+  /** Membuat satu halaman kustom (baris menu + dua baris teks); mengembalikan slug-nya. */
+  tambahHalaman: (nama: string) => string;
+  hapusHalaman: (slug: string) => void;
   setSemua: (next: SiteContent) => void;
   simpan: () => Promise<void>;
   keBawaan: () => void;
@@ -152,6 +168,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           return { ...p, blocks };
         }),
       setSemua: next => sunting(() => next),
+      tambahHalaman: nama => {
+        const slug = slugUnik(draft, nama);
+        sunting(p => ({
+          ...p,
+          menus: { ...p.menus, [kunciHal(slug)]: { label: nama.trim() || 'Halaman baru', hint: `Halaman /hal/${slug}`, on: true } },
+          texts: {
+            ...p.texts,
+            [kunciJudul(slug)]: { label: `Judul ${nama}`, text: nama.trim() || 'Halaman baru', color: '', font: 'Space Grotesk', visible: true },
+            [kunciIsi(slug)]: { label: `Isi ${nama}`, text: '', color: '', font: '', visible: true },
+          },
+        }));
+        return slug;
+      },
+      hapusHalaman: slug =>
+        sunting(p => {
+          const menus = Object.fromEntries(Object.entries(p.menus).filter(([k]) => k !== kunciHal(slug)));
+          const texts = Object.fromEntries(Object.entries(p.texts).filter(([k]) => k !== kunciJudul(slug) && k !== kunciIsi(slug)));
+          return { ...p, menus, texts };
+        }),
       keBawaan: () => sunting(() => kontenBawaan()),
       simpan: async () => {
         setSimpanSedang(true);
@@ -161,6 +196,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           setSukses('Tersimpan. Semua pengunjung melihatnya pada muat berikutnya.');
         } catch (err) {
           setGalat(err instanceof Error ? err.message : 'Pengaturan gagal disimpan.');
+          // Sebagian tabel bisa sudah tertulis sementara sisanya gagal. Bila baseline tidak
+          // diambil ulang, baris yang lolos tadi menjadi hantu: draf terlihat bersih sehingga
+          // tombol Simpan mati dan tidak ada jalan lagi untuk menyapu baris itu.
+          try {
+            setAwal(JSON.stringify(await loadContent()));
+          } catch {
+            /* baseline lama dipertahankan; draf tetap dianggap kotor dan Simpan bisa diulang */
+          }
         } finally {
           setSimpanSedang(false);
         }
@@ -183,10 +226,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           await masukSupabase(alamat, kataSandi);
           const boleh = await checkAdminAccess();
           setGerbang(boleh ? 'siap' : 'bukan-admin');
-          setEmail(alamat);
-          return boleh ? '' : 'Akun ini masuk, tetapi belum punya peran admin.';
+          setEmail(alamat.trim());
+          return boleh
+            ? ''
+            : `Masuk sebagai ${alamat.trim()}, tetapi baris peran "admin" tidak ada di project Supabase situs ini.`;
         } catch (err) {
-          return err instanceof Error ? err.message : 'Login gagal.';
+          return err instanceof Error ? err.message : 'Login gagal tanpa pesan dari server.';
         }
       },
     }),

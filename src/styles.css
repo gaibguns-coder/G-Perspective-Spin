@@ -777,6 +777,107 @@ a.settings-button:hover {
   color: var(--primary);
   border-color: var(--primary);
 }
+
+/* ── Menu halaman buatan admin ──────────────────────────────────────────── */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header-link {
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.header-link:hover,
+.header-link[data-aktif] {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ── Halaman kustom ─────────────────────────────────────────────────────── */
+.hal-kustom {
+  width: min(880px, 88%);
+  margin: 34px auto 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.hal-balik {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.hal-balik:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.hal-judul {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 5vw, 42px);
+  line-height: 1.18;
+  font-weight: 500;
+  margin: 0;
+  text-wrap: balance;
+}
+.hal-isi {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.hal-isi p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.hal-kosong-isi {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.hal-kosong {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 48px 0;
+  color: var(--muted-foreground);
+}
+.hal-kosong h1 {
+  margin: 0;
+  font-size: 22px;
+}
+.hal-kosong p {
+  margin: 0;
+  font-size: 13px;
+  max-width: 46ch;
+  line-height: 1.6;
+}
 .panel-hint em {
   font-style: normal;
   color: var(--foreground);
@@ -815,31 +916,75 @@ a.settings-button:hover {
 .toggle-bar {
   position: relative;
   flex-shrink: 0;
-  width: 42px;
-  height: 23px;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  cursor: pointer;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: var(--secondary);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  background: color-mix(in srgb, var(--muted-foreground) 16%, var(--secondary));
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 25%);
+  transition:
+    background-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
+
+/* Dua bintik menandai posisi tuas, jadi status terbaca walau warna tidak. */
+.toggle-bar::before,
+.toggle-bar::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: var(--muted-foreground);
+  transition: opacity 0.22s ease;
+}
+.toggle-bar::before {
+  left: 8px;
+}
+.toggle-bar::after {
+  right: 8px;
+}
+.toggle-bar.is-on::before {
+  opacity: 0;
+}
+.toggle-bar:not(.is-on)::after {
+  opacity: 0;
+}
+
 .toggle-knob {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: var(--muted-foreground);
-  transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1), background 0.2s ease;
+  background: color-mix(in srgb, var(--foreground) 65%, var(--muted-foreground));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 45%);
+  transition:
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 .toggle-bar.is-on {
-  background: color-mix(in oklab, var(--primary) 26%, var(--secondary));
-  border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+  background: color-mix(in oklab, var(--primary) 34%, var(--secondary));
+  border-color: color-mix(in oklab, var(--primary) 65%, transparent);
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 20%),
+    0 0 12px -2px var(--card-glow);
 }
 .toggle-bar.is-on .toggle-knob {
-  transform: translateX(19px);
+  transform: translateX(18px);
   background: var(--primary);
   box-shadow: 0 0 10px var(--card-glow);
+}
+.toggle-bar:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 .toggle-bar:disabled,
 .toggle-bar.is-disabled {
