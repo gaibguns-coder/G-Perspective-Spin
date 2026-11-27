@@ -88,38 +88,8 @@ export function MusicPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong?.id]);
 
-  // Peramban menolak autoplay tanpa interaksi: pantau klik/tombol pertama.
-  useEffect(() => {
-    if (!currentSong || isPlaying) return;
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    let cancelled = false;
-    const startOnInteraction = () => {
-      audio
-        .play()
-        .then(() => !cancelled && setIsPlaying(true))
-        .catch(() => {});
-      window.removeEventListener('click', startOnInteraction);
-      window.removeEventListener('keydown', startOnInteraction);
-    };
-
-    audio
-      .play()
-      .then(() => !cancelled && setIsPlaying(true))
-      .catch(() => {
-        window.addEventListener('click', startOnInteraction, { once: true });
-        window.addEventListener('keydown', startOnInteraction, { once: true });
-      });
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener('click', startOnInteraction);
-      window.removeEventListener('keydown', startOnInteraction);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSong?.id]);
-
+  // Musik tidak pernah menyala sendiri: pengunjung yang menekan tombol putar,
+  // jadi tidak ada suara yang muncul tiba-tiba saat halaman baru dibuka.
   useEffect(() => {
     if (audioRef.current) audioRef.current.loop = isLooping;
   }, [isLooping]);

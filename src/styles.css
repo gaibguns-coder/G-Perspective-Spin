@@ -361,12 +361,12 @@ h1 {
 
 /* ── Kontrol putaran ────────────────────────────────────────────────────── */
 .playback {
-  margin: 22px auto 42px;
-  width: min(660px, 84%);
+  margin: 18px auto 40px;
+  width: min(560px, 80%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 25px;
+  gap: 14px;
   opacity: 0.35;
   transition: opacity 0.55s ease;
 }
@@ -377,15 +377,24 @@ h1 {
 }
 .control-label {
   color: var(--muted-foreground);
-  font-size: 10px;
-  margin-bottom: 10px;
+  font-size: 9px;
+  margin-bottom: 6px;
+  letter-spacing: 0.7px;
   text-transform: uppercase;
 }
 .direction-buttons {
   display: flex;
   border: 1px solid var(--border);
-  padding: 3px;
-  border-radius: 6px;
+  padding: 2px;
+  border-radius: 5px;
+}
+.direction-buttons button {
+  width: 32px;
+  height: 32px;
+}
+.direction-buttons svg {
+  width: 15px;
+  height: 15px;
 }
 .direction-buttons [data-active='true'] {
   background: var(--secondary);
@@ -393,12 +402,12 @@ h1 {
 }
 .control-divider {
   width: 1.5px;
-  height: 38px;
+  height: 30px;
   background: var(--nyala-tegak);
   box-shadow: 0 0 12px 1px var(--nyala-halo);
 }
 .speed-control {
-  width: 180px;
+  width: 150px;
 }
 .speed-heading {
   display: flex;
@@ -409,10 +418,15 @@ h1 {
   color: var(--foreground);
 }
 .pause-control {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   background: var(--primary);
   color: var(--primary-foreground);
+}
+.pause-control svg {
+  width: 16px;
+  height: 16px;
 }
 
 .gallery-footer {
@@ -568,14 +582,14 @@ a.settings-button:hover {
     top: 46%;
   }
   .playback {
-    gap: 14px;
+    gap: 10px;
     margin-top: 12px;
   }
   .speed-control {
-    width: 115px;
+    width: 104px;
   }
   .control-divider {
-    height: 32px;
+    height: 26px;
   }
   .gallery-footer {
     font-size: 9px;
@@ -1674,11 +1688,12 @@ a.settings-button:hover {
 .playback {
   position: relative;
   margin: 20px auto 34px;
-  width: min(720px, 84%);
-  padding: 15px 24px;
+  width: min(560px, 80%);
+  padding: 9px 14px;
   border: 1px solid color-mix(in oklab, var(--primary) 26%, var(--border));
   background: color-mix(in srgb, var(--card) 48%, transparent);
   opacity: 0.72;
+  border-radius: 10px;
   box-shadow: 0 18px 44px -34px var(--card-glow);
   transition:
     opacity 0.5s ease,
@@ -1689,8 +1704,8 @@ a.settings-button:hover {
 .playback::after {
   content: '';
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border: 1px solid color-mix(in oklab, var(--primary) 60%, transparent);
 }
 .playback::before {
@@ -1791,7 +1806,7 @@ a.settings-button:hover {
     inset: 4px 4%;
   }
   .playback {
-    padding: 12px 14px;
+    padding: 8px 10px;
   }
   .footer-tag {
     display: none;
