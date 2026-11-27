@@ -120,7 +120,7 @@ Tautan pada kartu hanya dipasang ke situs yang benar-benar menjawab HTTP 200. Ed
 Sebelum halaman ini dipakai promosi:
 
 - Ganti seluruh `628xxxxxxxxxx` di `portofolio.html` dengan nomor WhatsApp asli berkode negara (contoh `6281234567890`). Ada dua tempat: tombol di hero dan tombol di bagian Kontak. Ganti pula `email-anda@domainanda.com` pada tombol "Kirim email" dengan alamat surel yang benar-benar dibuka — `mailto:` yang alamatnya fiktif membuat pesan pengunjung hilang tanpa pemberitahuan.
-- Galeri 3D masih menampilkan "Galeri belum memiliki gambar" sampai foto asli diunggah dari halaman admin. Kartu pertama sengaja memakai ilustrasi koridor (`public/karya/galeri-3d.png`) karena tangkapan layar situsnya masih kosong — begitu foto terpasang, ganti gambar itu dengan screenshot asli.
+- Sebelas dari empat belas bingkai galeri belum punya foto asli. Untuk sementara bingkai itu diisi gambar contoh yang dibangkitkan kode (`contohSlot()` di `src/lib/contoh.ts`, bertuliskan CONTOH) supaya terowongan tidak bolong — bukan baris basis data, jadi unggah foto asli dari halaman admin dan contohnya hilang sendiri. Kartu pertama di halaman portofolio masih memakai ilustrasi koridor (`public/karya/galeri-3d.png`) karena tangkapan layar situsnya belum ada — begitu foto terpasang, ganti gambar itu dengan screenshot asli.
 - Gambar kartu dibuat ulang dari tangkapan layar 1440×900 dengan perkakas sendiri:
   `node tools/gambar.cjs kecil sumber.png public/karya/nama.png 800 6` lalu
   `node tools/gambar.cjs kartu public/og-portofolio.png 6 public/karya/galeri-3d.png public/karya/deconstruction-store.png public/karya/harvest-days.png`

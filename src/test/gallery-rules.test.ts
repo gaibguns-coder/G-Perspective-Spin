@@ -13,6 +13,7 @@ import {
 import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
 import { ruteKonsol } from '@/lib/routes';
+import { contohSlot } from '@/lib/contoh';
 import {
   adalahHal,
   DEFAULT_MOTION,
@@ -348,5 +349,27 @@ describe('halaman buatan pengelola', () => {
     expect(hasil.texts.entriLama).toBeUndefined();
     expect(hasil.menus['hal:baru'].label).toBe('Baru');
     expect(hasil.menus.menuLama).toBeUndefined();
+  });
+});
+
+describe('gambar contoh untuk bingkai yang belum diisi foto', () => {
+  it('data-URI SVG, corak tetap untuk nomor yang sama', () => {
+    expect(contohSlot(4)).toBe(contohSlot(4));
+    expect(contohSlot(4).startsWith('data:image/svg+xml,')).toBe(true);
+    expect(decodeURIComponent(contohSlot(4))).toContain('CONTOH');
+  });
+
+  it('dua belas bingkai berturut-turut tidak ada yang kembar', () => {
+    expect(new Set(Array.from({ length: 12 }, (_, i) => contohSlot(i + 1))).size).toBe(12);
+  });
+
+  it('nomor di luar rentang tidak menghasilkan SVG rusak', () => {
+    for (const svg of [contohSlot(0), contohSlot(-3), contohSlot(24)]) {
+      const isi = decodeURIComponent(svg);
+      expect(isi).toContain('<svg xmlns=');
+      expect(isi).toContain('</svg>');
+      expect(isi).not.toContain('NaN');
+      expect(isi).not.toContain('undefined');
+    }
   });
 });

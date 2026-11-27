@@ -39,6 +39,7 @@ import {
   type TextKey,
 } from '@/lib/settings';
 import { checkAdminAccess, demoSlots, listGallery, type GalleryItem } from '@/lib/gallery';
+import { contohSlot } from '@/lib/contoh';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
 import { PERSPECTIVE_DASAR, advanceRotation, easeFaktor, radiusRing, tileOpacity } from '@/lib/motion';
 
@@ -253,6 +254,9 @@ export function Gallery() {
   const ada = (key: TextKey) => teks(key).visible;
   const isi = (key: TextKey) => teks(key).text;
 
+  /** Nomor bingkai untuk gambar contoh, supaya coraknya tetap sama saat kartu dibuka. */
+  const nomorContoh = (item: GalleryItem) => Math.max(1, items.findIndex(s => s.id === item.id) + 1);
+
   /** Menu bilah atas: hanya halaman yang menyala, urutannya mengikuti posisi baris. */
   const daftarHal = daftarHalaman(content).filter(h => h.menu.on);
   const halamanAktif = hal === null ? null : daftarHalaman(content).find(h => h.slug === hal) ?? null;
@@ -436,7 +440,7 @@ export function Gallery() {
               >
                 <Button
                   variant="ghost"
-                  className={`gallery-tile${item.image_url ? '' : ' is-kosong'}`}
+                  className={`gallery-tile${item.image_url ? '' : ' is-contoh'}`}
                   aria-label={`Lihat ${item.title}`}
                   style={{ '--i': index } as CSSProperties}
                   onMouseEnter={() => setHovering(true)}
@@ -449,7 +453,7 @@ export function Gallery() {
                     <img src={item.image_url} alt={item.title} />
                   ) : (
                     <>
-                      <ImageIcon />
+                      <img src={contohSlot(index + 1)} alt="" aria-hidden="true" />
                       {ada('tileEmpty') && <span className="tile-label" style={gaya('tileEmpty')}>{isi('tileEmpty')}</span>}
                     </>
                   )}
@@ -586,9 +590,11 @@ export function Gallery() {
             {selected.image_url ? (
               <img src={selected.image_url} alt={selected.title} />
             ) : (
-              <div className="viewer-empty">
-                <ImageIcon />
-                {ada('viewerEmpty') && <span style={gaya('viewerEmpty')}>{isi('viewerEmpty')}</span>}
+              <div className="viewer-contoh">
+                <img src={contohSlot(nomorContoh(selected))} alt="" aria-hidden="true" />
+                {ada('viewerEmpty') && (
+                  <span className="viewer-chip" style={gaya('viewerEmpty')}>{isi('viewerEmpty')}</span>
+                )}
               </div>
             )}
           </div>
