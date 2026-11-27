@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { ExternalLink, Eye, EyeOff, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Save, ShieldCheck, X } from 'lucide-react';
+import { ExternalLink, Eye, EyeOff, Lock, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Save, ShieldCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { BRAND } from '@/lib/motion';
 import { colorThemes, terapkanPalet } from '@/lib/theme';
@@ -50,7 +50,11 @@ function Pintu() {
   return (
     <main className="ad-pintu">
       <div className="ad-pintu-kartu">
-        <ShieldCheck className="size-8 text-primary" />
+        <span className="ad-pintu-lencana" aria-hidden="true">
+          <span />
+          <span />
+          <ShieldCheck className="size-7 text-primary" />
+        </span>
         <h1>Konsol {BRAND}</h1>
         {gerbang === 'tanpa-backend' ? (
           <p>{NOT_CONFIGURED_MESSAGE}</p>
@@ -109,6 +113,12 @@ function Pintu() {
                 {sedang ? 'Memproses…' : 'Masuk'}
               </Button>
             </form>
+            <p className="ad-pintu-kaki">
+              <Lock className="size-3" />
+              <span>
+                Sesi tersimpan di <b>peramban ini</b> sampai Anda keluar
+              </span>
+            </p>
             <a className="ad-pintu-balik" href="/">
               Kembali ke galeri
             </a>
@@ -120,7 +130,7 @@ function Pintu() {
 }
 
 export function Konsol() {
-  const { gerbang, keluar } = useSesi();
+  const { gerbang, keluar, email } = useSesi();
   const { simpan, simpanSedang, kotor, keBawaan, muat, galat, sukses, draft } = useAdmin();
   const [aktif, setAktif] = useState(idDariAlamat);
   const [bilah, setBilah] = useState(false);
@@ -200,6 +210,7 @@ export function Konsol() {
           {panel.grup} <i>/</i> <b>{panel.label}</b>
         </span>
         <span className={`ad-status${kotor && pakaiDraf ? ' is-kotor' : ''}`}>
+          <i className="ad-status-jarum" aria-hidden="true" />
           {pakaiDraf ? (muat ? 'memuat…' : kotor ? 'belum disimpan' : 'sesuai database') : 'tersimpan langsung'}
         </span>
         <a className="ad-href" href="/" target="_blank" rel="noopener">
@@ -220,7 +231,10 @@ export function Konsol() {
             if (!isi.length) return null;
             return (
               <div key={grup} className="ad-bilah-grup">
-                <h2>{grup}</h2>
+                <h2>
+                  {grup}
+                  <em>{isi.length}</em>
+                </h2>
                 {isi.map(p => {
                   const Ikon = p.ikon;
                   return (
@@ -234,6 +248,15 @@ export function Konsol() {
             );
           })}
           <div className="ad-bilah-kaki">
+            <div className="ad-akun">
+              <span className="ad-akun-lencana" aria-hidden="true">
+                <ShieldCheck className="size-3.5" />
+              </span>
+              <div>
+                <b>{email ? email.split('@')[0] : 'Akun admin'}</b>
+                <small>{email ? `@${email.split('@')[1]}` : 'peran admin dijaga policy'}</small>
+              </div>
+            </div>
             <Button variant="ghost" size="sm" onClick={() => void keluar()}>
               <LogOut className="size-4" />
               Keluar
@@ -272,7 +295,9 @@ export function Konsol() {
         <div className="ad-simpan">
           <span className="ad-simpan-ket">
             {kotor
-              ? `${panel.label} diubah. Simpan agar terlihat semua pengunjung.`
+              ? panel.id === 'ringkas'
+                ? 'Ada suntingan pada draf konten. Simpan agar terlihat semua pengunjung.'
+                : `${panel.label} diubah. Simpan agar terlihat semua pengunjung.`
               : 'Tidak ada perubahan pada draf konten.'}
           </span>
           <Button variant="outline" size="sm" disabled={simpanSedang || !kotor} onClick={keBawaan} title="Kembalikan seluruh panel ke bawaan aplikasi">

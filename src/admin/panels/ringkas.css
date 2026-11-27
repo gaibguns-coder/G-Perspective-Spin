@@ -1,0 +1,436 @@
+/*
+ * Panel Ikhtisar: hero berjendela HUD, kisi angka nyata, lalu dua kotak bawah.
+ * Semua lapisan memakai color-mix terhadap palet yang sedang disunting, jadi
+ * konsol ikut berubah warna begitu palet diganti tanpa satu pun nilai warna keras.
+ */
+
+.ad-rk-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr);
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 120% at 8% -10%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 78%, transparent), color-mix(in srgb, var(--card) 40%, transparent));
+}
+
+/* Sudut-sudut siku ala panel instrumen: garis tipis, bukan ikon. */
+.ad-rk-hero::before,
+.ad-rk-hero::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  pointer-events: none;
+}
+
+.ad-rk-hero::before {
+  top: 9px;
+  right: 9px;
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 0 10px 0 0;
+}
+
+.ad-rk-hero::after {
+  bottom: 9px;
+  left: 9px;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0 0 0 10px;
+}
+
+.ad-rk-hero-isi {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ad-rk-kacamata {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.ad-rk-jarum {
+  width: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+}
+
+.ad-rk-hero h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+
+.ad-rk-hero h3 b {
+  font-weight: 700;
+  background: linear-gradient(96deg, var(--foreground), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ad-rk-hero-isi > p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  max-width: 58ch;
+}
+
+.ad-rk-chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.ad-rk-chip span {
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 82%, var(--primary));
+  white-space: nowrap;
+}
+
+.ad-rk-chip span[data-nada='tidak'] {
+  color: var(--destructive);
+  border-color: color-mix(in srgb, var(--destructive) 40%, transparent);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+.ad-rk-chip span[data-nada='ada'] {
+  color: color-mix(in srgb, var(--music-accent) 80%, var(--foreground));
+  border-color: color-mix(in srgb, var(--music-accent) 36%, transparent);
+  background: color-mix(in srgb, var(--music-accent) 10%, transparent);
+}
+
+.ad-rk-aksi {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ad-rk-taut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  padding: 7px 13px;
+  border-radius: 9px;
+  text-decoration: none;
+  color: var(--primary-foreground);
+  background: linear-gradient(120deg, var(--primary), color-mix(in srgb, var(--primary) 62%, var(--music-accent)));
+  box-shadow: 0 8px 22px -14px color-mix(in srgb, var(--primary) 90%, transparent);
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+
+.ad-rk-taut:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.ad-rk-taut.is-halus {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--secondary) 70%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.ad-rk-hero-kincin {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ad-rk-hero-kincin .ad-mini {
+  height: 100%;
+  min-height: 148px;
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+  background:
+    radial-gradient(120% 90% at 50% 30%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 68%),
+    color-mix(in srgb, var(--background) 55%, transparent);
+}
+
+.ad-rk-hero-kincin p {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+/* ── Kisi angka ────────────────────────────────────────────────────────── */
+.ad-rk-kisi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+}
+
+.ad-rk-kartu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 13px 11px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  text-decoration: none;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--card) 62%, transparent);
+  overflow: hidden;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.ad-rk-kartu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(150deg, transparent 58%, color-mix(in srgb, var(--primary) 12%, transparent));
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.ad-rk-kartu:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
+}
+
+.ad-rk-kartu:hover::after {
+  opacity: 1;
+}
+
+.ad-rk-kartu:focus-visible {
+  outline: 1.5px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.ad-rk-kartu-ikon {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.ad-rk-kartu b {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.4px;
+  color: color-mix(in srgb, var(--foreground) 88%, var(--primary));
+}
+
+.ad-rk-kartu-label {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.ad-rk-kartu-kaki {
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.ad-rk-kartu-garis {
+  display: block;
+  height: 3px;
+  margin: 7px 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary) 90%, transparent);
+  overflow: hidden;
+}
+
+.ad-rk-kartu-garis i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 55%, transparent), var(--primary));
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Kisi tanpa penyebut nyata hanya menampilkan jejak, bukan batang palsu. */
+.ad-rk-kartu-garis.is-kosong {
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--muted-foreground) 40%, transparent) 0 3px, transparent 3px 7px);
+}
+
+.ad-rk-kartu small {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+/* ── Dua kotak bawah ───────────────────────────────────────────────────── */
+.ad-rk-bawah {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 10px;
+}
+
+.ad-rk-kotak {
+  padding: 13px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+  min-width: 0;
+}
+
+.ad-rk-kotak h4 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.ad-rk-kotak h4 svg {
+  color: var(--primary);
+}
+
+.ad-rk-langkah {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ad-rk-langkah li a {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  text-decoration: none;
+  color: var(--foreground);
+  padding: 8px 10px 8px 9px;
+  border-radius: 9px;
+  border-left: 2px solid var(--border);
+  background: color-mix(in srgb, var(--secondary) 42%, transparent);
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.ad-rk-langkah li a:hover {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.ad-rk-langkah .is-wanti a {
+  border-left-color: color-mix(in srgb, var(--primary) 70%, transparent);
+}
+
+.ad-rk-langkah .is-galat a {
+  border-left-color: var(--destructive);
+  color: color-mix(in srgb, var(--destructive) 80%, var(--foreground));
+}
+
+.ad-rk-langkah .is-rapi a {
+  border-left-color: var(--music-accent);
+}
+
+.ad-rk-langkah .is-netral a,
+.ad-rk-langkah .is-netral {
+  color: var(--muted-foreground);
+}
+
+.ad-rk-pintasan {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 10px 14px;
+}
+
+.ad-rk-grup p {
+  margin: 0 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--primary) 70%, var(--muted-foreground));
+}
+
+.ad-rk-grup a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 7px;
+  margin: 0 -7px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  text-decoration: none;
+  color: var(--foreground);
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.ad-rk-grup a svg {
+  opacity: 0.7;
+}
+
+.ad-rk-grup a:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+
+/* Ikon kepala panel: kisi 2×2 dengan satu sel menyala. */
+.ad-rk-merek {
+  display: grid;
+  grid-template-columns: repeat(2, 7px);
+  gap: 3px;
+  margin-top: 2px;
+  flex: none;
+}
+
+.ad-rk-merek i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  border: 1px solid var(--primary);
+}
+
+.ad-rk-merek i:first-child {
+  background: var(--primary);
+}
+
+@media (max-width: 1080px) {
+  .ad-rk-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ad-rk-hero-kincin .ad-mini {
+    min-height: 132px;
+  }
+  .ad-rk-bawah {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

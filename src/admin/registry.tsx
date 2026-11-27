@@ -1,9 +1,10 @@
 import type { LucideIcon } from 'lucide-react';
-import { Database, Globe, ImageIcon, Info, LayoutGrid, Move3d, Music, Palette, ToggleRight, Type } from 'lucide-react';
+import { Database, Globe, ImageIcon, Info, LayoutDashboard, LayoutGrid, Move3d, Music, Palette, ToggleRight, Type } from 'lucide-react';
 import { PanelGerak } from './panels/gerak';
 import { PanelLetak } from './panels/tata-letak';
 import { PanelLagu, PanelGambar } from './panels/pustaka';
 import { PanelHalaman, PanelMenu, PanelTeks } from './panels/konten';
+import { PanelRingkas } from './panels/ringkas';
 import { PanelBasisData, PanelMeta, PanelTampilan } from './panels/situs';
 import type { ReactNode } from 'react';
 
@@ -15,7 +16,7 @@ import type { ReactNode } from 'react';
 export interface PanelDef {
   id: string;
   label: string;
-  grup: 'Konten' | 'Carousel' | 'Situs' | 'Perpustakaan';
+  grup: 'Konsol' | 'Konten' | 'Carousel' | 'Situs' | 'Perpustakaan';
   ikon: LucideIcon;
   petunjuk: string;
   /** draf = ikut tombol Simpan bersama; langsung = menulis sendiri per tindakan. */
@@ -24,6 +25,15 @@ export interface PanelDef {
 }
 
 export const PANEL: PanelDef[] = [
+  {
+    id: 'ringkas',
+    label: 'Ikhtisar',
+    grup: 'Konsol',
+    ikon: LayoutDashboard,
+    petunjuk: 'Angka nyata: teks, menu, foto, dan yang belum selesai',
+    jenis: 'draf',
+    render: () => <PanelRingkas />,
+  },
   {
     id: 'teks',
     label: 'Teks',
@@ -116,4 +126,4 @@ export const PANEL: PanelDef[] = [
   },
 ];
 
-export const GRUP: PanelDef['grup'][] = ['Konten', 'Carousel', 'Situs', 'Perpustakaan'];
+export const GRUP: PanelDef['grup'][] = ['Konsol', 'Konten', 'Carousel', 'Situs', 'Perpustakaan'];

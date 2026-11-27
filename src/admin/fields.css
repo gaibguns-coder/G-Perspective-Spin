@@ -368,3 +368,46 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* ── Sentuhan HUD pada tiap grup ─────────────────────────────────────────
+   Grup bidang adalah unit yang paling sering dilihat, jadi ia mendapat garis
+   rambut di tepi atas, jarum di depan judul, dan cahaya samar saat disentuh
+   kursor. Tidak ada ukuran yang berubah, jadi tinggi panel tetap seperti dulu. */
+.ad-grup {
+  position: relative;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 5%, transparent), transparent 44%),
+    color-mix(in srgb, var(--card) 58%, transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ad-grup::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 50%, transparent) 16%, transparent 74%);
+}
+
+.ad-grup:hover {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  box-shadow: 0 12px 32px -28px color-mix(in srgb, var(--primary) 95%, transparent);
+}
+
+.ad-grup-kepala {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 10%, transparent), color-mix(in srgb, var(--secondary) 45%, transparent) 58%);
+}
+
+.ad-grup-kepala h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ad-grup-kepala h3::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 15%, transparent));
+}

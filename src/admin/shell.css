@@ -5,6 +5,7 @@
  */
 
 .ad-ruang {
+  position: relative;
   display: flex;
   flex-direction: column;
   /* Selalu setinggi jendela, di semua lebar: isi panel yang menggulir, bukan dokumen,
@@ -458,6 +459,95 @@ div.ad-catat {
   color: var(--primary);
 }
 
+/* ── Ambience pintu masuk ───────────────────────────────────────────────── */
+.ad-pintu {
+  position: relative;
+  background:
+    radial-gradient(52% 40% at 50% 8%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
+    radial-gradient(46% 44% at 88% 92%, color-mix(in srgb, var(--music-accent) 12%, transparent), transparent 72%),
+    var(--background);
+}
+
+.ad-pintu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 44px,
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px) 0 0 / 44px 100%;
+  mask-image: radial-gradient(70% 60% at 50% 45%, rgb(0 0 0 / 85%), transparent 78%);
+}
+
+/* Kartu pintu: hairline atas + cincin radar di belakang lencana. */
+.ad-pintu-kartu {
+  position: relative;
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+  box-shadow: 0 30px 70px -46px color-mix(in srgb, var(--primary) 90%, transparent);
+}
+
+.ad-pintu-kartu::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 70%, transparent), transparent);
+}
+
+.ad-pintu-lencana {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+}
+
+.ad-pintu-lencana > span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--primary) 34%, transparent);
+}
+
+.ad-pintu-lencana > span + span {
+  inset: 9px;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--primary) 24%, transparent);
+  animation: ad-mutar 22s linear infinite;
+}
+
+@keyframes ad-mutar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-pintu-lencana > span + span {
+    animation: none;
+  }
+}
+
+.ad-pintu-kaki {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin: 2px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 10.5px;
+  letter-spacing: 0.4px;
+  color: var(--muted-foreground);
+}
+
+.ad-pintu-kaki b {
+  color: color-mix(in srgb, var(--foreground) 80%, var(--primary));
+  font-weight: 600;
+}
+
 /* ── Responsif: bilah jadi laci, kolom jadi satu ───────────────────────── */
 @media (min-width: 900px) {
   .ad-bilah {
@@ -521,3 +611,268 @@ div.ad-catat {
     display: none;
   }
 }
+
+/* ── Lapisan ambience ──────────────────────────────────────────────────────
+   Konsol sebelumnya hanya setinggi warna dasar, jadi area kosong terasa mati.
+   Dua lapisan ini menambahkan cahaya lembut dan kisi instrumen yang bergerak
+   sangat lambat; keduanya di belakang isi dan tidak menangkap pointer. */
+.ad-ruang::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 40% at 82% -8%, color-mix(in srgb, var(--primary) 17%, transparent), transparent 68%),
+    radial-gradient(44% 38% at 2% 106%, color-mix(in srgb, var(--music-accent) 13%, transparent), transparent 70%),
+    radial-gradient(30% 26% at 46% 52%, color-mix(in srgb, var(--primary) 6%, transparent), transparent 72%);
+}
+
+.ad-ruang::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(color-mix(in srgb, var(--foreground) 4.5%, transparent) 1px, transparent 1px) 0 0 / 100% 46px,
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 4.5%, transparent) 1px, transparent 1px) 0 0 / 46px 100%;
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 90%), rgb(0 0 0 / 12%) 58%, transparent 92%);
+  animation: ad-jelajah 26s linear infinite;
+}
+
+@keyframes ad-jelajah {
+  to {
+    background-position:
+      0 46px,
+      46px 0;
+  }
+}
+
+/* Isi harus berada di atas kedua lapisan itu. `.ad-atas` tidak ikut diubah agar
+   tetap sticky — ia sudah ber-z-index 30, jadi sudah di atas lapisan 0. */
+.ad-badan,
+.ad-simpan {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-ruang::after {
+    animation: none;
+  }
+}
+
+/* ── Kepala: garis hairline bercahaya ───────────────────────────────────── */
+.ad-atas::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 55%, transparent) 22%, color-mix(in srgb, var(--music-accent) 45%, transparent) 72%, transparent);
+  opacity: 0.65;
+}
+
+.ad-merek img {
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  box-shadow: 0 0 14px -6px color-mix(in srgb, var(--primary) 80%, transparent);
+}
+
+.ad-alur i {
+  color: var(--primary);
+  opacity: 0.55;
+}
+
+/* Titik status: berdenyut saat draf kotor, tenang saat sesuai database. */
+.ad-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ad-status-jarum {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--music-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--music-accent) 70%, transparent);
+}
+
+.ad-status.is-kotor .ad-status-jarum {
+  background: var(--primary);
+  animation: ad-denyut 1.9s ease-out infinite;
+}
+
+@keyframes ad-denyut {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ── Bilah kiri ──────────────────────────────────────────────────────────── */
+.ad-bilah {
+  border-right-color: color-mix(in srgb, var(--primary) 16%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 6%, transparent), transparent 34%),
+    color-mix(in srgb, var(--card) 42%, transparent);
+  scrollbar-width: thin;
+}
+
+.ad-bilah-grup h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ad-bilah-grup h2 em {
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 999px;
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.ad-bilah-grup button {
+  position: relative;
+}
+
+/* Jalur accent di tepi kiri baris yang sedang aktif. */
+.ad-bilah-grup button::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.ad-bilah-grup button[data-active='true']::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.ad-bilah-grup button[data-active='true'] {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.ad-bilah-kaki {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ad-akun {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 9px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.ad-akun-lencana {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
+}
+
+.ad-akun div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-akun b {
+  font-size: 11.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ad-akun small {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tiga titik pada pegangan geser supaya jelas bisa diseret. */
+.ad-pegang::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+  background: repeating-linear-gradient(180deg, var(--muted-foreground) 0 3px, transparent 3px 6px);
+  opacity: 0.45;
+}
+
+/* ── Isi ─────────────────────────────────────────────────────────────────── */
+.ad-utama {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 40%, transparent) transparent;
+}
+
+.ad-kepala h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.2px;
+}
+
+/* Kolom catatan sering sendirian di sisi kanan: jadikan tile, bukan teks melayang. */
+div.ad-catat {
+  border-left: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  border-radius: 0 12px 12px 0;
+  padding: 10px 12px;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--primary) 7%, transparent), transparent 60%),
+    color-mix(in srgb, var(--card) 46%, transparent);
+}
+
+.ad-kosong {
+  border: 1px dashed color-mix(in srgb, var(--primary) 34%, var(--border));
+  border-radius: 14px;
+  background:
+    radial-gradient(80% 120% at 50% 0%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 70%);
+}
+
+/* ── Bar Simpan ──────────────────────────────────────────────────────────── */
+.ad-simpan {
+  border-top-color: color-mix(in srgb, var(--primary) 22%, var(--border));
+}
+
+.ad-simpan::before {
+  content: '';
+  position: absolute;
+  inset: -1px 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 60%, transparent), transparent);
+}
+
