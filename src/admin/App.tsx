@@ -193,24 +193,27 @@ export function Konsol() {
             </p>
           )}
 
-          {pakaiDraf && (
-            <div className="ad-simpan">
-              <span className="ad-simpan-ket">
-                {kotor
-                  ? `${panel.label} diubah. Simpan agar terlihat semua pengunjung.`
-                  : 'Tidak ada perubahan pada draf konten.'}
-              </span>
-              <Button variant="outline" size="sm" disabled={simpanSedang || !kotor} onClick={keBawaan} title="Kembalikan seluruh panel ke bawaan aplikasi">
-                Bawaan
-              </Button>
-              <Button size="sm" disabled={simpanSedang || !kotor} onClick={() => void simpan()}>
-                {simpanSedang ? <Save className="size-4 animate-pulse" /> : <Save className="size-4" />}
-                {simpanSedang ? 'Menyimpan…' : 'Simpan semua'}
-              </Button>
-            </div>
-          )}
         </main>
       </div>
+
+      {/* Bar Simpan adalah kaki cangkang, bukan bagian yang ikut menggulir: di dalam
+          area gulir ia menutupi baris terakhir panel. */}
+      {pakaiDraf && (
+        <div className="ad-simpan">
+          <span className="ad-simpan-ket">
+            {kotor
+              ? `${panel.label} diubah. Simpan agar terlihat semua pengunjung.`
+              : 'Tidak ada perubahan pada draf konten.'}
+          </span>
+          <Button variant="outline" size="sm" disabled={simpanSedang || !kotor} onClick={keBawaan} title="Kembalikan seluruh panel ke bawaan aplikasi">
+            Bawaan
+          </Button>
+          <Button size="sm" disabled={simpanSedang || !kotor} onClick={() => void simpan()}>
+            {simpanSedang ? <Save className="size-4 animate-pulse" /> : <Save className="size-4" />}
+            {simpanSedang ? 'Menyimpan…' : 'Simpan semua'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

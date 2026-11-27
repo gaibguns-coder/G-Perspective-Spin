@@ -7,7 +7,11 @@
 .ad-ruang {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
+  /* Selalu setinggi jendela, di semua lebar: isi panel yang menggulir, bukan dokumen,
+     jadi konsol tidak pernah berhenti di tengah layar atau terpotong. */
+  height: 100svh;
+  min-height: 0;
+  overflow: hidden;
   background: var(--background);
   color: var(--foreground);
   font-size: 13px;
@@ -195,7 +199,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 16px 18px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 18px 22px;
 }
 
 /* Konsol mengisi lebar dan tinggi jendela: tidak ada batas tengah yang menyisakan
@@ -259,21 +265,17 @@ div.ad-catat {
   padding-left: 10px;
 }
 
-/* ── Bar Simpan ────────────────────────────────────────────────────────── */
+/* ── Bar Simpan ──────────────────────────────────────────────────────────
+   Kaki cangkang, bukan elemen sticky: sticky di dalam area gulir membuat
+   bar mengambang di atas baris terakhir panel sehingga isi terlihat terpotong. */
 .ad-simpan {
-  position: sticky;
-  bottom: 0;
-  z-index: 20;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 20px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
   background: color-mix(in srgb, var(--card) 92%, transparent);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 -6px 24px -18px rgb(0 0 0 / 80%);
 }
 
 .ad-simpan-ket {
@@ -379,20 +381,10 @@ div.ad-catat {
 
 /* ── Responsif: bilah jadi laci, kolom jadi satu ───────────────────────── */
 @media (min-width: 900px) {
-  /* Cangkang setinggi jendela: hanya area isi yang menggulir, kepala dan bilah diam. */
-  .ad-ruang {
-    height: 100svh;
-    min-height: 0;
-    overflow: hidden;
-  }
   .ad-bilah {
     display: flex;
     height: 100%;
     overflow-y: auto;
-  }
-  .ad-utama {
-    overflow-y: auto;
-    overscroll-behavior: contain;
   }
   .ad-utama > .ad-isi > .ad-2 {
     flex: 1;
@@ -413,6 +405,7 @@ div.ad-catat {
     bottom: 0;
     left: 0;
     z-index: 40;
+    overflow-y: auto;
     box-shadow: 8px 0 30px -20px rgb(0 0 0 / 90%);
   }
   /* Kepala hanya butuh tombol laci, logo, status, dan pintasan — teks panjang menyusut. */
@@ -432,6 +425,7 @@ div.ad-catat {
   }
   .ad-simpan {
     flex-wrap: wrap;
+    padding: 10px 12px;
   }
   .ad-simpan-ket {
     width: 100%;
