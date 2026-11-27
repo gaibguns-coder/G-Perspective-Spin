@@ -3,31 +3,15 @@
    src/styles.css agar galeri dan portofolio terlihat satu keluarga. */
 
 :root {
-  --latar: oklch(0.145 0.004 130);
+  --latar: #000000; /* Hitam pekat, satu bahasa dengan latar galeri. */
   --depan: oklch(0.94 0.005 120);
   --utama: oklch(0.84 0.18 225);
   --utama-depan: oklch(0.14 0.02 230);
-  --kotak: oklch(0.21 0.006 130);
+  --kotak: oklch(0.17 0.006 130);
   --redup: oklch(0.59 0.008 120);
   --batas: oklch(0.4 0.008 130);
   --cahaya: oklch(0.86 0.18 225 / 0.4);
   --lebar: 1040px;
-  /* Garis pembatas bercahaya, satu bahasa dengan galeri di src/styles.css:
-     inti paling terang di tengah, meredup ke kedua ujung, dan cahaya yang
-     menetes ke satu sisi supaya garisnya tidak terasa seperti penggaris. */
-  --nyala-inti: color-mix(in oklab, var(--utama) 52%, var(--depan));
-  --nyala-sisi: color-mix(in oklab, var(--utama) 70%, transparent);
-  --nyala-halo: color-mix(in oklab, var(--utama) 26%, transparent);
-  --nyala-mendatar: linear-gradient(
-    90deg,
-    transparent,
-    var(--nyala-sisi) 12%,
-    var(--nyala-inti) 50%,
-    var(--nyala-sisi) 88%,
-    transparent
-  );
-  --nyala-tiris-atas: radial-gradient(46% 100% at 50% 0%, var(--nyala-halo), transparent 76%);
-  --nyala-tiris-bawah: radial-gradient(46% 100% at 50% 100%, var(--nyala-halo), transparent 76%);
 }
 
 * {
@@ -42,9 +26,7 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(90rem 42rem at 50% -12rem, oklch(0.34 0.12 235 / 0.32), transparent 70%),
-    var(--latar);
+  background: var(--latar);
   color: var(--depan);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 16px;
@@ -91,10 +73,8 @@ a {
   align-items: center;
   gap: 18px;
   padding: 14px clamp(16px, 4vw, 40px);
-  background: oklch(0.145 0.004 130 / 0.86);
+  background: rgba(0, 0, 0, 0.86);
   backdrop-filter: blur(10px);
-  border-bottom: 1.5px solid transparent;
-  border-image: var(--nyala-mendatar) 1;
 }
 
 .lp-brand {
@@ -243,12 +223,8 @@ a {
 
 /* ── isi paket ──────────────────────────────────────────────────────────── */
 .lp-kotak {
-  border-top: 0;
   display: grid;
   gap: 28px;
-  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-kotak h2 {
@@ -324,12 +300,8 @@ a {
 
 /* ── karya ──────────────────────────────────────────────────────────────── */
 .lp-karya {
-  border-top: 0;
   display: grid;
   gap: 28px;
-  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-karya h2 {
@@ -348,10 +320,6 @@ a {
   font-size: 13.5px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 0;
-  background-image: var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 1px;
   opacity: 0.9;
 }
 
@@ -383,8 +351,6 @@ a {
 .lp-item figure {
   margin: 0;
   padding: 0;
-  border-bottom: 1.5px solid transparent;
-  border-image: var(--nyala-mendatar) 1;
   background: var(--kotak);
   aspect-ratio: 8 / 5;
   overflow: hidden;
@@ -470,11 +436,7 @@ html:not([data-admin='1']) [data-khusus-admin] {
 }
 
 .lp-arsip {
-  border-top: 0;
   padding-top: 24px;
-  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 20px, 100% 1.5px;
 }
 
 .lp-arsip h3 {
@@ -501,17 +463,9 @@ html:not([data-admin='1']) [data-khusus-admin] {
 }
 
 /* ── pertanyaan ─────────────────────────────────────────────────────────── */
-.lp-tanya {
-  border-top: 0;
-  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 26px, 100% 1.5px;
-}
-
+/* Baris pertanyaan tidak lagi dipisahkan garis: jaraknya yang diperlebar. */
 .lp-tanya details {
-  border-bottom: 1.5px solid transparent;
-  border-image: var(--nyala-mendatar) 1;
-  padding: 16px 0;
+  padding: 20px 0;
 }
 
 .lp-tanya summary {
@@ -547,11 +501,7 @@ html:not([data-admin='1']) [data-khusus-admin] {
 
 /* ── penutup ────────────────────────────────────────────────────────────── */
 .lp-penutup {
-  border-top: 0;
   text-align: center;
-  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-penutup p {
@@ -569,11 +519,7 @@ html:not([data-admin='1']) [data-khusus-admin] {
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  padding: 26px 16px 40px;
-  border-top: 0;
-  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
-  background-repeat: no-repeat;
-  background-size: 100% 22px, 100% 1.5px;
+  padding: 44px 16px 40px;
   font-size: 12.5px;
   color: var(--redup);
 }

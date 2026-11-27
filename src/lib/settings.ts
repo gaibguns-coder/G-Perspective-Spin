@@ -146,6 +146,12 @@ export interface Motion {
   /** Gelap kartu yang menghadap belakang, dalam persen. 0 berarti semua terangan. */
   fadePct: number;
   degPerSec: number;
+  /** Terang garis koridor di titik lenyap, dalam persen. */
+  corridorCorePct: number;
+  /** Jarak dari tengah (persen radius layar) sebelum garis koridor mulai pudar. */
+  corridorFadePct: number;
+  /** Terang garis koridor sisa di tepi layar, dalam persen. 0 berarti hilang. */
+  corridorEdgePct: number;
 }
 
 /** Geometri satu bagian halaman; menyala/matinya tetap berada di site_menus. */
@@ -296,6 +302,9 @@ export const DEFAULT_MOTION: Motion = {
   easeRate: LAJU_EASE,
   fadePct: 0,
   degPerSec: DEG_PER_DETIK,
+  corridorCorePct: 95,
+  corridorFadePct: 55,
+  corridorEdgePct: 14,
 };
 
 const blok = (label: string, hint: string): Block => ({ label, hint, x: 0, y: 0, scale: 1, z: 0 });
@@ -495,6 +504,9 @@ export function gabung(
   hasil.motion.easeRate = angka(motion?.ease_rate, 0.5, 12, DEFAULT_MOTION.easeRate, 2);
   hasil.motion.fadePct = angka(motion?.fade_pct, 0, 90, DEFAULT_MOTION.fadePct);
   hasil.motion.degPerSec = angka(motion?.deg_per_sec, 1, 30, DEFAULT_MOTION.degPerSec, 1);
+  hasil.motion.corridorCorePct = angka(motion?.corridor_core_pct, 20, 100, DEFAULT_MOTION.corridorCorePct);
+  hasil.motion.corridorFadePct = angka(motion?.corridor_fade_pct, 0, 100, DEFAULT_MOTION.corridorFadePct);
+  hasil.motion.corridorEdgePct = angka(motion?.corridor_edge_pct, 0, 100, DEFAULT_MOTION.corridorEdgePct);
 
   const urutanBlok: BlockKey[] = [];
   for (const row of Array.isArray(blockRows) ? (blockRows as Record<string, unknown>[]) : []) {
@@ -633,6 +645,24 @@ export async function saveContent(next: SiteContent): Promise<void> {
             ease_rate: next.motion.easeRate,
             fade_pct: next.motion.fadePct,
             deg_per_sec: next.motion.degPerSec,
+            updated_at: waktu,
+          },
+          { onConflict: 'id' },
+        ),
+    ],
+    [
+      // Kolom koridor diusahakan terpisah dari `gerak`: kalau migrasi 0007 belum
+      // dijalankan, hanya label "koridor" yang gagal dan seluruh pengaturan carousel
+      // lain tetap tersimpan.
+      'koridor',
+      supabase
+        .from('site_motion')
+        .upsert(
+          {
+            id: 1,
+            corridor_core_pct: next.motion.corridorCorePct,
+            corridor_fade_pct: next.motion.corridorFadePct,
+            corridor_edge_pct: next.motion.corridorEdgePct,
             updated_at: waktu,
           },
           { onConflict: 'id' },

@@ -383,3 +383,32 @@ describe('gambar contoh untuk bingkai yang belum diisi foto', () => {
     expect(contohTeks(1).judul).not.toBe(contohTeks(2).judul);
   });
 });
+
+describe('gradasi koridor yang dapat disetel dari konsol', () => {
+  it('pakai bawaan bila kolom migrasi 0007 belum ada', () => {
+    const tanpa = gabung([], [], null, { id: 1, speed: 1 }, null, []);
+    expect(tanpa.motion.corridorCorePct).toBe(DEFAULT_MOTION.corridorCorePct);
+    expect(tanpa.motion.corridorFadePct).toBe(DEFAULT_MOTION.corridorFadePct);
+    expect(tanpa.motion.corridorEdgePct).toBe(DEFAULT_MOTION.corridorEdgePct);
+  });
+
+  it('membaca angka dari baris site_motion dan mengikatnya ke rentang', () => {
+    const tersimpan = gabung([], [], null, {
+      corridor_core_pct: 80,
+      corridor_fade_pct: 40,
+      corridor_edge_pct: 5,
+    }, null, []);
+    expect(tersimpan.motion.corridorCorePct).toBe(80);
+    expect(tersimpan.motion.corridorFadePct).toBe(40);
+    expect(tersimpan.motion.corridorEdgePct).toBe(5);
+
+    const liar = gabung([], [], null, {
+      corridor_core_pct: 400,
+      corridor_fade_pct: -12,
+      corridor_edge_pct: 'tujuh',
+    }, null, []);
+    expect(liar.motion.corridorCorePct).toBe(100);
+    expect(liar.motion.corridorFadePct).toBe(0);
+    expect(liar.motion.corridorEdgePct).toBe(DEFAULT_MOTION.corridorEdgePct);
+  });
+});

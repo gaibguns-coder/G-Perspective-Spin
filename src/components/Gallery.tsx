@@ -388,7 +388,15 @@ export function Gallery() {
       )}
 
       <section className="scene" aria-label="Carousel gambar 3D" style={{ ...letak('scene'), ...gayaScene }}>
-        {tampil('corridor') && <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />}
+        {tampil('corridor') && (
+          <PerspectiveCorridor
+            theme={theme}
+            colorTheme={colorTheme}
+            terang={m.corridorCorePct}
+            pudar={m.corridorFadePct}
+            tepi={m.corridorEdgePct}
+          />
+        )}
         <div className="carousel-orbit" data-sumbu={tegak ? 'vertical' : 'horizontal'} style={gayaPanggung}>
           <div ref={ring} className="carousel-ring">
             {items.map((item, index) => (

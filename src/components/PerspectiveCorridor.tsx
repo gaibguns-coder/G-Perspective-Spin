@@ -4,14 +4,31 @@ import { paletteColors, type ColorThemeKey } from '@/lib/theme';
 interface CorridorProps {
   theme?: 'light' | 'dark';
   colorTheme?: ColorThemeKey;
+  /** Terang garis di titik lenyap, 0–100. */
+  terang?: number;
+  /** Persen radius yang tetap terang penuh sebelum garis mulai pudar, 0–100. */
+  pudar?: number;
+  /** Terang yang tersisa di tepi layar, 0–100. */
+  tepi?: number;
 }
 
 const FRAME_INTERVAL = 1000 / 30;
 const SPEED_PER_FRAME = 0.003;
 const NUM_RAYS = 56;
 const NUM_SLICES = 28;
+/** Bingkai kedalaman digambar pada kecerahan tetap; jarak diatur gradiennya saja. */
+const KECERAHAN_BINGKAI = 0.8;
 
-export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: CorridorProps) {
+const paksa = (nilai: number, bawah: number, atas: number) =>
+  Number.isFinite(nilai) ? Math.min(atas, Math.max(bawah, nilai)) : bawah;
+
+export function PerspectiveCorridor({
+  theme = 'dark',
+  colorTheme = 'cyan',
+  terang = 95,
+  pudar = 55,
+  tepi = 14,
+}: CorridorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -63,19 +80,23 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Gradien kedalaman: paling terang di titik lenyap, memudar sampai hilang
-      // di tepi layar, jadi kotak luar terlihat transparan dan tengah justru jelas.
+      // Gradien kedalaman: terang penuh sampai `pudar`% radius, baru memudar menuju
+      // `tepi`% di ujung. Karena bagian datarnya panjang, bingkai kotak di sekitar
+      // kartu tetap tegas dan hanya sapuan paling luar yang menjadi transparan.
+      const inti = paksa(terang, 20, 100) / 100;
+      const mulai = paksa(pudar, 0, 95) / 100;
+      const pinggir = (paksa(tepi, 0, 100) / 100) * inti;
       radialGradient = ctx.createRadialGradient(
         width / 2,
         height / 2,
         2,
         width / 2,
         height / 2,
-        Math.max(width, height) * 0.52,
+        Math.max(width, height) * 0.58,
       );
-      radialGradient.addColorStop(0, toRgba(line, 0.95));
-      radialGradient.addColorStop(0.55, toRgba(line, 0.45));
-      radialGradient.addColorStop(1, toRgba(line, 0));
+      radialGradient.addColorStop(0, toRgba(line, inti));
+      radialGradient.addColorStop(mulai, toRgba(line, inti));
+      radialGradient.addColorStop(1, toRgba(line, pinggir));
     };
 
     const render = (timestamp: number) => {
@@ -116,19 +137,18 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Bingkai kedalaman yang bergerak ke arah penonton. Gradiennya membuat
-      // bingkai besar di tepi nyaris tak terlihat dan yang kecil di tengah tegas.
+      // Bingkai kedalaman yang bergerak ke arah penonton. Kecerahannya sengaja
+      // tetap — yang mengatur jauh-dekat hanyalah gradien di atas.
       ctx.strokeStyle = radialGradient ?? colors.line;
+      ctx.globalAlpha = KECERAHAN_BINGKAI;
       for (let i = 0; i < NUM_SLICES; i++) {
         const z = ((i - zOffset + NUM_SLICES) % NUM_SLICES) / NUM_SLICES;
         const scale = Math.pow(z, 2.2) * 1.6;
         if (scale <= 0.001) continue;
 
-        const alpha = 0.12 + Math.pow(1 - z, 1.8) * 0.78;
         const boxW = width * scale;
         const boxH = height * scale;
 
-        ctx.globalAlpha = alpha;
         ctx.strokeRect(vx - boxW / 2, vy - boxH / 2, boxW, boxH);
       }
       ctx.globalAlpha = 1;
@@ -168,7 +188,7 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       resizeObserver.disconnect();
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [theme, colorTheme]);
+  }, [theme, colorTheme, terang, pudar, tepi]);
 
   return (
     <canvas

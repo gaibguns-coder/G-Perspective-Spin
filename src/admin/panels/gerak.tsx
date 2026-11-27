@@ -190,6 +190,42 @@ export function PanelGerak() {
             />
           </Grup>
 
+          <Grup
+            judul="Gradasi latar koridor"
+            petunjuk="Atur sendiri seberapa cepat garis perspektif dan bingkai kotak memudar. Semua angka disimpan sebagai satu baris di site_motion."
+          >
+            <Geser
+              label="Terang di titik lenyap"
+              petunjuk="Kecerahan garis paling tengah. 100 berarti penuh, 20 berarti kabur sejak dari pusat."
+              min={20}
+              max={100}
+              value={m.corridorCorePct}
+              bawaan={DEFAULT_MOTION.corridorCorePct}
+              satuan="%"
+              onChange={corridorCorePct => gerakBaru({ corridorCorePct })}
+            />
+            <Geser
+              label="Jarak sebelum mulai pudar"
+              petunjuk="Sebagian radius layar yang tetap terang penuh. Naikkan bila bingkai kotak ingin terlihat jelas lebih lama."
+              min={0}
+              max={100}
+              value={m.corridorFadePct}
+              bawaan={DEFAULT_MOTION.corridorFadePct}
+              satuan="%"
+              onChange={corridorFadePct => gerakBaru({ corridorFadePct })}
+            />
+            <Geser
+              label="Terang sisa di tepi layar"
+              petunjuk="0 berarti tepi benar-benar transparan; 100 berarti tidak ada transparansi sama sekali."
+              min={0}
+              max={100}
+              value={m.corridorEdgePct}
+              bawaan={DEFAULT_MOTION.corridorEdgePct}
+              satuan="%"
+              onChange={corridorEdgePct => gerakBaru({ corridorEdgePct })}
+            />
+          </Grup>
+
           <Grup judul="Preset" petunjuk="Menimpa angka di atas dengan susunan yang sudah dites.">
             <div className="ad-preset">
               <Sparkles className="size-3.5 text-primary" />

@@ -19,7 +19,7 @@ npm run dev               # galeri di http://localhost:5175/ dan konsol di http:
 1. Buat project Supabase, lalu buka **SQL Editor**.
 2. Jalankan isi `supabase/migrations/0001_init.sql` sekali. Skrip ini membuat tabel `gallery_items`, `songs`, `user_roles`, fungsi `has_role`, policy RLS, dua bucket penyimpanan (`gallery-images`, `songs`), dan 15 slot gambar kosong.
 3. Jalankan isi `supabase/migrations/0003_site_content.sql` untuk tabel konten tampilan: `site_texts` (satu baris per teks), `site_menus` (satu baris per menu), `site_appearance`, `site_motion`, dan `site_info`. Skrip ini juga mengisi benih dan menghapus `site_settings` bila masih kosong.
-4. Jalankan isi `supabase/migrations/0004_carousel_layout.sql` untuk tabel `site_blocks` (geseran `x`/`y`, `scale`, `z`, dan urutan tiap bagian) sekaligus kolom geometri baru pada `site_motion`: `orientation` (horizontal/vertical), `perspective`, `stage_pct`, `radius_pct`, `hover_pct`, `ease_rate`, `fade_pct`, `deg_per_sec`, dan `view_angle` yang kini boleh negatif (melihat dari bawah). Tanpa migrasi ini panel **Carousel** dan **Tata letak** tetap terbuka, tetapi nilainya hanya tersimpan di peramban.
+4. Jalankan isi `supabase/migrations/0004_carousel_layout.sql` untuk tabel `site_blocks` (geseran `x`/`y`, `scale`, `z`, dan urutan tiap bagian) sekaligus kolom geometri baru pada `site_motion`: `orientation` (horizontal/vertical), `perspective`, `stage_pct`, `radius_pct`, `hover_pct`, `ease_rate`, `fade_pct`, `deg_per_sec`, dan `view_angle` yang kini boleh negatif (melihat dari bawah). Tanpa migrasi ini panel **Carousel** dan **Tata letak** tetap terbuka, tetapi nilainya hanya tersimpan di peramban. Lanjutkan dengan `supabase/migrations/0005_gallery_image_url.sql` (kolom `image_url` pada `gallery_items`), `0006_hover_ms.sql` (lama sorot kartu), dan `0007_corridor_fade.sql` — tiga kolom `corridor_core_pct`, `corridor_fade_pct`, `corridor_edge_pct` pada `site_motion` yang menjadi sumber slider **Carousel → Gradasi latar koridor**. Selama 0007 belum dijalankan, koridor tetap tampil dengan bawaan (95 / 55 / 14) dan hanya label "koridor" yang muncul di pesan gagal menyimpan.
 5. Buat akun admin lewat **Authentication → Users → Add user → Create new user** (jangan lupa matikan "Confirm email" atau gunakan jalur ini supaya akun langsung terkonfirmasi).
 6. Ambil UUID akun tersebut, lalu jalankan:
 
@@ -58,7 +58,7 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `public/sw.js` | Cache inti agar situs bisa dipasang dan dibuka luring |
 | `src/styles.css` | Token tema light/dark + palet + seluruh gaya galeri |
 | `portofolio.html` | Halaman portofolio: empat karya tayang + dua proyek internal, FAQ, JSON-LD |
-| `src/portofolio.css` | Gaya halaman portofolio, menyalin token warna galeri |
+| `src/portofolio.css` | Gaya halaman portofolio: latar hitam polos, tanpa garis pembatas bercahaya |
 | `src/portofolio.ts` | Pengisi tahun di kaki halaman portofolio (satu-satunya skrip di sana) |
 | `public/karya/*.png` | Tangkapan layar asli tiap karya (800×500, 6-bit) untuk kartu portofolio |
 | `tools/png.cjs` | Pustaka dekode/resample/encode PNG murni Node tanpa dependensi luar |
@@ -113,7 +113,7 @@ Persyaratannya sudah dipenuhi: `manifest.webmanifest`, ikon 192px dan 512px, HTT
 
 ## Halaman portofolio
 
-`portofolio.html` adalah halaman karya yang dibangun dari entri kedua di `vite.config.ts` (`utama` + `portofolio`). Seluruh isinya — judul, kartu karya, FAQ, dan data terstruktur JSON-LD (`ItemList` + `FAQPage`) — ditulis langsung di HTML, jadi mesin cari dan pratinjau tautan membacanya tanpa menjalankan JavaScript; `src/portofolio.ts` hanya mengisi tahun di kaki halaman dan `src/portofolio.css` menyalin token warna galeri.
+`portofolio.html` adalah halaman karya yang dibangun dari entri kedua di `vite.config.ts` (`utama` + `portofolio`). Seluruh isinya — judul, kartu karya, FAQ, dan data terstruktur JSON-LD (`ItemList` + `FAQPage`) — ditulis langsung di HTML, jadi mesin cari dan pratinjau tautan membacanya tanpa menjalankan JavaScript; `src/portofolio.ts` hanya mengisi tahun di kaki halaman dan `src/portofolio.css` memakai token warnanya sendiri di atas latar `#000000`; antarbagian dipisahkan oleh jarak, bukan garis, sama seperti halaman galeri yang sekarang polos.
 
 Tautan pada kartu hanya dipasang ke situs yang benar-benar menjawab HTTP 200. Editor Pola Jahit tidak dipasang sebagai kartu karena pekerjaannya belum selesai; tangkapan layarnya disimpan di `tools/arsip/` supaya bisa dipasang lagi nanti. G-Perspective AI Web Builder serta G-Tutorial ditulis sebagai proyek internal tanpa tautan karena belum tayang — situs G-Tutorial sudah dihapus (`lifecycle: deleted`, menjawab HTTP 404), jadi tidak boleh ditautkan sampai tayang lagi dan benar-benar bisa dibuka.
 
