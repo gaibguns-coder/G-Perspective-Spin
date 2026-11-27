@@ -47,7 +47,8 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `src/admin/fields.tsx` | `Grup`, `Baris`, `Sakelar`, `Geser`, `Pilihan`, `Isian` |
 | `src/admin/panels/` | Isi tiap menu: teks, menu, carousel, tata letak, tampilan, metadata, basis data, gambar, lagu |
 | `src/admin/MiniKarousel.tsx` | Pratinjau ring 3D kecil yang ikut angka yang sedang disunting |
-| `ceopusat/index.html` + `main.tsx` | Entri build kedua untuk alamat `/ceopusat/` (tanpa `.html`) |
+| `src/admin/boot.tsx` | Titik masuk konsol: judul, `noindex`, palet awal, lalu render |
+| `src/lib/routes.ts` | Kenali `/ceopusat/` dari dokumen root sehingga alamatnya tanpa `.html` |
 | `src/components/ui/Switch.tsx` | Toggle bar untuk mengaktifkan menu |
 | `src/lib/gallery.ts` | Lapisan data Supabase (baca, simpan, hapus, unggah) |
 | `src/lib/settings.ts` | Baca/tulis enam tabel konten + preferensi perangkat |
@@ -67,7 +68,7 @@ Tabel konten: `site_texts`, `site_menus`, `site_blocks`, `site_appearance`, `sit
 
 ## Konsol `/ceopusat/`
 
-Halaman pengelolaan berdiri sendiri di alamat `/ceopusat/` (entri build ketiga di `vite.config.ts`, berkasnya `ceopusat/index.html` → `dist/ceopusat/index.html`, jadi tanpa `.html` dan tidak bisa dirayapi mesin cari: `noindex, nofollow`).
+Pengelolaan berada di alamat sendiri, **`/ceopusat/`** — tanpa `.html`. Host statis hanya mengembalikan `index.html` untuk alamat yang diakhiri garis miring ( `/ceopusat` dan `dist/ceopusat/index.html` keduanya balas 404), jadi bukan entri build ketiga: `src/main.tsx` melihat `location.pathname` lewat `ruteKonsol()` lalu memuat `src/admin/boot.tsx` sebagai chunk terpisah. Pengunjung galeri tetap tidak ikut menanggung kode pengelola, dan halaman konsol memasang `noindex, nofollow` sendiri sehingga tidak dirayapi.
 
 - **Satu daftar, semua menu.** `src/admin/registry.tsx` memegang `PANEL`; bilah kiri, judul, isi, dan apakah bar Simpan muncul diambil dari daftar itu. Menambah menu = menambah satu entri, bukan menyalin tombol tab.
 - **Empat kelompok:** Konten (Teks, Menu & bagian), Carousel (Carousel, Tata letak), Situs (Tampilan, Metadata, Basis data), Perpustakaan (Gambar galeri, Musik latar).

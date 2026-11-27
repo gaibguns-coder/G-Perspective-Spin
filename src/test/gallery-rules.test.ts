@@ -12,6 +12,7 @@ import {
 } from '@/lib/motion';
 import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
+import { ruteKonsol } from '@/lib/routes';
 import {
   DEFAULT_MOTION,
   DEFAULT_BLOCKS,
@@ -252,5 +253,16 @@ describe('perlambatan hover dan pemasangan aplikasi', () => {
     for (const peranti of ['ios', 'android', 'chrome', 'safari', 'firefox', 'lain'] as const) {
       expect(langkahPemasangan(peranti).length, peranti).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('alamat konsol', () => {
+  it('hanya /ceopusat dan /ceopusat/ yang dialihkan dari galeri', () => {
+    expect(ruteKonsol('/ceopusat/')).toBe(true);
+    expect(ruteKonsol('/ceopusat')).toBe(true);
+    expect(ruteKonsol('/')).toBe(false);
+    expect(ruteKonsol('/portofolio.html')).toBe(false);
+    expect(ruteKonsol('/ceopusat/gerak')).toBe(false);
+    expect(ruteKonsol('/situs/ceopusat/')).toBe(false);
   });
 });

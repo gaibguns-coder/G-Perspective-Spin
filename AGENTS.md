@@ -12,7 +12,7 @@
 
 ## Konsol pengelolaan
 
-- Pengelolaan berada di halaman sendiri, `ceopusat/index.html` (entri build ketiga), sehingga alamatnya `/ceopusat/` tanpa `.html`. Komponennya hidup di `src/admin/`; `src/components/GalleryAdmin.tsx` dan `ContentAdmin.tsx` sudah dihapus dan tidak boleh dihidupkan kembali.
+- Pengelolaan berada di alamat `/ceopusat/` tanpa `.html`. Jangan diubah menjadi entri build sendiri: host hanya mem-fallback alamat berakhiran garis miring ke `index.html`, sehingga `ceopusat/index.html` maupun `/ceopusat` balas 404. Yang benar adalah `ruteKonsol()` di `src/lib/routes.ts` memutuskan tampilan di `src/main.tsx`, lalu `src/admin/boot.tsx` dimuat sebagai chunk terpisah (jangan mengimpor `admin/` secara statis ke main). Komponennya hidup di `src/admin/`; `src/components/GalleryAdmin.tsx` dan `ContentAdmin.tsx` sudah dihapus dan tidak boleh dihidupkan kembali.
 - `src/admin/registry.tsx` adalah satu-satunya daftar menu. Menambah bagian berarti menambah satu entri `PANEL` (id, label, grup, ikon, petunjuk, `jenis`, render) — jangan menulis tombol tab atau percabangan `switch` baru di `App.tsx`, dan jangan mengulang judul/sisi kiri di tempat lain.
 - `jenis: 'draf'` berarti panel ikut draf bersama dan bar Simpan muncul; `jenis: 'langsung'` berarti panel menulis sendiri (perpustakaan, basis data). Simpan seluruh tabel konten dalam satu `saveContent()` supaya keadaan tidak separuh.
 - Gerbang autentikasi hanya satu: `src/admin/store.tsx` memakai `supabase.auth.getSession()` untuk membedakan pengunjung tanpa akun (formulir masuk) dari akun tanpa peran (`bukan-admin`), lalu `checkAdminAccess()`. UI bukan pagar — tulis tetap ditolak RLS.

@@ -1,6 +1,7 @@
 import { Component, StrictMode, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Gallery } from './components/Gallery';
+import { ruteKonsol } from './lib/routes';
 import './styles.css';
 
 interface BoundaryState {
@@ -32,13 +33,19 @@ class AppBoundary extends Component<{ children: ReactNode }, BoundaryState> {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AppBoundary>
-      <Gallery />
-    </AppBoundary>
-  </StrictMode>,
-);
+// Dua tampilan berbagi satu dokumen: alamat /ceopusat/ memuat kerangka konsol sebagai
+// chunk terpisah, sehingga pengunjung galeri tidak ikut menanggung kode pengelola.
+if (ruteKonsol(location.pathname)) {
+  void import('./admin/boot').then(m => m.bootKonsol());
+} else {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <AppBoundary>
+        <Gallery />
+      </AppBoundary>
+    </StrictMode>,
+  );
+}
 
 // Hanya versi hasil build: pada dev server, cache service worker akan menahan modul
 // lama dan mengganggu hot reload.
