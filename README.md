@@ -1,6 +1,6 @@
 # G-Perspective-Spin
 
-Galeri gambar 3D Carousel yang berputar kanan/kiri dengan kecepatan yang bisa diatur, koridor perspektif berbasis canvas, panel samping pengaturan (terang/gelap, palet, pasang aplikasi Chrome, layar penuh), pemutar musik latar yang bisa digeser, dan konsol pengelolaan di alamat terpisah **`/ceopusat/`**: CRUD gambar, CRUD musik, serta sunting seluruh teks, menu, tampilan, dan gerak dari database.
+Galeri gambar 3D Carousel yang berputar kanan/kiri dengan kecepatan yang bisa diatur, koridor perspektif berbasis canvas, panel samping pengaturan (terang/gelap, palet, pasang aplikasi Chrome, layar penuh), pemutar musik latar yang bisa digeser, dan konsol pengelolaan di alamat terpisah **`/ceopusat`**: CRUD gambar, CRUD musik, serta sunting seluruh teks, menu, tampilan, dan gerak dari database.
 
 Dibangun sebagai SPA **Vite + React 19 + TypeScript + Tailwind v4** dengan **Supabase** sebagai penyimpanan data dan berkas, sehingga hasil sunting admin terlihat oleh semua pengunjung.
 
@@ -9,10 +9,10 @@ Dibangun sebagai SPA **Vite + React 19 + TypeScript + Tailwind v4** dengan **Sup
 ```sh
 npm install
 cp .env.example .env      # lalu isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY
-npm run dev               # galeri di http://localhost:5175/ dan konsol di http://localhost:5175/ceopusat/
+npm run dev               # galeri di http://localhost:5175/ dan konsol di http://localhost:5175/ceopusat
 ```
 
-`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website (konsol: tambahkan `/ceopusat/`) — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px, 512px, 180px untuk apple-touch-icon) sebagai ikon instalasi.
+`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website (konsol: tambahkan `/ceopusat`) — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px, 512px, 180px untuk apple-touch-icon) sebagai ikon instalasi.
 
 ## Menyiapkan Supabase
 
@@ -48,7 +48,7 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `src/admin/panels/` | Isi tiap menu: teks, menu, carousel, tata letak, tampilan, metadata, basis data, gambar, lagu |
 | `src/admin/MiniKarousel.tsx` | Pratinjau ring 3D kecil yang ikut angka yang sedang disunting |
 | `src/admin/boot.tsx` | Titik masuk konsol: judul, `noindex`, palet awal, lalu render |
-| `src/lib/routes.ts` | Kenali `/ceopusat/` dari dokumen root sehingga alamatnya tanpa `.html` |
+| `src/lib/routes.ts` | Kenali `/ceopusat` dari dokumen root sehingga alamatnya tanpa `.html` |
 | `src/components/ui/Switch.tsx` | Toggle bar untuk mengaktifkan menu |
 | `src/lib/gallery.ts` | Lapisan data Supabase (baca, simpan, hapus, unggah) |
 | `src/lib/settings.ts` | Baca/tulis enam tabel konten + preferensi perangkat |
@@ -66,18 +66,26 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 
 Tabel konten: `site_texts`, `site_menus`, `site_blocks`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis dari konsol. `site_blocks` hanya menyimpan geometri; menyala/matinya bagian tetap milik `site_menus.enabled` supaya tidak ada dua kebenaran untuk hal yang sama.
 
-## Konsol `/ceopusat/`
+## Konsol `/ceopusat`
 
-Pengelolaan berada di alamat sendiri, **`/ceopusat`** — tanpa `.html` dan tanpa garis miring penutup. Konsol bukan entri build ketiga: saat dirilis sebagai aplikasi SPA (`prepare_site` dengan `spa: true`), host mengembalikan `index.html` untuk alamat yang tidak dikenali, lalu `src/main.tsx` mengenali `/ceopusat` lewat `ruteKonsol()` dan memuat `src/admin/boot.tsx` sebagai chunk terpisah. Pengunjung galeri tetap tidak menanggung kode pengelola, dan konsol memasang `noindex, nofollow` sendiri sehingga tidak dirayapi.
+Pengelolaan berada di alamat sendiri, **`/ceopusat`** — tanpa `.html`. Konsol bukan entri build ketiga: `src/main.tsx` mengenali alamat itu lewat `ruteKonsol()` dan memuat `src/admin/boot.tsx` sebagai chunk terpisah, sehingga pengunjung galeri tetap tidak menanggung kode pengelola. Konsol memasang `noindex, nofollow` sendiri sehingga tidak dirayapi.
 
-Tanpa `spa: true` alamat ini balas 404 — host hanya mem-fallback path yang diakhiri garis miring, sehingga `/ceopusat/` pun jatuh ke dokumen galeri.
+Perilaku host yang sudah diukur pada rilis ini (`prepare_site` dengan `spa: true`):
+
+| Alamat | Balasan host |
+| --- | --- |
+| `/ceopusat/` | 200 — `index.html` (fallback hanya untuk path berakhiran garis miring) |
+| `/ceopusat` | **404** — `spa: true` tidak mem-fallback path tanpa garis miring |
+| `/portofolio.html`, `/index.html`, `/` | 200 seperti adanya |
+
+Karena itu `public/sw.js` menjembatani bentuk tanpa garis miring: permintaan navigasi yang dibalas bukan-200 ditukar dengan `index.html` dari cache, jadi alamat tetap terbaca `/ceopusat` dan tidak ada halaman 404 di layar. Konsekuensinya, service worker harus sudah terpasang lebih dulu — masuk dari halaman galeri (tautan **Konsol**), atau buka sekali `/ceopusat/` pada peramban yang benar-benar baru, setelah itu `/ceopusat` selalu bisa dipakai langsung dan bisa di-bookmark.
 
 - **Satu daftar, semua menu.** `src/admin/registry.tsx` memegang `PANEL`; bilah kiri, judul, isi, dan apakah bar Simpan muncul diambil dari daftar itu. Menambah menu = menambah satu entri, bukan menyalin tombol tab.
 - **Empat kelompok:** Konten (Teks, Menu & bagian), Carousel (Carousel, Tata letak), Situs (Tampilan, Metadata, Basis data), Perpustakaan (Gambar galeri, Musik latar).
 - **Dua jenis panel.** Panel `draf` menyunting salinan bersama dan baru tayang setelah tombol **Simpan**; panel `langsung` (gambar, lagu, basis data) menulis sendiri per tindakan.
 - **Pratinjau hidup.** Palet dan tema yang sedang disunting langsung terlihat di konsol, dan panel Carousel menampilkan ring mini yang ikut angka yang diketik.
 - **Gerbang tunggal.** `store.tsx` memeriksa sesi lewat `supabase.auth.getSession()` lalu peran lewat RPC `has_role`; tanpa sesi ditampilkan formulir masuk, bukan pesan "bukan admin". Menulis tetap dijaga RLS, bukan disembunyikan UI.
-- **Mengisi layar, tidak dipotong.** Cangkang setinggi jendela: kepala dan bilah diam, hanya area isi yang menggulir, bar Simpan mendarat di dasar, dan kolom isi tidak lagi dibatasi 1080px. Kanvas 16∶10 pada panel **Tata letak** dibatasi dari tinggi layar (`max-width: calc(min(52svh, 560px) * 1.6)`) supaya tidak terpotong di jendela pendek.
+- **Mengisi layar, tidak dipotong.** Cangkang setinggi jendela pada semua lebar (`height: 100svh`, `overflow: hidden`): kepala dan bilah diam, hanya `.ad-utama` yang menggulir, dan bar Simpan adalah kaki cangkang di luar area gulir — bukan `position: sticky`, yang dulu mengambang di atas baris terakhir panel. Di bawah 900px bilah menjadi laci. Kanvas 16∶10 pada panel **Tata letak** dibatasi dari tinggi layar (`max-width: calc(min(52svh, 560px) * 1.6)`) supaya tidak terpotong di jendela pendek.
 - Saat **Tata letak**, bagian digeser di kanvas perkiraan 16∶10; yang disimpan hanyalah pergeseran (`x`/`y` dalam persen, `scale`, `z`) dari tempat semula, jadi layar dengan tinggi berbeda tetap rapi.
 
 ## Pasang sebagai aplikasi

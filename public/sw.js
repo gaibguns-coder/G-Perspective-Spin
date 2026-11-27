@@ -2,7 +2,7 @@
    pemasangan aplikasi (ikon sendiri di HP/desktop) dan situs tetap terbuka tanpa jaringan.
    Hanya berkas dari alamat situs ini yang disimpan; gambar dan musik dari Supabase
    selalu diambil segar agar suntingan admin langsung terlihat. */
-const NAMA_CACHE = 'gspin-v5';
+const NAMA_CACHE = 'gspin-v6';
 const INTI = [
   '/',
   '/index.html',
@@ -54,7 +54,14 @@ self.addEventListener('fetch', event => {
     const kunci = url.pathname;
     event.respondWith(
       fetch(permintaan)
-        .then(jawaban => {
+        .then(async jawaban => {
+          if (!jawaban.ok && kunci !== '/index.html') {
+            // Host hanya mem-fallback alamat berakhiran garis miring, jadi /ceopusat
+            // dibalas 404. Dokumen root memutuskan sendiri apakah ia menampilkan
+            // galeri atau konsol, jadi 404 itu ditukar dengan index tanpa 404 di layar.
+            const cadangan = (await caches.match('/index.html')) || (await fetch('/index.html').catch(() => null));
+            if (cadangan && cadangan.ok) return cadangan;
+          }
           const salinan = jawaban.clone();
           void caches.open(NAMA_CACHE).then(cache => cache.put(kunci, salinan));
           return jawaban;
