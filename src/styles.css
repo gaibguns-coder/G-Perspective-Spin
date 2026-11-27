@@ -129,7 +129,6 @@ textarea {
 .gallery-header {
   height: 90px;
   margin: 0 5%;
-  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -185,6 +184,7 @@ h1 {
   font-weight: 500;
   margin: 12px 0 10px;
   text-wrap: balance;
+  text-shadow: 0 0 38px color-mix(in oklab, var(--card-glow) 65%, transparent);
 }
 .intro-subtitle {
   color: var(--muted-foreground);
@@ -197,13 +197,20 @@ h1 {
 .notice {
   margin: 18px auto 0;
   width: min(720px, 88%);
-  border: 1px dashed var(--border);
-  border-left: 3px solid var(--primary);
+  border: 1px dashed color-mix(in oklab, var(--primary) 32%, var(--border));
   background: var(--secondary);
+  background-image: var(--nyala-tiris-kanan), var(--nyala-tegak);
+  background-repeat: no-repeat;
+  background-size:
+    20px 100%,
+    3px 100%;
+  background-position:
+    0 0,
+    0 0;
   color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.6;
-  padding: 12px 16px;
+  padding: 12px 16px 12px 22px;
   border-radius: 6px;
 }
 
@@ -260,9 +267,9 @@ h1 {
     0 0 30px color-mix(in oklch, var(--primary) 25%, transparent),
     var(--shadow);
   transition:
-    transform 0.9s cubic-bezier(0.33, 1, 0.68, 1),
-    box-shadow 0.9s ease,
-    border-color 0.9s ease;
+    transform var(--lama-sorot, 1400ms) cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow var(--lama-sorot, 1400ms) ease,
+    border-color var(--lama-sorot, 1400ms) ease;
   cursor: pointer;
   padding: 0;
   overflow: hidden;
@@ -277,10 +284,6 @@ h1 {
     0 0 50px var(--card-glow),
     var(--shadow);
   z-index: 10;
-  transition:
-    transform 1.1s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 1.1s ease,
-    border-color 0.9s ease;
 }
 .gallery-tile > svg {
   width: 30px;
@@ -301,8 +304,8 @@ h1 {
   opacity: 0;
   transform: translateY(-4px);
   transition:
-    opacity 0.45s ease,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity calc(var(--lama-sorot, 1400ms) * 0.45) ease,
+    transform calc(var(--lama-sorot, 1400ms) * 0.55) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tile-corner {
   position: absolute;
@@ -313,8 +316,8 @@ h1 {
   opacity: 0;
   transform: translateY(-4px);
   transition:
-    opacity 0.45s ease,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity calc(var(--lama-sorot, 1400ms) * 0.45) ease,
+    transform calc(var(--lama-sorot, 1400ms) * 0.55) cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Penanda nomor dan ikon melebar baru terlihat ketika kartu disorot: keadaan
    diamnya harus gambar penuh, judul dan deskripsi dibaca setelah diklik. */
@@ -389,9 +392,10 @@ h1 {
   color: var(--primary);
 }
 .control-divider {
-  width: 1px;
+  width: 1.5px;
   height: 38px;
-  background: var(--border);
+  background: var(--nyala-tegak);
+  box-shadow: 0 0 12px 1px var(--nyala-halo);
 }
 .speed-control {
   width: 180px;
@@ -414,7 +418,6 @@ h1 {
 .gallery-footer {
   margin: 0 5%;
   padding: 22px 0;
-  border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -483,10 +486,22 @@ a.settings-button:hover {
   stroke-width: 1;
 }
 .viewer-details {
-  border-top: 1px solid var(--border);
+  /* Pemisah digambar sebagai latar: elemen ini punya max-height + overflow, jadi
+     pseudo-elemen yang menempel di tepi akan terpotong oleh bidang gulungnya. */
+  border-top: 0;
   padding-top: 20px;
   max-height: 25svh;
   overflow: auto;
+  background-image: var(--nyala-tiris-atas), var(--nyala-sorot-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 22px,
+    100% 5px,
+    100% 1.5px;
+  background-position:
+    50% 0,
+    50% 0,
+    50% 0;
 }
 .viewer-details h2 {
   font-family: var(--font-display);
@@ -603,7 +618,11 @@ a.settings-button:hover {
   display: flex;
   flex-direction: column;
   background: var(--background);
-  border-left: 1px solid var(--border);
+  background-image: var(--nyala-tiris-kanan), var(--nyala-tegak);
+  background-repeat: no-repeat;
+  background-size:
+    26px 100%,
+    1.5px 100%;
   box-shadow: var(--shadow);
   transform: translateX(100%);
   transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0.28s;
@@ -618,7 +637,17 @@ a.settings-button:hover {
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 0;
+  background-image: var(--nyala-tiris-bawah), var(--nyala-sorot-bawah), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 20px,
+    100% 5px,
+    100% 1.5px;
+  background-position:
+    50% 100%,
+    50% 100%,
+    50% 100%;
 }
 .panel-heading h2 {
   font-family: var(--font-display);
@@ -833,11 +862,21 @@ a.settings-button:hover {
   text-wrap: balance;
 }
 .hal-isi {
-  border-top: 1px solid var(--border);
+  border-top: 0;
   padding-top: 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  background-image: var(--nyala-tiris-atas), var(--nyala-sorot-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 20px,
+    100% 5px,
+    100% 1.5px;
+  background-position:
+    50% 0,
+    50% 0,
+    50% 0;
 }
 .hal-isi p {
   margin: 0;
@@ -899,9 +938,19 @@ a.settings-button:hover {
   align-items: center;
   gap: 9px;
   padding: 14px 20px;
-  border-top: 1px solid var(--border);
+  border-top: 0;
   font-size: 11px;
   color: var(--muted-foreground);
+  background-image: var(--nyala-tiris-atas), var(--nyala-sorot-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 20px,
+    100% 5px,
+    100% 1.5px;
+  background-position:
+    50% 0,
+    50% 0,
+    50% 0;
 }
 
 /* ── Tuas (toggle bar) ──────────────────────────────────────────────────── */
@@ -988,6 +1037,43 @@ a.settings-button:hover {
    Layer ini hanya dekorasi: angka yang tampil di atasnya selalu hitungan nyata
    (jumlah karya, jumlah halaman, laju). `isolation` membuat kedua pseudo-elemen
    di bawah tetap berada di belakang konten tanpa menimbun stacking context baru. */
+/* ── Garis pembatas bercahaya ───────────────────────────────────────────────
+   Semua pemisah di halaman publik digambar seperti garis cakrawala pada gambar
+   acuan: inti paling terang di tengah, meredup ke kedua ujung, plus cahaya yang
+   menetes ke satu sisi. Digambar lewat background-image berlapis supaya bisa
+   dipakai pada elemen yang pseudo-elemennya sudah terpakai, dan intinya dicampur
+   --foreground agar tetap terlihat pada tema terang maupun gelap. */
+:root {
+  --nyala-inti: color-mix(in oklab, var(--primary) 42%, var(--foreground));
+  --nyala-sisi: color-mix(in oklab, var(--primary) 72%, transparent);
+  --nyala-halo: color-mix(in oklab, var(--primary) 30%, transparent);
+  --nyala-mendatar: linear-gradient(
+    90deg,
+    transparent,
+    var(--nyala-sisi) 12%,
+    var(--nyala-inti) 50%,
+    var(--nyala-sisi) 88%,
+    transparent
+  );
+  --nyala-tegak: linear-gradient(
+    180deg,
+    transparent,
+    var(--nyala-sisi) 14%,
+    var(--nyala-inti) 50%,
+    var(--nyala-sisi) 86%,
+    transparent
+  );
+  /* Cahaya yang menguap dari garis ke arah konten. */
+  --nyala-tiris-bawah: radial-gradient(46% 100% at 50% 0%, var(--nyala-halo), transparent 76%);
+  --nyala-tiris-atas: radial-gradient(46% 100% at 50% 100%, var(--nyala-halo), transparent 76%);
+  /* Titik terang yang sengaja tidak di tengah, supaya garisnya tidak terasa seperti penggaris. */
+  --nyala-sorot-bawah: radial-gradient(22% 100% at 63% 0%, color-mix(in oklab, var(--primary) 44%, transparent), transparent 72%);
+  --nyala-sorot-atas: radial-gradient(22% 100% at 37% 100%, color-mix(in oklab, var(--primary) 44%, transparent), transparent 72%);
+  /* Untuk garis tegak: cahaya menetes ke samping, bukan ke bawah. */
+  --nyala-tiris-kiri: linear-gradient(to left, var(--nyala-halo), transparent 72%);
+  --nyala-tiris-kanan: linear-gradient(to right, var(--nyala-halo), transparent 72%);
+}
+
 .gallery-app {
   position: relative;
   isolation: isolate;
@@ -1070,15 +1156,221 @@ a.settings-button:hover {
   width: 8px;
   background-image: repeating-linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--border) 85%, transparent) 0 1px,
+    color-mix(in srgb, var(--primary) 62%, transparent) 0 1px,
     transparent 1px 15px
   );
+  opacity: 0.5;
+  filter: drop-shadow(0 0 5px var(--nyala-halo));
 }
 .gallery-rel.is-kiri {
   left: 0;
 }
 .gallery-rel.is-kanan {
   right: 0;
+}
+
+/* ── Lapisan ekspresi ───────────────────────────────────────────────────────
+   Ramai tapi berjenjang: tiap lapisan punya wilayah sendiri. Debu dan sapuan
+   cahaya menempel di tepi, mistar hanya menandai batas atas, dan rel merek
+   berdiri di kolom yang kosong. Tidak ada satu pun yang menutupi angka atau
+   foto, jadi semuanya boleh mati bersama bingkai lewat tuja yang sama. */
+.gallery-bingkai {
+  overflow: hidden;
+}
+.bingkai-debu {
+  position: absolute;
+  inset: -6% 0;
+  background-image:
+    radial-gradient(circle, color-mix(in oklab, var(--primary) 62%, transparent) 0.9px, transparent 1.2px),
+    radial-gradient(circle, color-mix(in oklab, var(--primary) 40%, transparent) 0.7px, transparent 1px);
+  background-size:
+    190px 240px,
+    130px 170px;
+  -webkit-mask-image: radial-gradient(72% 58% at 50% 44%, #000 6%, transparent 76%);
+  mask-image: radial-gradient(72% 58% at 50% 44%, #000 6%, transparent 76%);
+  opacity: 0.36;
+  animation: gs-debu 34s linear infinite;
+}
+@keyframes gs-debu {
+  to {
+    background-position:
+      -95px -240px,
+      130px -170px;
+  }
+}
+.bingkai-sapu {
+  position: absolute;
+  top: -22%;
+  bottom: -22%;
+  left: 0;
+  width: 32%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 15%, transparent) 44%,
+    color-mix(in oklab, var(--foreground) 7%, transparent) 54%,
+    transparent
+  );
+  filter: blur(16px);
+  opacity: 0.6;
+  transform: translateX(-140%) skewX(-8deg);
+  animation: gs-sapu 16s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+@keyframes gs-sapu {
+  0% {
+    transform: translateX(-140%) skewX(-8deg);
+  }
+  58% {
+    transform: translateX(360%) skewX(-8deg);
+  }
+  100% {
+    transform: translateX(360%) skewX(-8deg);
+  }
+}
+.bingkai-mistar {
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 9px;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in srgb, var(--primary) 48%, transparent) 0 1px,
+    transparent 1px 26px
+  );
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 24%, #000 76%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 24%, #000 76%, transparent);
+  opacity: 0.42;
+}
+/* Jarum yang merayap di atas mistar: satu-satunya bagian yang bergerak cepat. */
+.bingkai-mistar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--nyala-inti);
+  box-shadow: 0 0 10px 1px var(--nyala-halo);
+  animation: gs-jarum 11s ease-in-out infinite alternate;
+}
+@keyframes gs-jarum {
+  to {
+    left: 100%;
+  }
+}
+.bingkai-merek {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-height: 44%;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 4.5px;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--muted-foreground) 78%, var(--primary));
+  text-shadow: 0 0 12px var(--card-glow);
+  opacity: 0.66;
+}
+
+/* Kompas di bawah kincin: lingkaran putus-putus dengan sapuan radar pelan. */
+.stage-kompas {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5%;
+  width: min(640px, 84%);
+  height: 116px;
+  transform: translateX(-50%);
+  border: 1px dashed color-mix(in oklab, var(--primary) 38%, transparent);
+  border-radius: 50%;
+  opacity: 0.34;
+}
+.stage-kompas::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 72%,
+    color-mix(in oklab, var(--primary) 46%, transparent) 88%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(closest-side, transparent 0 58%, #000 60%);
+  mask-image: radial-gradient(closest-side, transparent 0 58%, #000 60%);
+  animation: gs-kompas 9s linear infinite;
+}
+@keyframes gs-kompas {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Titik tanda setelah judul menahankan mata di baris pertama. */
+.judul-titik {
+  display: inline-block;
+  width: 0.24em;
+  height: 0.24em;
+  margin-left: 0.16em;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 16px 2px var(--card-glow);
+  vertical-align: baseline;
+  animation: gs-napas 2.8s ease-in-out infinite;
+}
+/* Dua goresan miring mengapit judul: kesan bergerak, bukan garis penggaris. */
+.gallery-intro > div {
+  position: relative;
+}
+.gallery-intro > div::before,
+.gallery-intro > div::after {
+  content: '';
+  position: absolute;
+  top: 0.5em;
+  width: clamp(24px, 6vw, 78px);
+  height: 1.5px;
+  background: var(--nyala-mendatar);
+  opacity: 0.8;
+}
+.gallery-intro > div::before {
+  left: -10px;
+  transform: skewY(-9deg);
+}
+.gallery-intro > div::after {
+  right: -10px;
+  transform: skewY(9deg);
+}
+
+/* Napas kartu: tiap slot menyalakan cahaya dari bawah pada fase berbeda, jadi
+   kincin terasa hidup walau putarannya seragam. Angka indeks dikirim dari JSX. */
+.gallery-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    122% 88% at 50% 120%,
+    color-mix(in oklab, var(--primary) 34%, transparent),
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  animation: gs-napas-kartu 6.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.53s);
+}
+@keyframes gs-napas-kartu {
+  50% {
+    opacity: 0.6;
+  }
+}
+.gallery-tile:hover::before,
+.gallery-tile:focus-visible::before {
+  animation-play-state: paused;
+  opacity: 0.55;
 }
 
 .gallery-header {
@@ -1090,15 +1382,17 @@ a.settings-button:hover {
   left: 0;
   right: 0;
   bottom: -1px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklab, var(--primary) 65%, transparent) 22%,
-    color-mix(in oklab, var(--primary) 65%, transparent) 78%,
-    transparent
-  );
-  opacity: 0.55;
+  height: 22px;
+  background-image: var(--nyala-tiris-bawah), var(--nyala-sorot-bawah), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 22px,
+    100% 5px,
+    100% 1.5px;
+  background-position:
+    50% 0,
+    50% 0,
+    50% 0;
 }
 .header-caption {
   display: inline-flex;
@@ -1148,7 +1442,7 @@ a.settings-button:hover {
   gap: 5px;
   min-width: 96px;
   padding: 11px 18px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in oklab, var(--primary) 20%, var(--border));
   background: color-mix(in srgb, var(--card) 60%, transparent);
   transition:
     border-color 0.35s ease,
@@ -1194,10 +1488,11 @@ a.settings-button:hover {
   color: var(--muted-foreground);
 }
 .gallery-meter-garis {
-  width: 1px;
+  width: 1.5px;
   align-self: center;
-  height: 34px;
-  background: linear-gradient(to bottom, transparent, var(--border), transparent);
+  height: 40px;
+  background: var(--nyala-tegak);
+  box-shadow: 0 0 14px 1px var(--nyala-halo);
 }
 
 /* Bingkai panggung. */
@@ -1243,14 +1538,15 @@ a.settings-button:hover {
   left: 0;
   right: 0;
   bottom: 13%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklab, var(--primary) 55%, transparent) 25%,
-    color-mix(in oklab, var(--primary) 55%, transparent) 75%,
-    transparent
-  );
+  height: 2px;
+  background-image: var(--nyala-sorot-bawah), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 6px,
+    100% 1.5px;
+  background-position:
+    50% 0,
+    50% 0;
 }
 .stage-cakrawala::after {
   content: '';
@@ -1262,6 +1558,19 @@ a.settings-button:hover {
   transform: translateX(-50%);
   background: radial-gradient(58% 100% at 50% 100%, var(--card-glow), transparent 72%);
   opacity: 0.5;
+}
+/* Pantulan tipis di bawah garis cakrawala, seperti cahaya yang menggenang. */
+.stage-cakrawala::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3px;
+  height: 26px;
+  background-image: var(--nyala-tiris-bawah);
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  transform: scaleY(-1);
 }
 .stage-tik {
   position: absolute;
@@ -1367,9 +1676,14 @@ a.settings-button:hover {
   margin: 20px auto 34px;
   width: min(720px, 84%);
   padding: 15px 24px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in oklab, var(--primary) 26%, var(--border));
   background: color-mix(in srgb, var(--card) 48%, transparent);
-  opacity: 0.5;
+  opacity: 0.72;
+  box-shadow: 0 18px 44px -34px var(--card-glow);
+  transition:
+    opacity 0.5s ease,
+    border-color 0.5s ease,
+    box-shadow 0.5s ease;
 }
 .playback::before,
 .playback::after {
@@ -1393,7 +1707,9 @@ a.settings-button:hover {
 }
 .playback:hover,
 .playback:focus-within {
-  border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+  opacity: 1;
+  border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+  box-shadow: 0 0 40px -16px var(--card-glow);
 }
 .speed-value {
   font-family: var(--font-display);
@@ -1410,15 +1726,17 @@ a.settings-button:hover {
   top: -1px;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklab, var(--primary) 60%, transparent) 30%,
-    color-mix(in oklab, var(--primary) 60%, transparent) 70%,
-    transparent
-  );
-  opacity: 0.5;
+  height: 22px;
+  background-image: var(--nyala-tiris-atas), var(--nyala-sorot-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size:
+    100% 22px,
+    100% 5px,
+    100% 1.5px;
+  background-position:
+    50% 100%,
+    50% 100%,
+    50% 100%;
 }
 .footer-merek {
   display: flex;
@@ -1428,11 +1746,14 @@ a.settings-button:hover {
 }
 .footer-tag {
   font-style: normal;
-  padding-left: 10px;
-  border-left: 1px solid var(--border);
+  padding-left: 11px;
+  border-left: 0;
   font-size: 9px;
   letter-spacing: 1.4px;
   text-transform: uppercase;
+  background-image: var(--nyala-tegak);
+  background-repeat: no-repeat;
+  background-size: 1.5px 100%;
 }
 .footer-titik {
   width: 3px;
@@ -1469,24 +1790,57 @@ a.settings-button:hover {
   .stage-hud {
     inset: 4px 4%;
   }
-  .stage-petunjuk {
-    bottom: 34px;
-    font-size: 8.5px;
-    letter-spacing: 1.1px;
-  }
   .playback {
     padding: 12px 14px;
   }
   .footer-tag {
     display: none;
   }
+  /* Aturan `.header-caption { display: inline-flex }` di bawah tertimbang sama
+     dengan blok responsif lama, jadi penyembunyiannya harus diulang di sini. */
+  .header-caption {
+    display: none;
+  }
+  .header-portfolio {
+    padding: 5px 8px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  /* Ponsel tidak punya kursor, jadi petunjuk "gerakkan kursor" hanya memakan
+     tempat dan terpotong di tepi kiri panggung. */
+  .stage-petunjuk {
+    display: none;
+  }
+  /* Ponsel tidak punya tepi kosong: rel, mistar, dan kompas disimpan dulu supaya
+     foto tetap satu-satunya yang penuh di layar. */
+  .bingkai-merek,
+  .bingkai-mistar,
+  .stage-kompas {
+    display: none;
+  }
+  .bingkai-debu {
+    opacity: 0.24;
+  }
+  .bingkai-sapu {
+    width: 46%;
+    opacity: 0.4;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .gallery-app::after,
   .header-kedip.is-jalan,
-  .footer-kedip {
+  .footer-kedip,
+  .bingkai-debu,
+  .bingkai-sapu,
+  .bingkai-mistar::after,
+  .stage-kompas::after,
+  .judul-titik,
+  .gallery-tile::before {
     animation: none;
+  }
+  .bingkai-sapu {
+    display: none;
   }
 }
 

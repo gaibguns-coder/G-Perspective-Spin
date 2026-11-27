@@ -2,7 +2,7 @@
 //
 //   node tools/gambar.cjs kecil <sumber.png> <tujuan.png> [lebar=800] [bit=8]
 //   node tools/gambar.cjs koridor <tujuan.png> <lebar> <tinggi> [bit=6]
-//   node tools/gambar.cjs kartu <tujuan.png> <bit> <k1.png> <k2.png> <k3.png> <k4.png>
+//   node tools/gambar.cjs kartu <tujuan.png> <bit> <k1.png> [k2..k4]
 //
 // koridor menggambar terowongan perspektif dengan garis — dipakai untuk kartu
 // G-Perspective-Spin karena tangkapan layar situsnya masih menampilkan galeri kosong.
@@ -90,10 +90,25 @@ if (perintah === 'kecil') {
   const lembar = kanvas(W, H, [9, 12, 19]);
   const kolom = Math.round((W - 2 * tepi - jarak) / 2);
   const baris = Math.round((H - 2 * tepi - jarak) / 2);
-  sumber.slice(0, 4).forEach((jalur, i) => {
-    const x = tepi + (i % 2) * (kolom + jarak);
-    const y = tepi + Math.floor(i / 2) * (baris + jarak);
-    salin(lembar, penuhi(bacaPng(jalur), kolom, baris, 0.5), x, y);
+  const daftar = sumber.slice(0, 4);
+  // Tiga karya: dua kartu di atas dan satu kartu melebar di bawah, supaya tidak
+  // ada sel kosong yang terlihat seperti gambar yang gagal dimuat.
+  const tata =
+    daftar.length === 3
+      ? [
+          { x: tepi, y: tepi, w: kolom, h: baris },
+          { x: tepi + kolom + jarak, y: tepi, w: kolom, h: baris },
+          { x: tepi, y: tepi + baris + jarak, w: W - 2 * tepi, h: baris },
+        ]
+      : daftar.map((_, i) => ({
+          x: tepi + (i % 2) * (kolom + jarak),
+          y: tepi + Math.floor(i / 2) * (baris + jarak),
+          w: kolom,
+          h: baris,
+        }));
+  daftar.forEach((jalur, i) => {
+    const kotak = tata[i];
+    salin(lembar, penuhi(bacaPng(jalur), kotak.w, kotak.h, 0.5), kotak.x, kotak.y);
   });
   const ukuran = tulisPng(lembar, tujuan, bit);
   console.log(`kartu ${W}x${H} (${kolom}x${baris} per sel) -> ${tujuan} ${(ukuran / 1024).toFixed(0)} kB`);

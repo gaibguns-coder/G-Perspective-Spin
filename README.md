@@ -115,7 +115,7 @@ Persyaratannya sudah dipenuhi: `manifest.webmanifest`, ikon 192px dan 512px, HTT
 
 `portofolio.html` adalah halaman karya yang dibangun dari entri kedua di `vite.config.ts` (`utama` + `portofolio`). Seluruh isinya — judul, kartu karya, FAQ, dan data terstruktur JSON-LD (`ItemList` + `FAQPage`) — ditulis langsung di HTML, jadi mesin cari dan pratinjau tautan membacanya tanpa menjalankan JavaScript; `src/portofolio.ts` hanya mengisi tahun di kaki halaman dan `src/portofolio.css` menyalin token warna galeri.
 
-Tautan pada kartu hanya dipasang ke situs yang benar-benar menjawab HTTP 200. Editor Pola Jahit diberi label "perlu akun" karena situs itu memang privat (401), dan G-Perspective AI Web Builder serta G-Tutorial ditulis sebagai proyek internal tanpa tautan karena belum tayang.
+Tautan pada kartu hanya dipasang ke situs yang benar-benar menjawab HTTP 200. Editor Pola Jahit tidak dipasang sebagai kartu karena pekerjaannya belum selesai; tangkapan layarnya disimpan di `tools/arsip/` supaya bisa dipasang lagi nanti. G-Perspective AI Web Builder serta G-Tutorial ditulis sebagai proyek internal tanpa tautan karena belum tayang — situs G-Tutorial sudah dihapus (`lifecycle: deleted`, menjawab HTTP 404), jadi tidak boleh ditautkan sampai tayang lagi dan benar-benar bisa dibuka.
 
 Sebelum halaman ini dipakai promosi:
 
@@ -123,7 +123,8 @@ Sebelum halaman ini dipakai promosi:
 - Galeri 3D masih menampilkan "Galeri belum memiliki gambar" sampai foto asli diunggah dari halaman admin. Kartu pertama sengaja memakai ilustrasi koridor (`public/karya/galeri-3d.png`) karena tangkapan layar situsnya masih kosong — begitu foto terpasang, ganti gambar itu dengan screenshot asli.
 - Gambar kartu dibuat ulang dari tangkapan layar 1440×900 dengan perkakas sendiri:
   `node tools/gambar.cjs kecil sumber.png public/karya/nama.png 800 6` lalu
-  `node tools/gambar.cjs kartu public/og-portofolio.png 6 public/karya/galeri-3d.png public/karya/deconstruction-store.png public/karya/harvest-days.png public/karya/pola-jahit.png`
+  `node tools/gambar.cjs kartu public/og-portofolio.png 6 public/karya/galeri-3d.png public/karya/deconstruction-store.png public/karya/harvest-days.png`
+  Tiga sumber ditata dua kartu di atas dan satu kartu melebar di bawah; empat sumber memakai kisi 2×2.
 - Jangan menambahkan angka harga, jumlah klien, atau rating yang tidak bisa dibuktikan. FAQ sengaja tidak mencantumkan harga karena belum ada daftar tarif yang disepakati.
 
 ## Aturan teknis

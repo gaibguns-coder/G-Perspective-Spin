@@ -12,6 +12,22 @@
   --batas: oklch(0.4 0.008 130);
   --cahaya: oklch(0.86 0.18 225 / 0.4);
   --lebar: 1040px;
+  /* Garis pembatas bercahaya, satu bahasa dengan galeri di src/styles.css:
+     inti paling terang di tengah, meredup ke kedua ujung, dan cahaya yang
+     menetes ke satu sisi supaya garisnya tidak terasa seperti penggaris. */
+  --nyala-inti: color-mix(in oklab, var(--utama) 52%, var(--depan));
+  --nyala-sisi: color-mix(in oklab, var(--utama) 70%, transparent);
+  --nyala-halo: color-mix(in oklab, var(--utama) 26%, transparent);
+  --nyala-mendatar: linear-gradient(
+    90deg,
+    transparent,
+    var(--nyala-sisi) 12%,
+    var(--nyala-inti) 50%,
+    var(--nyala-sisi) 88%,
+    transparent
+  );
+  --nyala-tiris-atas: radial-gradient(46% 100% at 50% 0%, var(--nyala-halo), transparent 76%);
+  --nyala-tiris-bawah: radial-gradient(46% 100% at 50% 100%, var(--nyala-halo), transparent 76%);
 }
 
 * {
@@ -77,7 +93,8 @@ a {
   padding: 14px clamp(16px, 4vw, 40px);
   background: oklch(0.145 0.004 130 / 0.86);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--batas);
+  border-bottom: 1.5px solid transparent;
+  border-image: var(--nyala-mendatar) 1;
 }
 
 .lp-brand {
@@ -226,9 +243,12 @@ a {
 
 /* ── isi paket ──────────────────────────────────────────────────────────── */
 .lp-kotak {
-  border-top: 1px solid var(--batas);
+  border-top: 0;
   display: grid;
   gap: 28px;
+  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-kotak h2 {
@@ -245,7 +265,8 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 1px;
   margin: 0;
-  background: var(--batas);
+  /* Celah 1px di antara sel inilah yang menjadi garis pembatasnya. */
+  background: color-mix(in oklab, var(--utama) 30%, var(--batas));
   border: 1px solid var(--batas);
 }
 
@@ -303,9 +324,12 @@ a {
 
 /* ── karya ──────────────────────────────────────────────────────────────── */
 .lp-karya {
-  border-top: 1px solid var(--batas);
+  border-top: 0;
   display: grid;
   gap: 28px;
+  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-karya h2 {
@@ -324,7 +348,11 @@ a {
   font-size: 13.5px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px dashed var(--batas);
+  border-top: 0;
+  background-image: var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  opacity: 0.9;
 }
 
 .lp-jaring {
@@ -336,16 +364,27 @@ a {
 .lp-item {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--batas);
+  border: 1px solid color-mix(in oklab, var(--utama) 20%, var(--batas));
   border-radius: 14px;
   overflow: hidden;
   background: linear-gradient(180deg, var(--kotak), transparent);
+  transition:
+    border-color 0.5s ease,
+    box-shadow 0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-item:hover {
+  border-color: color-mix(in oklab, var(--utama) 55%, var(--batas));
+  box-shadow: 0 0 42px -18px var(--cahaya);
+  transform: translateY(-3px);
 }
 
 .lp-item figure {
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid var(--batas);
+  border-bottom: 1.5px solid transparent;
+  border-image: var(--nyala-mendatar) 1;
   background: var(--kotak);
   aspect-ratio: 8 / 5;
   overflow: hidden;
@@ -431,8 +470,11 @@ html:not([data-admin='1']) [data-khusus-admin] {
 }
 
 .lp-arsip {
-  border-top: 1px dashed var(--batas);
+  border-top: 0;
   padding-top: 24px;
+  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 20px, 100% 1.5px;
 }
 
 .lp-arsip h3 {
@@ -460,11 +502,15 @@ html:not([data-admin='1']) [data-khusus-admin] {
 
 /* ── pertanyaan ─────────────────────────────────────────────────────────── */
 .lp-tanya {
-  border-top: 1px solid var(--batas);
+  border-top: 0;
+  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-tanya details {
-  border-bottom: 1px solid var(--batas);
+  border-bottom: 1.5px solid transparent;
+  border-image: var(--nyala-mendatar) 1;
   padding: 16px 0;
 }
 
@@ -501,8 +547,11 @@ html:not([data-admin='1']) [data-khusus-admin] {
 
 /* ── penutup ────────────────────────────────────────────────────────────── */
 .lp-penutup {
-  border-top: 1px solid var(--batas);
+  border-top: 0;
   text-align: center;
+  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 26px, 100% 1.5px;
 }
 
 .lp-penutup p {
@@ -521,7 +570,10 @@ html:not([data-admin='1']) [data-khusus-admin] {
   justify-content: center;
   gap: 10px;
   padding: 26px 16px 40px;
-  border-top: 1px solid var(--batas);
+  border-top: 0;
+  background-image: var(--nyala-tiris-atas), var(--nyala-mendatar);
+  background-repeat: no-repeat;
+  background-size: 100% 22px, 100% 1.5px;
   font-size: 12.5px;
   color: var(--redup);
 }

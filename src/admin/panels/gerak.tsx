@@ -10,10 +10,10 @@ import type { Motion } from '@/lib/settings';
  * punya jalan pulang bila hasil suntingan terasa berlebihan.
  */
 const PRESET: { nama: string; petunjuk: string; nilai: Partial<Motion> }[] = [
-  { nama: 'Lembut', petunjuk: 'Putaran lambat, kartu belakang sedikit meredup.', nilai: { orientation: 'horizontal', speed: 0.6, degPerSec: 5, easeRate: 2.2, hoverPct: 30, fadePct: 22, viewAngle: 12, perspective: 1900, stagePct: 100, radiusPct: 105 } },
-  { nama: 'Rapi', petunjuk: 'Persis bawaan aplikasi.', nilai: { orientation: 'horizontal', speed: 1, degPerSec: 8, easeRate: 3.2, hoverPct: 18, fadePct: 0, viewAngle: 17, perspective: 1600, stagePct: 100, radiusPct: 100 } },
-  { nama: 'Dramatis', petunjuk: 'Sudut curam dari atas, perspektif dekat, belakang gelap.', nilai: { orientation: 'horizontal', speed: 0.85, degPerSec: 6.5, easeRate: 2.6, hoverPct: 8, fadePct: 55, viewAngle: 32, perspective: 900, stagePct: 110, radiusPct: 130 } },
-  { nama: 'Menara', petunjuk: 'Kincin berdiri tegak: kartu naik dari bawah ke atas.', nilai: { orientation: 'vertical', speed: 0.9, degPerSec: 7, easeRate: 3, hoverPct: 15, fadePct: 40, viewAngle: 0, perspective: 1300, stagePct: 92, radiusPct: 118 } },
+  { nama: 'Lembut', petunjuk: 'Putaran lambat, kartu belakang sedikit meredup.', nilai: { orientation: 'horizontal', speed: 0.6, degPerSec: 5, easeRate: 2.2, hoverPct: 30, hoverMs: 2000, fadePct: 22, viewAngle: 12, perspective: 1900, stagePct: 100, radiusPct: 105 } },
+  { nama: 'Rapi', petunjuk: 'Persis bawaan aplikasi.', nilai: { orientation: 'horizontal', speed: 1, degPerSec: 8, easeRate: 3.2, hoverPct: 18, hoverMs: 1400, fadePct: 0, viewAngle: 17, perspective: 1600, stagePct: 100, radiusPct: 100 } },
+  { nama: 'Dramatis', petunjuk: 'Sudut curam dari atas, perspektif dekat, belakang gelap.', nilai: { orientation: 'horizontal', speed: 0.85, degPerSec: 6.5, easeRate: 2.6, hoverPct: 8, hoverMs: 1000, fadePct: 55, viewAngle: 32, perspective: 900, stagePct: 110, radiusPct: 130 } },
+  { nama: 'Menara', petunjuk: 'Kincin berdiri tegak: kartu naik dari bawah ke atas.', nilai: { orientation: 'vertical', speed: 0.9, degPerSec: 7, easeRate: 3, hoverPct: 15, hoverMs: 1700, fadePct: 40, viewAngle: 0, perspective: 1300, stagePct: 92, radiusPct: 118 } },
 ];
 
 export function PanelGerak() {
@@ -156,6 +156,17 @@ export function PanelGerak() {
               bawaan={DEFAULT_MOTION.hoverPct}
               satuan="%"
               onChange={hoverPct => gerakBaru({ hoverPct })}
+            />
+            <Geser
+              label="Lama kartu membesar saat disorot"
+              petunjuk="Waktu transisi membesar dan mengecilnya kartu, dalam milidetik. Makin besar makin mengambang."
+              min={200}
+              max={3000}
+              step={50}
+              value={m.hoverMs}
+              bawaan={DEFAULT_MOTION.hoverMs}
+              satuan="ms"
+              onChange={hoverMs => gerakBaru({ hoverMs })}
             />
             <Geser
               label="Kelandaian kurva"

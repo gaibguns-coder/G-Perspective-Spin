@@ -2,7 +2,7 @@
    pemasangan aplikasi (ikon sendiri di HP/desktop) dan situs tetap terbuka tanpa jaringan.
    Hanya berkas dari alamat situs ini yang disimpan; gambar dan musik dari Supabase
    selalu diambil segar agar suntingan admin langsung terlihat. */
-const NAMA_CACHE = 'gspin-v8';
+const NAMA_CACHE = 'gspin-v9';
 const INTI = [
   '/',
   '/index.html',
@@ -16,7 +16,6 @@ const INTI = [
   '/karya/galeri-3d.png',
   '/karya/deconstruction-store.png',
   '/karya/harvest-days.png',
-  '/karya/pola-jahit.png',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',

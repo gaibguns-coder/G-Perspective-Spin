@@ -91,7 +91,10 @@ export function Gallery() {
   // Angka admin masuk ke variabel CSS, bukan ke properti transform langsung, supaya
   // skala bawaan per lebar layar di styles.css tetap berlaku sebagai dasar.
   const gayaPanggung = { '--tilik': `${-m.viewAngle}deg`, '--panggung': String(m.stagePct / 100) } as CSSProperties;
-  const gayaScene = { '--perspektif': String(m.perspective / PERSPECTIVE_DASAR) } as CSSProperties;
+  const gayaScene = {
+    '--perspektif': String(m.perspective / PERSPECTIVE_DASAR),
+    '--lama-sorot': `${m.hoverMs}ms`,
+  } as CSSProperties;
   const letak = (key: BlockKey) => gayaBlok(blokOf(content, key));
 
   const reload = useCallback(async () => {
@@ -292,6 +295,10 @@ export function Gallery() {
       {/* Bingkai HUD: sudut, rel, dan cakrawala digambar CSS supaya tidak menambah
           teks yang harus disunting admin. Tuasnya ada di menu "Bingkai HUD". */}
       <div className="gallery-bingkai" aria-hidden="true">
+        <span className="bingkai-debu" />
+        <span className="bingkai-sapu" />
+        <span className="bingkai-mistar" />
+        {ada('brand') && <span className="bingkai-merek">{isi('brand')}</span>}
         <span className="gallery-sudut is-atas-kiri" />
         <span className="gallery-sudut is-atas-kanan" />
         <span className="gallery-sudut is-bawah-kiri" />
@@ -366,7 +373,7 @@ export function Gallery() {
             {ada('introTitle') && (
               <h1 style={gaya('introTitle')}>
                 {isi('introTitle')}
-                <span className="wordmark-dot" />
+                <span className="judul-titik" />
               </h1>
             )}
             {ada('introSubtitle') && (
@@ -408,6 +415,7 @@ export function Gallery() {
         {tampil('corridor') && <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />}
         {tampil('hud') && (
           <div className="stage-hud" aria-hidden="true">
+            <span className="stage-kompas" />
             <span className="stage-cakrawala" />
             <span className="stage-tis is-atas-kiri" />
             <span className="stage-tis is-atas-kanan" />
@@ -430,6 +438,7 @@ export function Gallery() {
                   variant="ghost"
                   className={`gallery-tile${item.image_url ? '' : ' is-kosong'}`}
                   aria-label={`Lihat ${item.title}`}
+                  style={{ '--i': index } as CSSProperties}
                   onMouseEnter={() => setHovering(true)}
                   onMouseLeave={() => setHovering(false)}
                   onFocus={() => setHovering(true)}

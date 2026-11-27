@@ -1,7 +1,7 @@
 import { NOT_CONFIGURED_MESSAGE, supabase } from './supabase';
 import type { CSSProperties } from 'react';
 import type { ColorThemeKey } from './theme';
-import { BRAND, DEG_PER_DETIK, FAKTOR_KURSI, INITIAL_SLOT_COUNT, LAJU_EASE, PERSPECTIVE_DASAR, VIEW_ANGLE, type SpinDirection } from './motion';
+import { BRAND, DEG_PER_DETIK, FAKTOR_KURSI, INITIAL_SLOT_COUNT, LAJU_EASE, LAMA_SOROT, PERSPECTIVE_DASAR, VIEW_ANGLE, type SpinDirection } from './motion';
 
 /**
  * Setiap data yang tampil di halaman user dan admin punya tabel sendiri di Supabase:
@@ -143,6 +143,8 @@ export interface Motion {
   radiusPct: number;
   /** Sisa kecepatan saat kursor di atas kartu, dalam persen. */
   hoverPct: number;
+  /** Lama transisi kartu membesar/mengecil saat disorot, dalam milidetik. */
+  hoverMs: number;
   easeRate: number;
   /** Gelap kartu yang menghadap belakang, dalam persen. 0 berarti semua terangan. */
   fadePct: number;
@@ -296,6 +298,7 @@ export const DEFAULT_MOTION: Motion = {
   stagePct: 100,
   radiusPct: 100,
   hoverPct: Math.round(FAKTOR_KURSI * 100),
+  hoverMs: LAMA_SOROT,
   easeRate: LAJU_EASE,
   fadePct: 0,
   degPerSec: DEG_PER_DETIK,
@@ -494,6 +497,7 @@ export function gabung(
   hasil.motion.stagePct = angka(motion?.stage_pct, 50, 200, DEFAULT_MOTION.stagePct);
   hasil.motion.radiusPct = angka(motion?.radius_pct, 40, 300, DEFAULT_MOTION.radiusPct);
   hasil.motion.hoverPct = angka(motion?.hover_pct, 0, 100, DEFAULT_MOTION.hoverPct);
+  hasil.motion.hoverMs = angka(motion?.hover_ms, 200, 3000, DEFAULT_MOTION.hoverMs);
   hasil.motion.easeRate = angka(motion?.ease_rate, 0.5, 12, DEFAULT_MOTION.easeRate, 2);
   hasil.motion.fadePct = angka(motion?.fade_pct, 0, 90, DEFAULT_MOTION.fadePct);
   hasil.motion.degPerSec = angka(motion?.deg_per_sec, 1, 30, DEFAULT_MOTION.degPerSec, 1);
@@ -631,6 +635,7 @@ export async function saveContent(next: SiteContent): Promise<void> {
             stage_pct: next.motion.stagePct,
             radius_pct: next.motion.radiusPct,
             hover_pct: next.motion.hoverPct,
+            hover_ms: next.motion.hoverMs,
             ease_rate: next.motion.easeRate,
             fade_pct: next.motion.fadePct,
             deg_per_sec: next.motion.degPerSec,

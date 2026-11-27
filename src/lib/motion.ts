@@ -14,6 +14,11 @@ export const DEG_PER_DETIK = 8;
 const JARAK_PAS = 105;
 /** Kedalaman perspektif panggung sebelum admin mengubahnya. */
 export const PERSPECTIVE_DASAR = 1600;
+/**
+ * Lama kartu membesar lalu mengecil kembali saat disorot, dalam milidetik.
+ * Bawaannya sengaja lambat supaya perpindahan terasa mengambang, bukan patah.
+ */
+export const LAMA_SOROT = 1400;
 
 /**
  * Menggerakkan satu nilai menuju sasaran secara eksponensial sehingga perubahan
