@@ -18,6 +18,9 @@
 .ad-kanvas {
   position: relative;
   aspect-ratio: 16 / 10;
+  /* Lebar konsol kini mengikuti jendela: batasi lewat tinggi supaya kanvas 16∶10
+     tidak pernah terpotong di bawah layar. */
+  max-width: min(100%, calc(min(52svh, 560px) * 1.6));
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;

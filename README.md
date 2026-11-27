@@ -68,13 +68,16 @@ Tabel konten: `site_texts`, `site_menus`, `site_blocks`, `site_appearance`, `sit
 
 ## Konsol `/ceopusat/`
 
-Pengelolaan berada di alamat sendiri, **`/ceopusat/`** — tanpa `.html`. Host statis hanya mengembalikan `index.html` untuk alamat yang diakhiri garis miring ( `/ceopusat` dan `dist/ceopusat/index.html` keduanya balas 404), jadi bukan entri build ketiga: `src/main.tsx` melihat `location.pathname` lewat `ruteKonsol()` lalu memuat `src/admin/boot.tsx` sebagai chunk terpisah. Pengunjung galeri tetap tidak ikut menanggung kode pengelola, dan halaman konsol memasang `noindex, nofollow` sendiri sehingga tidak dirayapi.
+Pengelolaan berada di alamat sendiri, **`/ceopusat`** — tanpa `.html` dan tanpa garis miring penutup. Konsol bukan entri build ketiga: saat dirilis sebagai aplikasi SPA (`prepare_site` dengan `spa: true`), host mengembalikan `index.html` untuk alamat yang tidak dikenali, lalu `src/main.tsx` mengenali `/ceopusat` lewat `ruteKonsol()` dan memuat `src/admin/boot.tsx` sebagai chunk terpisah. Pengunjung galeri tetap tidak menanggung kode pengelola, dan konsol memasang `noindex, nofollow` sendiri sehingga tidak dirayapi.
+
+Tanpa `spa: true` alamat ini balas 404 — host hanya mem-fallback path yang diakhiri garis miring, sehingga `/ceopusat/` pun jatuh ke dokumen galeri.
 
 - **Satu daftar, semua menu.** `src/admin/registry.tsx` memegang `PANEL`; bilah kiri, judul, isi, dan apakah bar Simpan muncul diambil dari daftar itu. Menambah menu = menambah satu entri, bukan menyalin tombol tab.
 - **Empat kelompok:** Konten (Teks, Menu & bagian), Carousel (Carousel, Tata letak), Situs (Tampilan, Metadata, Basis data), Perpustakaan (Gambar galeri, Musik latar).
 - **Dua jenis panel.** Panel `draf` menyunting salinan bersama dan baru tayang setelah tombol **Simpan**; panel `langsung` (gambar, lagu, basis data) menulis sendiri per tindakan.
 - **Pratinjau hidup.** Palet dan tema yang sedang disunting langsung terlihat di konsol, dan panel Carousel menampilkan ring mini yang ikut angka yang diketik.
-- **Gerbang tunggal.** `store.tsx` memeriksa sesi lewat `supabase.auth.getSession()` lalu peran lewat RPC `has_role`; tanpa sesi ditampilkan formulir masuk, bukan pesan "bukan admin". Writing tetap dijaga RLS, bukan disembunyikan UI.
+- **Gerbang tunggal.** `store.tsx` memeriksa sesi lewat `supabase.auth.getSession()` lalu peran lewat RPC `has_role`; tanpa sesi ditampilkan formulir masuk, bukan pesan "bukan admin". Menulis tetap dijaga RLS, bukan disembunyikan UI.
+- **Mengisi layar, tidak dipotong.** Cangkang setinggi jendela: kepala dan bilah diam, hanya area isi yang menggulir, bar Simpan mendarat di dasar, dan kolom isi tidak lagi dibatasi 1080px. Kanvas 16∶10 pada panel **Tata letak** dibatasi dari tinggi layar (`max-width: calc(min(52svh, 560px) * 1.6)`) supaya tidak terpotong di jendela pendek.
 - Saat **Tata letak**, bagian digeser di kanvas perkiraan 16∶10; yang disimpan hanyalah pergeseran (`x`/`y` dalam persen, `scale`, `z`) dari tempat semula, jadi layar dengan tinggi berbeda tetap rapi.
 
 ## Pasang sebagai aplikasi

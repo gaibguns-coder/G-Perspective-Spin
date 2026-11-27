@@ -164,7 +164,7 @@ export function SidePanel({ open, onClose, theme, onTheme, colorTheme, onColorTh
             Portofolio karya
           </a>
           {adminAllowed && (
-            <a className="panel-link" href="/ceopusat/" rel="noopener">
+            <a className="panel-link" href="/ceopusat" rel="noopener">
               Buka konsol kelola
             </a>
           )}

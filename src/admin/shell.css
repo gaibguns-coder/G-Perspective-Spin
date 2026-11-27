@@ -1,7 +1,7 @@
 /*
- * Cangkang konsol /ceopusat/: kepala tetap di atas, bilah panel di kiri, isi bisa
- * digulir, dan bar Simpan menempel di bawah. Semua ukuran rapat (12–13px) supaya
- * banyak kolom muat tanpa perlu menggulir ke samping.
+ * Cangkang konsol /ceopusat: kepala tetap di atas, bilah panel di kiri, isi mengisi
+ * sisa layar dan menggulir di dalam dirinya sendiri, bar Simpan menempel di dasar.
+ * Semua ukuran rapat (12–13px) supaya banyak kolom muat tanpa gulir ke samping.
  */
 
 .ad-ruang {
@@ -192,11 +192,18 @@
 .ad-utama {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   padding: 16px 18px 24px;
 }
 
+/* Konsol mengisi lebar dan tinggi jendela: tidak ada batas tengah yang menyisakan
+   ruang kosong, dan bar Simpan selalu sampai di dasar area, bukan di tengah layar. */
 .ad-isi {
-  max-width: 1080px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .ad-kepala {
@@ -372,13 +379,23 @@ div.ad-catat {
 
 /* ── Responsif: bilah jadi laci, kolom jadi satu ───────────────────────── */
 @media (min-width: 900px) {
+  /* Cangkang setinggi jendela: hanya area isi yang menggulir, kepala dan bilah diam. */
+  .ad-ruang {
+    height: 100svh;
+    min-height: 0;
+    overflow: hidden;
+  }
   .ad-bilah {
     display: flex;
-    position: sticky;
-    top: 50px;
-    align-self: flex-start;
-    height: calc(100svh - 50px);
+    height: 100%;
     overflow-y: auto;
+  }
+  .ad-utama {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .ad-utama > .ad-isi > .ad-2 {
+    flex: 1;
   }
   .ad-bilah-tombol {
     display: none;

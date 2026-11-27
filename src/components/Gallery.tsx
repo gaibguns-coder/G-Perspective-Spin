@@ -143,7 +143,7 @@ export function Gallery() {
     return () => subscription.unsubscribe();
   }, [reload]);
 
-  // Admin menyimpan dari halaman /ceopusat/, jadi saat tab ini kembali dilihat,
+  // Admin menyimpan dari halaman /ceopusat, jadi saat tab ini kembali dilihat,
   // konten dan daftar lagu dibaca ulang tanpa pengunjung perlu memuat ulang halaman.
   useEffect(() => {
     const onRuangLihat = () => {
@@ -441,7 +441,7 @@ export function Gallery() {
           <span className="flex items-center gap-3">
             <span>{ada('photoLabel') ? `${count} ${isi('photoLabel')}` : count}</span>
             {tampil('adminButton') && adminAllowed && (
-              <a className="settings-button" href="/ceopusat/" aria-label="Kelola situs" title="Kelola situs di halaman terpisah">
+              <a className="settings-button" href="/ceopusat" aria-label="Kelola situs" title="Kelola situs di halaman terpisah">
                 <Settings />
               </a>
             )}
