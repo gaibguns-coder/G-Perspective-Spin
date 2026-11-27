@@ -211,7 +211,9 @@ h1 {
 .scene {
   height: 560px;
   position: relative;
-  perspective: 1600px;
+  /* Kalikan kedalaman bawaan dengan nilai dari site_motion supaya ponsel tetap
+     lebih dangkal daripada desktop walau admin mengubah angka yang sama. */
+  perspective: calc(1600px * var(--perspektif, 1));
   overflow: clip;
 }
 .carousel-orbit {
@@ -220,7 +222,13 @@ h1 {
   left: 50%;
   top: 46%;
   transform-style: preserve-3d;
-  transform: scale(0.55) rotateX(-17deg);
+  /* Skala dasar per lebar layar dikalikan angka panggung dari dashboard, lalu
+     dimiringkan sesuai sudut lihat admin. */
+  --orbit-dasar: 0.55;
+  transform: scale(calc(var(--orbit-dasar) * var(--panggung, 1))) rotateX(var(--tilik, -17deg));
+}
+.carousel-orbit[data-sumbu='vertical'] {
+  transform: scale(calc(var(--orbit-dasar) * var(--panggung, 1))) rotateY(var(--tilik, -17deg));
 }
 .carousel-ring {
   position: relative;
@@ -425,6 +433,23 @@ h1 {
   opacity: 0.6;
 }
 
+a.settings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: inherit;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+a.settings-button:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--primary);
+}
+
 /* ── Penampil gambar penuh ──────────────────────────────────────────────── */
 .viewer {
   position: fixed;
@@ -483,106 +508,6 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-/* ── Panel pengelolaan ──────────────────────────────────────────────────── */
-.admin-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  background: var(--overlay);
-  display: flex;
-  justify-content: flex-end;
-}
-.admin-panel {
-  width: min(560px, 100%);
-  background: var(--background);
-  height: 100%;
-  overflow: auto;
-  padding: 28px;
-  box-shadow: var(--shadow);
-}
-.admin-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.admin-heading h2 {
-  font-family: var(--font-display);
-  font-size: 23px;
-}
-.admin-login {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 80px 10px;
-  text-align: center;
-}
-.admin-login p {
-  color: var(--muted-foreground);
-  font-size: 14px;
-  max-width: 320px;
-}
-.admin-row {
-  border-bottom: 1px solid var(--border);
-  padding: 13px 0;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-.admin-thumbnail {
-  width: 48px;
-  height: 48px;
-  background: var(--secondary);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.admin-thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.admin-row-title {
-  flex: 1;
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-.admin-form {
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-}
-.admin-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 12px;
-}
-.admin-form input,
-.admin-form textarea {
-  background: var(--secondary);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 12px;
-  color: var(--foreground);
-  width: 100%;
-  outline-color: var(--primary);
-}
-.admin-form textarea {
-  min-height: 150px;
-  resize: vertical;
-}
-.error-message {
-  color: var(--destructive);
-  font-size: 12px;
-  margin: 12px 0;
-}
-.success-message {
-  color: var(--primary);
-  font-size: 12px;
-  margin: 12px 0;
-}
 
 /* ── Pemutar musik ──────────────────────────────────────────────────────── */
 .music-player {
@@ -629,10 +554,10 @@ h1 {
   }
   .scene {
     height: 390px;
-    perspective: 1300px;
+    perspective: calc(1300px * var(--perspektif, 1));
   }
   .carousel-orbit {
-    transform: scale(0.29) rotateX(-17deg);
+    --orbit-dasar: 0.29;
     top: 46%;
   }
   .playback {
@@ -922,170 +847,3 @@ h1 {
   cursor: not-allowed;
 }
 
-/* ── Penyunting teks & menu ─────────────────────────────────────────────── */
-.content-editor {
-  max-height: 62vh;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-.content-section {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--font-display);
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-.content-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.content-row {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--card);
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  transition: opacity 0.18s ease, border-color 0.18s ease;
-}
-.content-row.is-off {
-  opacity: 0.55;
-}
-.content-row-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.content-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-}
-.content-row input[type='text'],
-.content-row input[type='number'],
-.content-row select,
-.content-row textarea {
-  width: 100%;
-  background: var(--secondary);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  color: var(--foreground);
-  padding: 8px 10px;
-  font-size: 13px;
-  font-family: inherit;
-}
-.content-row input[type='text']:focus-visible,
-.content-row input[type='number']:focus-visible,
-.content-row select:focus-visible,
-.content-row textarea:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--primary) 55%, transparent);
-  outline-offset: 1px;
-}
-.content-row textarea {
-  min-height: 58px;
-  resize: vertical;
-  line-height: 1.5;
-}
-.content-row input[type='number'] {
-  width: 88px;
-}
-.content-row select {
-  width: auto;
-}
-.content-savebar {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 18px;
-  padding: 10px 0;
-  background: var(--background);
-  border-bottom: 1px solid var(--border);
-}
-.content-savebar button {
-  margin-left: auto;
-}
-.content-savebar button + button {
-  margin-left: 0;
-}
-.content-note {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--muted-foreground);
-}
-.content-tools {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-wrap: wrap;
-}
-.color-field {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-.color-field code {
-  font-size: 10px;
-  letter-spacing: 0.03em;
-}
-.color-chip {
-  position: relative;
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  background-image: linear-gradient(45deg, var(--secondary) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--secondary) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--secondary) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--secondary) 75%);
-  background-size: 8px 8px;
-  background-position: 0 0, 0 4px, 4px -4px, -4px 0;
-}
-.color-chip input[type='color'] {
-  position: absolute;
-  inset: -6px;
-  width: calc(100% + 12px);
-  height: calc(100% + 12px);
-  border: 0;
-  padding: 0;
-  background: none;
-  cursor: pointer;
-}
-.color-chip input[type='color']::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-.color-chip input[type='color']::-webkit-color-swatch {
-  border: 0;
-}
-.font-preview {
-  flex: 1;
-  min-width: 70px;
-  font-size: 15px;
-  color: var(--foreground);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.menu-row {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.menu-hint {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  margin-top: 3px;
-}
