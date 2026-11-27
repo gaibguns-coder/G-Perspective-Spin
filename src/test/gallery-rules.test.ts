@@ -14,6 +14,7 @@ import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
 import { ruteKonsol } from '@/lib/routes';
 import { contohSlot, contohTeks } from '@/lib/contoh';
+import { nomorWa, sisaKueri, surel } from '@/lib/kontak';
 import {
   adalahHal,
   DEFAULT_MOTION,
@@ -410,5 +411,48 @@ describe('gradasi koridor yang dapat disetel dari konsol', () => {
     expect(liar.motion.corridorCorePct).toBe(100);
     expect(liar.motion.corridorFadePct).toBe(0);
     expect(liar.motion.corridorEdgePct).toBe(DEFAULT_MOTION.corridorEdgePct);
+  });
+});
+
+describe('kontak yang disunting dari panel Metadata', () => {
+  it('nomor WhatsApp dinormalkan ke digit berkode negara', () => {
+    expect(nomorWa('+62 812-3456-7890')).toBe('6281234567890');
+    expect(nomorWa('0812 3456 7890')).toBe('6281234567890');
+    expect(nomorWa('6281234567890')).toBe('6281234567890');
+    expect(nomorWa(6281234567890)).toBe('6281234567890');
+    expect(nomorWa('kosong').length).toBe(0);
+    expect(nomorWa('12345')).toBe('');
+    expect(nomorWa('6281234567890123456')).toBe('');
+    expect(nomorWa(null)).toBe('');
+    // Yang bukan angka tidak pernah ikut ke href.
+    expect(nomorWa('0812 3456 7890"><script>')).toBe('6281234567890');
+  });
+
+  it('hanya alamat yang benar-benar sah yang lolos ke mailto', () => {
+    expect(surel('  Nama@Domain.COM ')).toBe('nama@domain.com');
+    expect(surel('mailto:nama@domain.com')).toBe('nama@domain.com');
+    expect(surel('nama@sub.domain.co.id')).toBe('nama@sub.domain.co.id');
+    expect(surel('nama@domain')).toBe('');
+    expect(surel('bukan email')).toBe('');
+    expect(surel('a@b.co?id=1')).toBe('');
+    expect(surel(undefined)).toBe('');
+  });
+
+  it('pesan bawaan tombol dipertahankan saat href ditimpa', () => {
+    expect(sisaKueri('https://wa.me/628xxxxxxxxxx?text=Halo%2C%20saya')).toBe('?text=Halo%2C%20saya');
+    expect(sisaKueri('https://wa.me/628xxxxxxxxxx')).toBe('');
+    expect(sisaKueri('mailto:a@b.com?subject=X')).toBe('?subject=X');
+  });
+
+  it('baris site_info dinormalkan, dan nilai asing berarti kosong', () => {
+    const diisi = gabung([], [], null, null, { whatsapp: '0812-3456-7890', email: 'MAIL@Contoh.COM' });
+    expect(diisi.info.whatsapp).toBe('6281234567890');
+    expect(diisi.info.email).toBe('mail@contoh.com');
+    const asing = gabung([], [], null, null, { whatsapp: 'xxx', email: 'aaa' });
+    expect(asing.info.whatsapp).toBe('');
+    expect(asing.info.email).toBe('');
+    const tanpa = gabung([], [], null, null, null);
+    expect(tanpa.info.whatsapp).toBe('');
+    expect(tanpa.info.email).toBe('');
   });
 });

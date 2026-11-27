@@ -93,7 +93,7 @@ export const PANEL: PanelDef[] = [
     label: 'Metadata',
     grup: 'Situs',
     ikon: Info,
-    petunjuk: 'Judul tab, mesin cari, kartu berbagi',
+    petunjuk: 'Judul tab, kartu berbagi, nomor kontak',
     jenis: 'draf',
     render: () => <PanelMeta />,
   },

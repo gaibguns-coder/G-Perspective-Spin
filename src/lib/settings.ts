@@ -2,6 +2,7 @@ import { NOT_CONFIGURED_MESSAGE, supabase } from './supabase';
 import type { CSSProperties } from 'react';
 import type { ColorThemeKey } from './theme';
 import { BRAND, DEG_PER_DETIK, FAKTOR_KURSI, INITIAL_SLOT_COUNT, LAJU_EASE, LAMA_SOROT, PERSPECTIVE_DASAR, VIEW_ANGLE, type SpinDirection } from './motion';
+import { nomorWa, surel } from './kontak';
 
 /**
  * Setiap data yang tampil di halaman user dan admin punya tabel sendiri di Supabase:
@@ -174,6 +175,10 @@ export interface SiteInfo {
   ogImage: string;
   themeColor: string;
   lang: string;
+  /** Digit murni berkode negara untuk tombol WhatsApp portofolio; kosong = bawaan HTML. */
+  whatsapp: string;
+  /** Alamat surel untuk `mailto:` portofolio; kosong = bawaan HTML. */
+  email: string;
 }
 
 export interface SiteContent {
@@ -330,6 +335,10 @@ export const DEFAULT_INFO: SiteInfo = {
   ogImage: '/logo.png',
   themeColor: '#000000',
   lang: 'id',
+  // Kontak sengaja bawaan kosong: angka yang terbaca mesin cari tetap tertanam di
+  // portofolio.html, dan nilai di sini hanya menimpanya bila admin mengisinya.
+  whatsapp: '',
+  email: '',
 };
 
 export function kontenBawaan(): SiteContent {
@@ -532,6 +541,8 @@ export function gabung(
     ogImage: str(info?.og_image, DEFAULT_INFO.ogImage),
     themeColor: str(info?.theme_color, DEFAULT_INFO.themeColor),
     lang: str(info?.lang, DEFAULT_INFO.lang),
+    whatsapp: nomorWa(info?.whatsapp),
+    email: surel(info?.email),
   };
   return hasil;
 }
@@ -682,6 +693,23 @@ export async function saveContent(next: SiteContent): Promise<void> {
             og_image: next.info.ogImage,
             theme_color: next.info.themeColor,
             lang: next.info.lang,
+            updated_at: waktu,
+          },
+          { onConflict: 'id' },
+        ),
+    ],
+    [
+      // Kontak ditulis sebagai batch tersendiri, meniru `koridor`: bila migrasi 0008
+      // belum dijalankan, hanya label "kontak" yang gagal dan seluruh metadata
+      // halaman tetap tersimpan.
+      'kontak',
+      supabase
+        .from('site_info')
+        .upsert(
+          {
+            id: 1,
+            whatsapp: nomorWa(next.info.whatsapp),
+            email: surel(next.info.email),
             updated_at: waktu,
           },
           { onConflict: 'id' },

@@ -3,6 +3,7 @@ import { Database, Info, Moon, Palette, RefreshCw, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { colorThemes, type ColorThemeKey } from '@/lib/theme';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
+import { nomorWa, surel } from '@/lib/kontak';
 import { BRAND } from '@/lib/motion';
 import { Baris, Grup, Isian, Pilihan } from '../fields';
 import { useAdmin } from '../store';
@@ -72,16 +73,61 @@ export function PanelTampilan() {
 export function PanelMeta() {
   const { draft, infoBaru } = useAdmin();
   const i = draft.info;
+  const nomor = nomorWa(i.whatsapp);
+  const alamat = surel(i.email);
+  const nomorDitolak = !nomor && i.whatsapp.trim().length > 0;
+  const alamatDitolak = !alamat && i.email.trim().length > 0;
 
   return (
     <div className="ad-isi">
       <div className="ad-kepala">
         <Info className="size-4 text-primary" />
         <div>
-          <h2>Metadata halaman</h2>
-          <p>Judul tab, keterangan mesin cari, dan kartu yang muncul saat tautan dibagikan.</p>
+          <h2>Metadata &amp; kontak</h2>
+          <p>Judul tab, kartu berbagi, dan nomor yang dipakai tombol halaman portofolio.</p>
         </div>
       </div>
+
+      <Grup
+        judul="Kontak portofolio"
+        petunjuk="Dua nilai ini menimpa tombol di /portofolio.html. Nomor boleh diketik apa adanya (+62 812-3456-7890 atau 0812-3456-7890); yang tersimpan tetap digit berkode negara."
+      >
+        <Isian
+          label="Nomor WhatsApp"
+          max={24}
+          placeholder="6281234567890"
+          value={i.whatsapp}
+          petunjuk="Kosong berarti tombol masih memakai angka bawaan yang tertanam di berkas HTML."
+          onChange={whatsapp => infoBaru({ whatsapp })}
+        />
+        <Isian
+          label="Alamat email"
+          max={160}
+          placeholder="nama@domain.com"
+          value={i.email}
+          petunjuk="Untuk tombol “Kirim email”. Alamat fiktif membuat pesan calon klien hilang tanpa pemberitahuan."
+          onChange={email => infoBaru({ email })}
+        />
+        <div className="ad-catat">
+          {nomor ? (
+            <a href={`https://wa.me/${nomor}`} target="_blank" rel="noopener noreferrer">
+              wa.me/{nomor}
+            </a>
+          ) : nomorDitolak ? (
+            <b>Nomor “{i.whatsapp.trim()}” belum terbaca — minimal 8 angka.</b>
+          ) : (
+            <span>WhatsApp belum diisi — tombol memakai placeholder HTML.</span>
+          )}
+          <br />
+          {alamat ? (
+            <a href={`mailto:${alamat}`}>{alamat}</a>
+          ) : alamatDitolak ? (
+            <b>Email “{i.email.trim()}” tidak berbentuk alamat surel.</b>
+          ) : (
+            <span>Email belum diisi — tombol memakai placeholder HTML.</span>
+          )}
+        </div>
+      </Grup>
 
       <Grup judul="Judul &amp; deskripsi">
         <Isian label="Judul halaman" value={i.pageTitle} onChange={pageTitle => infoBaru({ pageTitle })} />
