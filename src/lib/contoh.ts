@@ -125,3 +125,23 @@ function kisi(nomor: number): string {
   });
   return garis.join('');
 }
+
+/** Satu pasangan judul + cerita per motif, urutannya sama dengan MOTIF. */
+const TEKS: [string, string][] = [
+  ['Senja di Punggung Bukit', 'Tiga punggungan menerima cahaya terakhir dari satu titik rendah. Susunan seperti ini cocok untuk foto perjalanan atau hasil cetak ukuran besar.'],
+  ['Terowongan Cahaya', 'Bingkai bersarang yang menyempit ke tengah, persis cara karya Anda disusun di panggung ini. Cocok untuk pameran tunggal atau arsip studio.'],
+  ['Riap yang Berulang', 'Enam garis gelombang yang melemah ke bawah, dibaca tenang dari jarak jauh. Cocok untuk karya dengan warna lembut atau pemindaian arsip.'],
+  ['Cakrawala Kota', 'Sembilan blok gedung dengan dua lampu menyala, dibaca jelas meski kartunya kecil. Cocok untuk dokumentasi acara dan lanskap perkotaan.'],
+  ['Lintasan Orbit', 'Cincin melonjong dengan taburan titik cahaya, komposisi paling ramai di antara yang lain. Cocok untuk karya digital dan ilustrasi.'],
+  ['Bidang Prisma', 'Lima bidang tajam dengan tingkat cahaya berbeda, disusun bergeser supaya tidak kaku. Cocok untuk fotografi arsitektur dan produk.'],
+];
+
+const CATATAN = ' — contoh teks, ganti lewat halaman admin.';
+
+/** Judul dan deskripsi untuk bingkai yang belum punya foto, supaya layar penuh
+ *  tidak menampilkan "Gambar 06 / Belum ada deskripsi." saat masih menunggu kiriman. */
+export function contohTeks(nomor: number): { judul: string; deskripsi: string } {
+  const n = Math.max(1, Math.round(nomor));
+  const [judul, cerita] = TEKS[(n - 1) % TEKS.length];
+  return { judul, deskripsi: `${cerita}${CATATAN}` };
+}

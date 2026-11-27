@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { colorThemes, paletteColors, type ColorThemeKey } from '@/lib/theme';
+import { paletteColors, type ColorThemeKey } from '@/lib/theme';
 
 interface CorridorProps {
   theme?: 'light' | 'dark';
@@ -29,7 +29,6 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
     let isRunning = false;
 
     const isDark = theme === 'dark';
-    const palette = colorThemes[colorTheme] ?? colorThemes.cyan;
     const { line, glow } = paletteColors(colorTheme, isDark);
 
     // Di latar terang garis dan glow perlu alpha supaya 56 sinar tidak menumpuk jadi blok warna.
@@ -38,9 +37,9 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       return `rgba(${(nilai >> 16) & 255}, ${(nilai >> 8) & 255}, ${nilai & 255}, ${alpha})`;
     };
 
+    // Latar polos: hitam pekat di tema gelap, putih bersih di tema terang.
     const colors = {
-      bg: isDark ? palette.bg : '#f8fafc',
-      wall: isDark ? palette.wall : 'rgba(241, 245, 249, 0.45)',
+      bg: isDark ? '#000000' : '#ffffff',
       line: isDark ? line : toRgba(line, 0.5),
       glow: isDark ? glow : toRgba(glow, 0.4),
     };
@@ -64,16 +63,19 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      // Gradien kedalaman: paling terang di titik lenyap, memudar sampai hilang
+      // di tepi layar, jadi kotak luar terlihat transparan dan tengah justru jelas.
       radialGradient = ctx.createRadialGradient(
         width / 2,
         height / 2,
         2,
         width / 2,
         height / 2,
-        Math.max(width, height) * 0.45,
+        Math.max(width, height) * 0.52,
       );
-      radialGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      radialGradient.addColorStop(1, colors.line);
+      radialGradient.addColorStop(0, toRgba(line, 0.95));
+      radialGradient.addColorStop(0.55, toRgba(line, 0.45));
+      radialGradient.addColorStop(1, toRgba(line, 0));
     };
 
     const render = (timestamp: number) => {
@@ -98,22 +100,6 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       ctx.fillStyle = colors.bg;
       ctx.fillRect(0, 0, width, height);
 
-      // Dinding kiri & kanan.
-      ctx.fillStyle = colors.wall;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(vx, vy);
-      ctx.lineTo(0, height);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(width, 0);
-      ctx.lineTo(vx, vy);
-      ctx.lineTo(width, height);
-      ctx.closePath();
-      ctx.fill();
-
       // Garis perspektif dari titik hilang.
       ctx.strokeStyle = radialGradient ?? colors.line;
       ctx.lineWidth = 1;
@@ -130,14 +116,15 @@ export function PerspectiveCorridor({ theme = 'dark', colorTheme = 'cyan' }: Cor
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Bingkai kedalaman yang bergerak ke arah penonton.
-      ctx.strokeStyle = colors.line;
+      // Bingkai kedalaman yang bergerak ke arah penonton. Gradiennya membuat
+      // bingkai besar di tepi nyaris tak terlihat dan yang kecil di tengah tegas.
+      ctx.strokeStyle = radialGradient ?? colors.line;
       for (let i = 0; i < NUM_SLICES; i++) {
         const z = ((i - zOffset + NUM_SLICES) % NUM_SLICES) / NUM_SLICES;
         const scale = Math.pow(z, 2.2) * 1.6;
         if (scale <= 0.001) continue;
 
-        const alpha = 0.1 + Math.pow(z, 2) * 0.9;
+        const alpha = 0.12 + Math.pow(1 - z, 1.8) * 0.78;
         const boxW = width * scale;
         const boxH = height * scale;
 

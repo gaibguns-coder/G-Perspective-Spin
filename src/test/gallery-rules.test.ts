@@ -13,7 +13,7 @@ import {
 import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
 import { ruteKonsol } from '@/lib/routes';
-import { contohSlot } from '@/lib/contoh';
+import { contohSlot, contohTeks } from '@/lib/contoh';
 import {
   adalahHal,
   DEFAULT_MOTION,
@@ -371,5 +371,15 @@ describe('gambar contoh untuk bingkai yang belum diisi foto', () => {
       expect(isi).not.toContain('NaN');
       expect(isi).not.toContain('undefined');
     }
+  });
+
+  it('contoh teks selalu berpasangan dan menandai dirinya sebagai contoh', () => {
+    for (const n of [1, 4, 7, 11, 0, -2]) {
+      const t = contohTeks(n);
+      expect(t.judul.length).toBeGreaterThan(4);
+      expect(t.deskripsi).toContain('contoh teks');
+    }
+    expect(contohTeks(1).judul).toBe(contohTeks(7).judul);
+    expect(contohTeks(1).judul).not.toBe(contohTeks(2).judul);
   });
 });

@@ -28,16 +28,13 @@ export type TextKey =
   | 'emptyGallery'
   | 'viewerEmpty'
   | 'playlistHeading'
-  | 'meterWorks'
   | 'meterPages'
-  | 'meterRate'
   | 'sceneHint'
   | 'footerTag';
 
 export type MenuKey =
   | 'header'
   | 'intro'
-  | 'meters'
   | 'hud'
   | 'corridor'
   | 'status'
@@ -261,17 +258,14 @@ export const DEFAULT_SETTINGS = {
     emptyGallery: teks('Pesan galeri kosong', 'Galeri belum memiliki gambar.'),
     viewerEmpty: teks('Pesan layar penuh kosong', 'Belum ada gambar'),
     playlistHeading: teks('Judul daftar lagu', 'Daftar Lagu'),
-    meterWorks: teks('Label jumlah karya', 'Karya'),
     meterPages: teks('Label jumlah halaman', 'Halaman'),
-    meterRate: teks('Label laju putaran', 'Laju'),
     sceneHint: teks('Petunjuk panggung', 'Arahkan kursor ke kartu untuk mendekat'),
     footerTag: teks('Catatan di footer', 'Tampilan perspektif interaktif'),
   } satisfies Record<TextKey, TextSetting>,
   menus: {
     header: menu('Bilah atas', 'Logo, nama merek, dan penghitung foto.'),
     intro: menu('Judul pembuka', 'Judul besar dan sub judul di atas koridor.'),
-    meters: menu('Panel angka', 'Tiga pembaca angka: karya, halaman, dan laju.'),
-    hud: menu('Bingkai HUD', 'Sudut, kisi, dan rel penanda di sekeliling panggung.'),
+    hud: menu('Bingkai HUD', 'Rel merek di tepi panggung dan petunjuk di bawah kartu.'),
     corridor: menu('Latar koridor 3D', 'Kanvas garis perspektif di belakang foto.'),
     status: menu('Chip status', 'Tanda "Sedang berputar" dan jumlah foto.'),
     playback: menu('Panel kontrol', 'Bilah arah, kecepatan, dan jeda di bawah koridor.'),
@@ -325,7 +319,7 @@ export const DEFAULT_INFO: SiteInfo = {
   ogTitle: `${BRAND} — Galeri Gambar 3D`,
   ogDescription: 'Koleksi gambar dalam gerak, dilihat dari sudut pandang baru.',
   ogImage: '/logo.png',
-  themeColor: '#0c0f17',
+  themeColor: '#000000',
   lang: 'id',
 };
 

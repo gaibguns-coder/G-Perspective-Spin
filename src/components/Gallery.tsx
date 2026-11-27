@@ -39,7 +39,7 @@ import {
   type TextKey,
 } from '@/lib/settings';
 import { checkAdminAccess, demoSlots, listGallery, type GalleryItem } from '@/lib/gallery';
-import { contohSlot } from '@/lib/contoh';
+import { contohSlot, contohTeks } from '@/lib/contoh';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
 import { PERSPECTIVE_DASAR, advanceRotation, easeFaktor, radiusRing, tileOpacity } from '@/lib/motion';
 
@@ -180,15 +180,12 @@ export function Gallery() {
   // Palet aktif ditulis ke variabel CSS agar tombol, glow, border, dan slider ikut berubah.
   // Tema terang memakai varian gelap palet supaya garis dan glow tetap terbaca di atas putih.
   useEffect(() => {
-    const active = colorThemes[colorTheme] ?? colorThemes.cyan;
     const dark = theme === 'dark';
     const { line, glow } = paletteColors(colorTheme, dark);
     const root = document.documentElement;
     root.style.setProperty('--primary', line);
     root.style.setProperty('--primary-foreground', colorTheme === 'monochrome' ? '#09090b' : '#ffffff');
     root.style.setProperty('--card-glow', dark ? glow : `color-mix(in srgb, ${glow} 45%, transparent)`);
-    if (dark) root.style.setProperty('--background', active.bg);
-    else root.style.removeProperty('--background');
   }, [colorTheme, theme]);
 
   useEffect(() => {
@@ -256,6 +253,10 @@ export function Gallery() {
 
   /** Nomor bingkai untuk gambar contoh, supaya coraknya tetap sama saat kartu dibuka. */
   const nomorContoh = (item: GalleryItem) => Math.max(1, items.findIndex(s => s.id === item.id) + 1);
+  /** Bingkai tanpa foto ikut menampilkan judul dan cerita contoh, bukan "Gambar 06". */
+  const judulKartu = (item: GalleryItem) => (item.image_url ? item.title : contohTeks(nomorContoh(item)).judul);
+  const ceritaKartu = (item: GalleryItem) => (item.image_url ? item.description : contohTeks(nomorContoh(item)).deskripsi);
+  const ceritaTerpilih = selected ? ceritaKartu(selected) : '';
 
   /** Menu bilah atas: hanya halaman yang menyala, urutannya mengikuti posisi baris. */
   const daftarHal = daftarHalaman(content).filter(h => h.menu.on);
@@ -296,19 +297,10 @@ export function Gallery() {
 
   return (
     <main className="gallery-app" data-hud={tampil('hud') ? 'nyala' : 'mati'}>
-      {/* Bingkai HUD: sudut, rel, dan cakrawala digambar CSS supaya tidak menambah
-          teks yang harus disunting admin. Tuasnya ada di menu "Bingkai HUD". */}
+      {/* Rel merek di tepi kiri; sudut, mistar, dan garis kecil lain sengaja tidak
+          lagi digambar karena latar sekarang polos dan panggung harus bersih. */}
       <div className="gallery-bingkai" aria-hidden="true">
-        <span className="bingkai-debu" />
-        <span className="bingkai-sapu" />
-        <span className="bingkai-mistar" />
         {ada('brand') && <span className="bingkai-merek">{isi('brand')}</span>}
-        <span className="gallery-sudut is-atas-kiri" />
-        <span className="gallery-sudut is-atas-kanan" />
-        <span className="gallery-sudut is-bawah-kiri" />
-        <span className="gallery-sudut is-bawah-kanan" />
-        <span className="gallery-rel is-kiri" />
-        <span className="gallery-rel is-kanan" />
       </div>
       {tampil('header') && (
         <header className="gallery-header" style={letak('header')}>
@@ -388,26 +380,6 @@ export function Gallery() {
               </p>
             )}
           </div>
-
-          {/* Tiga pembaca angka — semuanya hitungan nyata dari data yang sudah dimuat. */}
-          {tampil('meters') && (
-            <div className="gallery-meters">
-              <div className="gallery-meter">
-                <b>{String(count).padStart(2, '0')}</b>
-                {ada('meterWorks') && <span style={gaya('meterWorks')}>{isi('meterWorks')}</span>}
-              </div>
-              <span className="gallery-meter-garis" aria-hidden="true" />
-              <div className="gallery-meter">
-                <b>{String(daftarHal.length).padStart(2, '0')}</b>
-                {ada('meterPages') && <span style={gaya('meterPages')}>{isi('meterPages')}</span>}
-              </div>
-              <span className="gallery-meter-garis" aria-hidden="true" />
-              <div className="gallery-meter">
-                <b>{playing ? `${speed.toFixed(1)}×` : '0.0×'}</b>
-                {ada('meterRate') && <span style={gaya('meterRate')}>{isi('meterRate')}</span>}
-              </div>
-            </div>
-          )}
         </section>
       )}
 
@@ -417,19 +389,6 @@ export function Gallery() {
 
       <section className="scene" aria-label="Carousel gambar 3D" style={{ ...letak('scene'), ...gayaScene }}>
         {tampil('corridor') && <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />}
-        {tampil('hud') && (
-          <div className="stage-hud" aria-hidden="true">
-            <span className="stage-kompas" />
-            <span className="stage-cakrawala" />
-            <span className="stage-tis is-atas-kiri" />
-            <span className="stage-tis is-atas-kanan" />
-            <span className="stage-tis is-bawah-kiri" />
-            <span className="stage-tis is-bawah-kanan" />
-            <span className="stage-tik is-a" />
-            <span className="stage-tik is-b" />
-            <span className="stage-tik is-c" />
-          </div>
-        )}
         <div className="carousel-orbit" data-sumbu={tegak ? 'vertical' : 'horizontal'} style={gayaPanggung}>
           <div ref={ring} className="carousel-ring">
             {items.map((item, index) => (
@@ -441,7 +400,7 @@ export function Gallery() {
                 <Button
                   variant="ghost"
                   className={`gallery-tile${item.image_url ? '' : ' is-contoh'}`}
-                  aria-label={`Lihat ${item.title}`}
+                  aria-label={`Lihat ${judulKartu(item)}`}
                   style={{ '--i': index } as CSSProperties}
                   onMouseEnter={() => setHovering(true)}
                   onMouseLeave={() => setHovering(false)}
@@ -576,7 +535,7 @@ export function Gallery() {
       )}
 
       {selected && (
-        <section className="viewer" role="dialog" aria-modal="true" aria-label={selected.title}>
+        <section className="viewer" role="dialog" aria-modal="true" aria-label={judulKartu(selected)}>
           <div className="viewer-header">
             <div className="brand">
               <img src="/logo.png" alt={`Logo ${isi('brand')}`} className="brand-icon size-5 rounded-sm object-contain" />
@@ -599,9 +558,9 @@ export function Gallery() {
             )}
           </div>
           <div className="viewer-details">
-            <h2>{selected.title}</h2>
-            {(selected.description || ada('tileNoDesc')) && (
-              <p style={selected.description ? undefined : gaya('tileNoDesc')}>{selected.description || isi('tileNoDesc')}</p>
+            <h2>{judulKartu(selected)}</h2>
+            {(ceritaTerpilih || ada('tileNoDesc')) && (
+              <p style={ceritaTerpilih ? undefined : gaya('tileNoDesc')}>{ceritaTerpilih || isi('tileNoDesc')}</p>
             )}
           </div>
         </section>
