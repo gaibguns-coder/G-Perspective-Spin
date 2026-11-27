@@ -304,7 +304,9 @@
   flex: none;
 }
 
-.ad-menu-aksi button {
+/* Kelas eksplisit, bukan `button`: .toggle-bar juga sebuah <button>, jadi selectors
+   berbasis nama elemen membuatnya ikut 24×24 dan pilnya kehilangan bentuk. */
+.ad-menu-panah {
   font: inherit;
   font-size: 12px;
   width: 24px;
@@ -316,12 +318,17 @@
   cursor: pointer;
 }
 
-.ad-menu-aksi button:hover:not(:disabled) {
+.ad-menu-panah:hover:not(:disabled) {
   color: var(--primary);
   border-color: var(--primary);
 }
 
-.ad-menu-aksi button:disabled {
+.ad-menu-panah:disabled {
   opacity: 0.3;
   cursor: default;
+}
+
+.ad-menu .ad-sakelar {
+  flex: none;
+  margin-left: 2px;
 }

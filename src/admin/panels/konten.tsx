@@ -133,10 +133,22 @@ export function PanelMenu() {
                 </div>
               </div>
               <div className="ad-menu-aksi">
-                <button type="button" title="Naikkan urutan" disabled={i === 0} onClick={() => urutkan('menus', i, -1)}>
+                <button
+                  type="button"
+                  className="ad-menu-panah"
+                  title="Naikkan urutan"
+                  disabled={i === 0}
+                  onClick={() => urutkan('menus', i, -1)}
+                >
                   ↑
                 </button>
-                <button type="button" title="Turunkan urutan" disabled={i === kunci.length - 1} onClick={() => urutkan('menus', i, 1)}>
+                <button
+                  type="button"
+                  className="ad-menu-panah"
+                  title="Turunkan urutan"
+                  disabled={i === kunci.length - 1}
+                  onClick={() => urutkan('menus', i, 1)}
+                >
                   ↓
                 </button>
                 <Sakelar checked={m.on} onChange={on => menuBaru(key, { on })} label={m.label} />

@@ -5,6 +5,7 @@ import {
   Circle,
   Expand,
   ImageIcon,
+  Move3d,
   Pause,
   Play,
   Settings,
@@ -287,7 +288,17 @@ export function Gallery() {
   }
 
   return (
-    <main className="gallery-app">
+    <main className="gallery-app" data-hud={tampil('hud') ? 'nyala' : 'mati'}>
+      {/* Bingkai HUD: sudut, rel, dan cakrawala digambar CSS supaya tidak menambah
+          teks yang harus disunting admin. Tuasnya ada di menu "Bingkai HUD". */}
+      <div className="gallery-bingkai" aria-hidden="true">
+        <span className="gallery-sudut is-atas-kiri" />
+        <span className="gallery-sudut is-atas-kanan" />
+        <span className="gallery-sudut is-bawah-kiri" />
+        <span className="gallery-sudut is-bawah-kanan" />
+        <span className="gallery-rel is-kiri" />
+        <span className="gallery-rel is-kanan" />
+      </div>
       {tampil('header') && (
         <header className="gallery-header" style={letak('header')}>
           <div className="brand">
@@ -296,7 +307,16 @@ export function Gallery() {
               <span style={gaya('brand')}>{isi('brand')}</span>
             )}
           </div>
-          <span className="header-caption" />
+          <span className="header-caption">
+            <i className={`header-kedip${playing ? ' is-jalan' : ''}`} aria-hidden="true" />
+            {membuka
+              ? halamanAktif?.menu.label ?? ''
+              : ada('statusRunning') || ada('statusPaused')
+                ? playing
+                  ? isi('statusRunning')
+                  : isi('statusPaused')
+                : ''}
+          </span>
           <div className="flex items-center gap-3">
             {ada('photoLabel') && (
               <span className="text-xs text-muted-foreground" style={gaya('photoLabel')}>
@@ -357,6 +377,26 @@ export function Gallery() {
               </p>
             )}
           </div>
+
+          {/* Tiga pembaca angka — semuanya hitungan nyata dari data yang sudah dimuat. */}
+          {tampil('meters') && (
+            <div className="gallery-meters">
+              <div className="gallery-meter">
+                <b>{String(count).padStart(2, '0')}</b>
+                {ada('meterWorks') && <span style={gaya('meterWorks')}>{isi('meterWorks')}</span>}
+              </div>
+              <span className="gallery-meter-garis" aria-hidden="true" />
+              <div className="gallery-meter">
+                <b>{String(daftarHal.length).padStart(2, '0')}</b>
+                {ada('meterPages') && <span style={gaya('meterPages')}>{isi('meterPages')}</span>}
+              </div>
+              <span className="gallery-meter-garis" aria-hidden="true" />
+              <div className="gallery-meter">
+                <b>{playing ? `${speed.toFixed(1)}×` : '0.0×'}</b>
+                {ada('meterRate') && <span style={gaya('meterRate')}>{isi('meterRate')}</span>}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -366,6 +406,18 @@ export function Gallery() {
 
       <section className="scene" aria-label="Carousel gambar 3D" style={{ ...letak('scene'), ...gayaScene }}>
         {tampil('corridor') && <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />}
+        {tampil('hud') && (
+          <div className="stage-hud" aria-hidden="true">
+            <span className="stage-cakrawala" />
+            <span className="stage-tis is-atas-kiri" />
+            <span className="stage-tis is-atas-kanan" />
+            <span className="stage-tis is-bawah-kiri" />
+            <span className="stage-tis is-bawah-kanan" />
+            <span className="stage-tik is-a" />
+            <span className="stage-tik is-b" />
+            <span className="stage-tik is-c" />
+          </div>
+        )}
         <div className="carousel-orbit" data-sumbu={tegak ? 'vertical' : 'horizontal'} style={gayaPanggung}>
           <div ref={ring} className="carousel-ring">
             {items.map((item, index) => (
@@ -376,7 +428,7 @@ export function Gallery() {
               >
                 <Button
                   variant="ghost"
-                  className="gallery-tile"
+                  className={`gallery-tile${item.image_url ? '' : ' is-kosong'}`}
                   aria-label={`Lihat ${item.title}`}
                   onMouseEnter={() => setHovering(true)}
                   onMouseLeave={() => setHovering(false)}
@@ -407,9 +459,24 @@ export function Gallery() {
         </div>
 
         {count === 0 && !NOT_CONFIGURED_MESSAGE && ada('emptyGallery') && (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground" style={gaya('emptyGallery')}>
-            {isi('emptyGallery')}
+          <div className="scene-kosong">
+            <div className="scene-kosong-kotak" style={gaya('emptyGallery')}>
+              <ImageIcon className="size-5" />
+              <span>{isi('emptyGallery')}</span>
+              {adminAllowed && (
+                <a className="scene-kosong-tautan" href="/ceopusat" aria-label="Kelola situs" title="Kelola situs">
+                  <Settings className="size-3.5" />
+                </a>
+              )}
+            </div>
           </div>
+        )}
+
+        {tampil('hud') && count > 0 && ada('sceneHint') && (
+          <p className="stage-petunjuk" style={gaya('sceneHint')}>
+            <Move3d className="size-3" />
+            <span>{isi('sceneHint')}</span>
+          </p>
         )}
 
         {tampil('status') && (
@@ -473,9 +540,23 @@ export function Gallery() {
 
       {tampil('footer') && (
         <footer className="gallery-footer" style={letak('footer')}>
-          <span style={gaya('brand')}>{isi('brand')}</span>
+          <span className="footer-merek">
+            <i className="footer-kedip" aria-hidden="true" />
+            <span style={gaya('brand')}>{isi('brand')}</span>
+            {ada('footerTag') && (
+              <em className="footer-tag" style={gaya('footerTag')}>
+                {isi('footerTag')}
+              </em>
+            )}
+          </span>
           <span className="flex items-center gap-3">
             <span>{ada('photoLabel') ? `${count} ${isi('photoLabel')}` : count}</span>
+            {daftarHal.length > 0 && (
+              <>
+                <i className="footer-titik" aria-hidden="true" />
+                <span>{ada('meterPages') ? `${daftarHal.length} ${isi('meterPages')}` : daftarHal.length}</span>
+              </>
+            )}
             {tampil('adminButton') && adminAllowed && (
               <a className="settings-button" href="/ceopusat" aria-label="Kelola situs" title="Kelola situs di halaman terpisah">
                 <Settings />

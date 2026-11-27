@@ -167,7 +167,7 @@ textarea {
 }
 
 .gallery-intro {
-  margin: 44px auto 0;
+  margin: 34px auto 0;
   width: 100%;
   max-width: min(92%, 860px);
   padding: 0 16px;
@@ -990,5 +990,511 @@ a.settings-button:hover {
 .toggle-bar.is-disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ── Cahaya dan bingkai HUD halaman publik ─────────────────────────────────
+   Layer ini hanya dekorasi: angka yang tampil di atasnya selalu hitungan nyata
+   (jumlah karya, jumlah halaman, laju). `isolation` membuat kedua pseudo-elemen
+   di bawah tetap berada di belakang konten tanpa menimbun stacking context baru. */
+.gallery-app {
+  position: relative;
+  isolation: isolate;
+}
+.gallery-app::before,
+.gallery-app::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.gallery-app::before {
+  background:
+    radial-gradient(56% 40% at 16% 0%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 72%),
+    radial-gradient(44% 34% at 88% 10%, var(--card-glow), transparent 74%),
+    radial-gradient(72% 52% at 50% 116%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%);
+}
+.gallery-app::after {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--border) 48%, transparent) 1px, transparent 1px);
+  background-size: 62px 62px;
+  -webkit-mask-image: radial-gradient(76% 60% at 50% 46%, #000 18%, transparent 78%);
+  mask-image: radial-gradient(76% 60% at 50% 46%, #000 18%, transparent 78%);
+  opacity: 0.45;
+  animation: gs-jelajah 36s linear infinite;
+}
+@keyframes gs-jelajah {
+  to {
+    background-position:
+      62px 62px,
+      -62px 62px;
+  }
+}
+
+.gallery-bingkai {
+  position: fixed;
+  inset: 18px;
+  z-index: 2;
+  pointer-events: none;
+}
+[data-hud='mati'] .gallery-bingkai {
+  display: none;
+}
+.gallery-sudut {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1px solid color-mix(in oklab, var(--primary) 55%, transparent);
+}
+.gallery-sudut.is-atas-kiri {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+.gallery-sudut.is-atas-kanan {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+}
+.gallery-sudut.is-bawah-kiri {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+.gallery-sudut.is-bawah-kanan {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+}
+.gallery-rel {
+  position: absolute;
+  top: 24%;
+  bottom: 24%;
+  width: 8px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--border) 85%, transparent) 0 1px,
+    transparent 1px 15px
+  );
+}
+.gallery-rel.is-kiri {
+  left: 0;
+}
+.gallery-rel.is-kanan {
+  right: 0;
+}
+
+.gallery-header {
+  position: relative;
+}
+.gallery-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 65%, transparent) 22%,
+    color-mix(in oklab, var(--primary) 65%, transparent) 78%,
+    transparent
+  );
+  opacity: 0.55;
+}
+.header-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  letter-spacing: 1.4px;
+}
+.header-kedip,
+.footer-kedip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted-foreground);
+}
+.header-kedip.is-jalan,
+.footer-kedip {
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--card-glow);
+  animation: gs-napas 2.8s ease-in-out infinite;
+}
+@keyframes gs-napas {
+  50% {
+    opacity: 0.28;
+    transform: scale(0.82);
+  }
+}
+.header-link[data-aktif] {
+  box-shadow: 0 7px 16px -11px var(--card-glow);
+}
+.header-portfolio {
+  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+}
+
+/* Pembaca angka di bawah judul. */
+.gallery-meters {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+.gallery-meter {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 96px;
+  padding: 11px 18px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gallery-meter:hover {
+  border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+  box-shadow: 0 0 26px -14px var(--card-glow);
+  transform: translateY(-2px);
+}
+.gallery-meter::before,
+.gallery-meter::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 1px solid color-mix(in oklab, var(--primary) 60%, transparent);
+}
+.gallery-meter::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.gallery-meter::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+.gallery-meter b {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--foreground);
+}
+.gallery-meter span {
+  font-size: 9.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.gallery-meter-garis {
+  width: 1px;
+  align-self: center;
+  height: 34px;
+  background: linear-gradient(to bottom, transparent, var(--border), transparent);
+}
+
+/* Bingkai panggung. */
+.stage-hud {
+  position: absolute;
+  inset: 6px 3%;
+  z-index: 1;
+  pointer-events: none;
+}
+.stage-tis {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1px solid color-mix(in oklab, var(--primary) 45%, transparent);
+  opacity: 0.75;
+}
+.stage-tis.is-atas-kiri {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+.stage-tis.is-atas-kanan {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+}
+.stage-tis.is-bawah-kiri {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+.stage-tis.is-bawah-kanan {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+}
+.stage-cakrawala {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 13%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 55%, transparent) 25%,
+    color-mix(in oklab, var(--primary) 55%, transparent) 75%,
+    transparent
+  );
+}
+.stage-cakrawala::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 62%;
+  height: 120px;
+  transform: translateX(-50%);
+  background: radial-gradient(58% 100% at 50% 100%, var(--card-glow), transparent 72%);
+  opacity: 0.5;
+}
+.stage-tik {
+  position: absolute;
+  bottom: 13%;
+  width: 1px;
+  height: 9px;
+  background: color-mix(in oklab, var(--primary) 60%, transparent);
+}
+.stage-tik.is-a {
+  left: 22%;
+}
+.stage-tik.is-b {
+  left: 50%;
+  height: 13px;
+}
+.stage-tik.is-c {
+  left: 78%;
+}
+.stage-petunjuk {
+  position: absolute;
+  right: 3%;
+  bottom: 46px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  white-space: nowrap;
+  font-size: 9.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+.stage-petunjuk svg {
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+/* Kartu tanpa gambar terlihat seperti cetak biru, bukan kotak rusak. */
+.gallery-tile.is-kosong {
+  border: 1px dashed color-mix(in oklab, var(--primary) 55%, var(--border));
+  background-color: color-mix(in srgb, var(--card) 72%, transparent);
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--primary) 12%, transparent) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--primary) 10%, transparent) 0 1px, transparent 1px 24px);
+}
+.gallery-tile.is-kosong > svg {
+  width: 34px;
+  height: 34px;
+  opacity: 0.8;
+  color: var(--primary);
+  filter: drop-shadow(0 0 12px var(--card-glow));
+}
+
+/* Galeri kosong: bingkai, bukan satu baris teks menggantung. */
+.scene-kosong {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+}
+.scene-kosong-kotak {
+  display: grid;
+  justify-items: center;
+  gap: 13px;
+  padding: 28px 36px;
+  border: 1px dashed color-mix(in oklab, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--card) 74%, transparent);
+  box-shadow: 0 0 46px -14px var(--card-glow);
+  font-size: 12px;
+  text-align: center;
+}
+.scene-kosong-kotak > svg {
+  color: var(--primary);
+  opacity: 0.7;
+}
+.scene-kosong-tautan {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted-foreground);
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.scene-kosong-tautan:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 16px -4px var(--card-glow);
+}
+
+/* Panel kontrol ikut memakai bahasa sudut yang sama. */
+.playback {
+  position: relative;
+  margin: 20px auto 34px;
+  width: min(720px, 84%);
+  padding: 15px 24px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 48%, transparent);
+  opacity: 0.5;
+}
+.playback::before,
+.playback::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid color-mix(in oklab, var(--primary) 60%, transparent);
+}
+.playback::before {
+  top: -1px;
+  right: -1px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.playback::after {
+  bottom: -1px;
+  left: -1px;
+  border-right: 0;
+  border-top: 0;
+}
+.playback:hover,
+.playback:focus-within {
+  border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+}
+.speed-value {
+  font-family: var(--font-display);
+  letter-spacing: 0.6px;
+}
+
+.gallery-footer {
+  position: relative;
+  gap: 18px;
+}
+.gallery-footer::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 60%, transparent) 30%,
+    color-mix(in oklab, var(--primary) 60%, transparent) 70%,
+    transparent
+  );
+  opacity: 0.5;
+}
+.footer-merek {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.footer-tag {
+  font-style: normal;
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+.footer-titik {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--muted-foreground);
+  opacity: 0.55;
+}
+
+/* ── Responsif untuk lapisan HUD ────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .gallery-bingkai {
+    inset: 10px;
+  }
+  .gallery-rel {
+    display: none;
+  }
+  .gallery-meters {
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .gallery-meter {
+    min-width: 0;
+    flex: 1;
+    padding: 9px 10px;
+  }
+  .gallery-meter b {
+    font-size: 17px;
+  }
+  .gallery-meter span {
+    font-size: 8.5px;
+    letter-spacing: 1px;
+  }
+  .stage-hud {
+    inset: 4px 4%;
+  }
+  .stage-petunjuk {
+    bottom: 34px;
+    font-size: 8.5px;
+    letter-spacing: 1.1px;
+  }
+  .playback {
+    padding: 12px 14px;
+  }
+  .footer-tag {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-app::after,
+  .header-kedip.is-jalan,
+  .footer-kedip {
+    animation: none;
+  }
 }
 
