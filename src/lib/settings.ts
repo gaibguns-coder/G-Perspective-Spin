@@ -1,6 +1,7 @@
 import { NOT_CONFIGURED_MESSAGE, supabase } from './supabase';
+import type { CSSProperties } from 'react';
 import type { ColorThemeKey } from './theme';
-import { BRAND, INITIAL_SLOT_COUNT, VIEW_ANGLE, type SpinDirection } from './motion';
+import { BRAND, DEG_PER_DETIK, FAKTOR_KURSI, INITIAL_SLOT_COUNT, LAJU_EASE, PERSPECTIVE_DASAR, VIEW_ANGLE, type SpinDirection } from './motion';
 
 /**
  * Setiap data yang tampil di halaman user dan admin punya tabel sendiri di Supabase:
@@ -41,6 +42,17 @@ export type MenuKey =
   | 'footer'
   | 'adminButton';
 
+/** Bagian yang boleh digeser. Hanya `scene` yang tidak punya tuas di site_menus. */
+export type BlockKey =
+  | 'header'
+  | 'intro'
+  | 'scene'
+  | 'status'
+  | 'playback'
+  | 'music'
+  | 'sidePanel'
+  | 'footer';
+
 export interface TextSetting {
   label: string;
   text: string;
@@ -62,6 +74,8 @@ export interface Appearance {
   colorTheme: ColorThemeKey;
 }
 
+export type SpinAxis = 'horizontal' | 'vertical';
+
 export interface Motion {
   direction: SpinDirection;
   speed: number;
@@ -69,6 +83,31 @@ export interface Motion {
   pauseOnHover: boolean;
   viewAngle: number;
   slotCount: number;
+  /** horizontal = kincin berdiri (rotateY), vertical = kincin telentang (rotateX). */
+  orientation: SpinAxis;
+  /** Kedalaman perspektif dalam piksel; makin kecil makin dramatis. */
+  perspective: number;
+  /** Besar panggung dibanding bawaan layar, dalam persen. */
+  stagePct: number;
+  radiusPct: number;
+  /** Sisa kecepatan saat kursor di atas kartu, dalam persen. */
+  hoverPct: number;
+  easeRate: number;
+  /** Gelap kartu yang menghadap belakang, dalam persen. 0 berarti semua terangan. */
+  fadePct: number;
+  degPerSec: number;
+}
+
+/** Geometri satu bagian halaman; menyala/matinya tetap berada di site_menus. */
+export interface Block {
+  label: string;
+  hint: string;
+  /** Persen lebar layar (x) dan tinggi layar (y); 0 berarti tempat semula. */
+  x: number;
+  y: number;
+  scale: number;
+  /** 0 berarti ikut urutan tumpukan bawaan. */
+  z: number;
 }
 
 export interface SiteInfo {
@@ -87,6 +126,7 @@ export interface SiteContent {
   appearance: Appearance;
   motion: Motion;
   info: SiteInfo;
+  blocks: Record<BlockKey, Block>;
 }
 
 /** Pasangan nama keluarga → tumpukan CSS. Muatannya mengikuti <link> di index.html. */
@@ -164,7 +204,29 @@ export const DEFAULT_MOTION: Motion = {
   pauseOnHover: true,
   viewAngle: VIEW_ANGLE,
   slotCount: INITIAL_SLOT_COUNT,
+  orientation: 'horizontal',
+  perspective: PERSPECTIVE_DASAR,
+  stagePct: 100,
+  radiusPct: 100,
+  hoverPct: Math.round(FAKTOR_KURSI * 100),
+  easeRate: LAJU_EASE,
+  fadePct: 0,
+  degPerSec: DEG_PER_DETIK,
 };
+
+const blok = (label: string, hint: string): Block => ({ label, hint, x: 0, y: 0, scale: 1, z: 0 });
+
+/** Urutan kunci ini yang dipakai panel Tata Letak sebagai daftar bagian halaman. */
+export const DEFAULT_BLOCKS = {
+  header: blok('Bilah atas', 'Baris logo, penghitung, tautan, dan tombol pengaturan.'),
+  intro: blok('Judul pembuka', 'Judul besar dan sub judul di atas panggung.'),
+  scene: blok('Panggung carousel', 'Ring 3D berikut latar koridor.'),
+  status: blok('Chip status', 'Garis penanda "sedang berputar" dan jumlah foto.'),
+  playback: blok('Panel kontrol', 'Bilah arah, kecepatan, dan tombol jeda.'),
+  music: blok('Pemutar musik', 'Kotak hijau melayang di pojok kiri bawah.'),
+  sidePanel: blok('Panel samping', 'Lemari pengaturan yang membuka dari kanan.'),
+  footer: blok('Footer', 'Baris merek dan penghitung di dasar layar.'),
+} satisfies Record<BlockKey, Block>;
 
 export const DEFAULT_INFO: SiteInfo = {
   pageTitle: `${BRAND} — Galeri Gambar 3D`,
@@ -184,6 +246,7 @@ export function kontenBawaan(): SiteContent {
     appearance: { ...DEFAULT_APPEARANCE },
     motion: { ...DEFAULT_MOTION },
     info: { ...DEFAULT_INFO },
+    blocks: structuredClone(DEFAULT_BLOCKS),
   };
 }
 
@@ -193,6 +256,25 @@ export function textOf(content: SiteContent, key: TextKey): TextSetting {
 
 export function menuOn(content: SiteContent, key: MenuKey): boolean {
   return content.menus[key]?.on ?? DEFAULT_SETTINGS.menus[key].on;
+}
+
+/** Geometri satu bagian; kunci yang belum punya baris tetap berada di tempatnya. */
+export function blokOf(content: SiteContent, key: BlockKey): Block {
+  return content.blocks[key] ?? DEFAULT_BLOCKS[key];
+}
+
+/**
+ * Gaya tempat bagian setelah digeser admin. Memakai transform agar tata letak asli
+ * (tinggi baris, posisi tetap pemutar musik, skala per lebar layar) tidak berubah;
+ * nilai nol tidak menulis apa pun supaya tampilan bawaan tetap dari CSS.
+ */
+export function gayaBlok(b: Block): CSSProperties {
+  const geser = b.x !== 0 || b.y !== 0;
+  if (!geser && b.scale === 1 && !b.z) return {};
+  return {
+    transform: `translate(${b.x}vw, ${b.y}vh)${b.scale !== 1 ? ` scale(${b.scale})` : ''}`,
+    ...(b.z ? { zIndex: b.z } : {}),
+  };
 }
 
 /**
@@ -205,10 +287,18 @@ export function gabung(
   appearance?: Record<string, unknown> | null,
   motion?: Record<string, unknown> | null,
   info?: Record<string, unknown> | null,
+  blockRows?: unknown,
 ): SiteContent {
   const hasil = kontenBawaan();
   const str = (v: unknown, fallback: string) => (typeof v === 'string' && v ? v : fallback);
   const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
+  /** Angka terikat rentang: tipe salah atau di luar batas kembali ke bawaan. */
+  const angka = (v: unknown, min: number, max: number, fallback: number, desimal = 0) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fallback;
+    const pangkat = 10 ** desimal;
+    return Math.min(max, Math.max(min, Math.round(n * pangkat) / pangkat));
+  };
 
   for (const row of Array.isArray(textRows) ? (textRows as Record<string, unknown>[]) : []) {
     const key = row.key as TextKey;
@@ -240,14 +330,33 @@ export function gabung(
 
   const arah = motion?.direction;
   if (arah === 'left' || arah === 'right') hasil.motion.direction = arah;
-  const laju = Number(motion?.speed);
-  if (Number.isFinite(laju)) hasil.motion.speed = Math.min(3, Math.max(0.2, Math.round(laju * 10) / 10));
+  hasil.motion.speed = angka(motion?.speed, 0.2, 3, DEFAULT_MOTION.speed, 1);
   hasil.motion.autoplay = bool(motion?.autoplay, DEFAULT_MOTION.autoplay);
   hasil.motion.pauseOnHover = bool(motion?.pause_on_hover, DEFAULT_MOTION.pauseOnHover);
-  const sudut = Number(motion?.view_angle);
-  if (Number.isFinite(sudut)) hasil.motion.viewAngle = Math.min(45, Math.max(0, Math.round(sudut)));
-  const slot = Number(motion?.slot_count);
-  if (Number.isFinite(slot)) hasil.motion.slotCount = Math.min(40, Math.max(3, Math.round(slot)));
+  hasil.motion.viewAngle = angka(motion?.view_angle, -45, 45, DEFAULT_MOTION.viewAngle);
+  hasil.motion.slotCount = angka(motion?.slot_count, 3, 40, DEFAULT_MOTION.slotCount);
+  const sumbu = motion?.orientation;
+  if (sumbu === 'horizontal' || sumbu === 'vertical') hasil.motion.orientation = sumbu;
+  hasil.motion.perspective = angka(motion?.perspective, 400, 4000, DEFAULT_MOTION.perspective);
+  hasil.motion.stagePct = angka(motion?.stage_pct, 50, 200, DEFAULT_MOTION.stagePct);
+  hasil.motion.radiusPct = angka(motion?.radius_pct, 40, 300, DEFAULT_MOTION.radiusPct);
+  hasil.motion.hoverPct = angka(motion?.hover_pct, 0, 100, DEFAULT_MOTION.hoverPct);
+  hasil.motion.easeRate = angka(motion?.ease_rate, 0.5, 12, DEFAULT_MOTION.easeRate, 2);
+  hasil.motion.fadePct = angka(motion?.fade_pct, 0, 90, DEFAULT_MOTION.fadePct);
+  hasil.motion.degPerSec = angka(motion?.deg_per_sec, 1, 30, DEFAULT_MOTION.degPerSec, 1);
+
+  for (const row of Array.isArray(blockRows) ? (blockRows as Record<string, unknown>[]) : []) {
+    const key = row.key as BlockKey;
+    if (!(key in hasil.blocks)) continue;
+    hasil.blocks[key] = {
+      label: str(row.label, hasil.blocks[key].label),
+      hint: str(row.hint, hasil.blocks[key].hint),
+      x: angka(row.x, -50, 50, 0, 2),
+      y: angka(row.y, -40, 40, 0, 2),
+      scale: angka(row.scale, 0.5, 2, 1, 2),
+      z: angka(row.z, 0, 30, 0),
+    };
+  }
 
   hasil.info = {
     pageTitle: str(info?.page_title, DEFAULT_INFO.pageTitle),
@@ -272,14 +381,15 @@ async function coba<T>(jalan: PromiseLike<{ data: T | null; error: unknown }>, f
 
 export async function loadContent(): Promise<SiteContent> {
   if (NOT_CONFIGURED_MESSAGE) return kontenBawaan();
-  const [textRows, menuRows, appearance, motion, info] = await Promise.all([
+  const [textRows, menuRows, appearance, motion, info, blockRows] = await Promise.all([
     coba(supabase.from('site_texts').select('key,label,body,color,font,visible,position').order('position'), null),
     coba(supabase.from('site_menus').select('key,label,hint,enabled,position').order('position'), null),
     coba(supabase.from('site_appearance').select('*').eq('id', 1).maybeSingle(), null),
     coba(supabase.from('site_motion').select('*').eq('id', 1).maybeSingle(), null),
     coba(supabase.from('site_info').select('*').eq('id', 1).maybeSingle(), null),
+    coba(supabase.from('site_blocks').select('key,label,hint,x,y,scale,z,position').order('position'), null),
   ]);
-  return gabung(textRows, menuRows, appearance, motion, info);
+  return gabung(textRows, menuRows, appearance, motion, info, blockRows);
 }
 
 /** Simpan setiap kelompok ke tabelnya sendiri; kegagalan dikumpulkan, bukan dihentikan di baris pertama. */
@@ -307,9 +417,23 @@ export async function saveContent(next: SiteContent): Promise<void> {
     updated_at: waktu,
   }));
 
+  const blockRows = (Object.keys(next.blocks) as BlockKey[]).map((key, index) => ({
+    key,
+    label: next.blocks[key].label,
+    hint: next.blocks[key].hint,
+    x: next.blocks[key].x,
+    y: next.blocks[key].y,
+    scale: next.blocks[key].scale,
+    z: next.blocks[key].z,
+    position: index + 1,
+    updated_at: waktu,
+  }));
+
+  // Satu entri per tabel: menambah jenis data baru cukup menambah baris di daftar ini.
   const tugas: [string, PromiseLike<{ error: unknown }>][] = [
     ['teks', supabase.from('site_texts').upsert(textRows, { onConflict: 'key' })],
     ['menu', supabase.from('site_menus').upsert(menuRows, { onConflict: 'key' })],
+    ['blok', supabase.from('site_blocks').upsert(blockRows, { onConflict: 'key' })],
     [
       'tampilan',
       supabase
@@ -329,6 +453,14 @@ export async function saveContent(next: SiteContent): Promise<void> {
             pause_on_hover: next.motion.pauseOnHover,
             view_angle: next.motion.viewAngle,
             slot_count: next.motion.slotCount,
+            orientation: next.motion.orientation,
+            perspective: next.motion.perspective,
+            stage_pct: next.motion.stagePct,
+            radius_pct: next.motion.radiusPct,
+            hover_pct: next.motion.hoverPct,
+            ease_rate: next.motion.easeRate,
+            fade_pct: next.motion.fadePct,
+            deg_per_sec: next.motion.degPerSec,
             updated_at: waktu,
           },
           { onConflict: 'id' },

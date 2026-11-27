@@ -1,6 +1,6 @@
 # G-Perspective-Spin
 
-Galeri gambar 3D Carousel yang berputar kanan/kiri dengan kecepatan yang bisa diatur, koridor perspektif berbasis canvas, panel samping pengaturan (terang/gelap, palet, pasang aplikasi Chrome, layar penuh), pemutar musik latar yang bisa digeser, dan panel pengelolaan untuk admin: CRUD gambar, CRUD musik, serta sunting seluruh teks dan menu dari database.
+Galeri gambar 3D Carousel yang berputar kanan/kiri dengan kecepatan yang bisa diatur, koridor perspektif berbasis canvas, panel samping pengaturan (terang/gelap, palet, pasang aplikasi Chrome, layar penuh), pemutar musik latar yang bisa digeser, dan konsol pengelolaan di alamat terpisah **`/ceopusat/`**: CRUD gambar, CRUD musik, serta sunting seluruh teks, menu, tampilan, dan gerak dari database.
 
 Dibangun sebagai SPA **Vite + React 19 + TypeScript + Tailwind v4** dengan **Supabase** sebagai penyimpanan data dan berkas, sehingga hasil sunting admin terlihat oleh semua pengunjung.
 
@@ -9,18 +9,19 @@ Dibangun sebagai SPA **Vite + React 19 + TypeScript + Tailwind v4** dengan **Sup
 ```sh
 npm install
 cp .env.example .env      # lalu isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY
-npm run dev               # http://localhost:5175
+npm run dev               # galeri di http://localhost:5175/ dan konsol di http://localhost:5175/ceopusat/
 ```
 
-`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px, 512px, 180px untuk apple-touch-icon) sebagai ikon instalasi.
+`npm run build` menghasilkan folder `dist/` berupa situs statis yang bisa diunggah ke hosting mana pun (Qoder Sites, Netlify, Cloudflare Pages, GitHub Pages). Versi yang tayang saat ini: https://g-perspective-spin-c6vh82w25x7.qoder.website (konsol: tambahkan `/ceopusat/`) — dibangun dari branch `main`, dengan `public/logo.png` (512px), `public/favicon.png` (64px), dan `public/icons/` (192px, 512px, 180px untuk apple-touch-icon) sebagai ikon instalasi.
 
 ## Menyiapkan Supabase
 
 1. Buat project Supabase, lalu buka **SQL Editor**.
 2. Jalankan isi `supabase/migrations/0001_init.sql` sekali. Skrip ini membuat tabel `gallery_items`, `songs`, `user_roles`, fungsi `has_role`, policy RLS, dua bucket penyimpanan (`gallery-images`, `songs`), dan 15 slot gambar kosong.
 3. Jalankan isi `supabase/migrations/0003_site_content.sql` untuk tabel konten tampilan: `site_texts` (satu baris per teks), `site_menus` (satu baris per menu), `site_appearance`, `site_motion`, dan `site_info`. Skrip ini juga mengisi benih dan menghapus `site_settings` bila masih kosong.
-4. Buat akun admin lewat **Authentication → Users → Add user → Create new user** (jangan lupa matikan "Confirm email" atau gunakan jalur ini supaya akun langsung terkonfirmasi).
-5. Ambil UUID akun tersebut, lalu jalankan:
+4. Jalankan isi `supabase/migrations/0004_carousel_layout.sql` untuk tabel `site_blocks` (geseran `x`/`y`, `scale`, `z`, dan urutan tiap bagian) sekaligus kolom geometri baru pada `site_motion`: `orientation` (horizontal/vertical), `perspective`, `stage_pct`, `radius_pct`, `hover_pct`, `ease_rate`, `fade_pct`, `deg_per_sec`, dan `view_angle` yang kini boleh negatif (melihat dari bawah). Tanpa migrasi ini panel **Carousel** dan **Tata letak** tetap terbuka, tetapi nilainya hanya tersimpan di peramban.
+5. Buat akun admin lewat **Authentication → Users → Add user → Create new user** (jangan lupa matikan "Confirm email" atau gunakan jalur ini supaya akun langsung terkonfirmasi).
+6. Ambil UUID akun tersebut, lalu jalankan:
 
    ```sql
    insert into public.user_roles (user_id, role)
@@ -28,7 +29,7 @@ npm run dev               # http://localhost:5175
    on conflict (user_id, role) do nothing;
    ```
 
-6. Isi `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` di `.env`. Kunci hanya boleh berada di berkas `.env` (sudah di-`gitignore`) — jangan ditempel ke obrolan, dokumentasi, atau commit.
+7. Isi `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` di `.env`. Kunci hanya boleh berada di berkas `.env` (sudah di-`gitignore`) — jangan ditempel ke obrolan, dokumentasi, atau commit.
 
 Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum disambungkan.
 
@@ -40,12 +41,17 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `src/components/SidePanel.tsx` | Panel samping: terang/gelap, palet, pasang aplikasi, layar penuh |
 | `src/components/PerspectiveCorridor.tsx` | Latar koridor canvas 30 FPS |
 | `src/components/MusicPlayer.tsx` | Pemutar musik melayang + playlist |
-| `src/components/GalleryAdmin.tsx` | Login admin, CRUD gambar, unggah/urut musik, pemilih tab |
-| `src/components/ContentAdmin.tsx` | Sunting teks, menu, tampilan, gerak, metadata |
+| `src/admin/App.tsx` | Kerangka konsol: gerbang login, bilah kiri, bar Simpan |
+| `src/admin/registry.tsx` | Daftar `PANEL` — satu entri untuk setiap menu baru |
+| `src/admin/store.tsx` | Muat semua tabel konten, draf bersama, simpan, dan cek peran |
+| `src/admin/fields.tsx` | `Grup`, `Baris`, `Sakelar`, `Geser`, `Pilihan`, `Isian` |
+| `src/admin/panels/` | Isi tiap menu: teks, menu, carousel, tata letak, tampilan, metadata, basis data, gambar, lagu |
+| `src/admin/MiniKarousel.tsx` | Pratinjau ring 3D kecil yang ikut angka yang sedang disunting |
+| `ceopusat/index.html` + `main.tsx` | Entri build kedua untuk alamat `/ceopusat/` (tanpa `.html`) |
 | `src/components/ui/Switch.tsx` | Toggle bar untuk mengaktifkan menu |
 | `src/lib/gallery.ts` | Lapisan data Supabase (baca, simpan, hapus, unggah) |
-| `src/lib/settings.ts` | Baca/tulis lima tabel konten + preferensi perangkat |
-| `src/lib/theme.ts` | Lima palet warna dan varian terang/gelapnya |
+| `src/lib/settings.ts` | Baca/tulis enam tabel konten + preferensi perangkat |
+| `src/lib/theme.ts` | Lima palet warna, varian terang/gelapnya, dan `terapkanPalet()` untuk galeri sekaligus konsol |
 | `src/lib/pwa.ts` | Kenali peranti, petunjuk pasang, salin alamat, layar penuh |
 | `src/lib/motion.ts` | Aturan putaran bawaan, perlambatan hover, gerbang peran admin |
 | `public/sw.js` | Cache inti agar situs bisa dipasang dan dibuka luring |
@@ -57,7 +63,18 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `tools/png.cjs` | Pustaka dekode/resample/encode PNG murni Node tanpa dependensi luar |
 | `tools/gambar.cjs` | Pembuat thumbnail tangkapan layar, ilustrasi koridor, dan kartu berbagi 1200×630 |
 
-Tabel konten: `site_texts`, `site_menus`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis ulang dari tab **Teks & Menu**.
+Tabel konten: `site_texts`, `site_menus`, `site_blocks`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis dari konsol. `site_blocks` hanya menyimpan geometri; menyala/matinya bagian tetap milik `site_menus.enabled` supaya tidak ada dua kebenaran untuk hal yang sama.
+
+## Konsol `/ceopusat/`
+
+Halaman pengelolaan berdiri sendiri di alamat `/ceopusat/` (entri build ketiga di `vite.config.ts`, berkasnya `ceopusat/index.html` → `dist/ceopusat/index.html`, jadi tanpa `.html` dan tidak bisa dirayapi mesin cari: `noindex, nofollow`).
+
+- **Satu daftar, semua menu.** `src/admin/registry.tsx` memegang `PANEL`; bilah kiri, judul, isi, dan apakah bar Simpan muncul diambil dari daftar itu. Menambah menu = menambah satu entri, bukan menyalin tombol tab.
+- **Empat kelompok:** Konten (Teks, Menu & bagian), Carousel (Carousel, Tata letak), Situs (Tampilan, Metadata, Basis data), Perpustakaan (Gambar galeri, Musik latar).
+- **Dua jenis panel.** Panel `draf` menyunting salinan bersama dan baru tayang setelah tombol **Simpan**; panel `langsung` (gambar, lagu, basis data) menulis sendiri per tindakan.
+- **Pratinjau hidup.** Palet dan tema yang sedang disunting langsung terlihat di konsol, dan panel Carousel menampilkan ring mini yang ikut angka yang diketik.
+- **Gerbang tunggal.** `store.tsx` memeriksa sesi lewat `supabase.auth.getSession()` lalu peran lewat RPC `has_role`; tanpa sesi ditampilkan formulir masuk, bukan pesan "bukan admin". Writing tetap dijaga RLS, bukan disembunyikan UI.
+- Saat **Tata letak**, bagian digeser di kanvas perkiraan 16∶10; yang disimpan hanyalah pergeseran (`x`/`y` dalam persen, `scale`, `z`) dari tempat semula, jadi layar dengan tinggi berbeda tetap rapi.
 
 ## Pasang sebagai aplikasi
 

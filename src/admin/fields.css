@@ -1,0 +1,303 @@
+/* Kendali dasar konsol /ceopusat/: rapat, 13px, tanpa hiasan berlebihan. */
+
+.ad-grup {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 62%, transparent);
+  overflow: hidden;
+}
+
+.ad-grup + .ad-grup {
+  margin-top: 16px;
+}
+
+.ad-grup-kepala {
+  padding: 11px 14px 9px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--secondary) 55%, transparent);
+}
+
+.ad-grup-kepala h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.ad-grup-kepala p {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.ad-grup-isi {
+  padding: 4px 14px 12px;
+}
+
+.ad-baris {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.ad-baris:last-child {
+  border-bottom: 0;
+}
+
+.ad-baris.is-lebar {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.ad-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ad-label > span {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.ad-label small {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+.ad-kendali {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: none;
+  flex-wrap: wrap;
+}
+
+/* Select dengan opsi panjang tidak boleh menembus layar sempit. */
+.ad-kendali > * {
+  max-width: 100%;
+}
+
+.ad-baris.is-lebar .ad-kendali {
+  width: 100%;
+}
+
+/* Layar sempit: keterangan di baris sendiri, kendali mengisi lebar agar tidak menembus layar. */
+@media (max-width: 640px) {
+  .ad-baris {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ad-kendali {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.ad-kendali input[type='text'],
+.ad-kendali textarea,
+.ad-kendali select {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 9px;
+  width: 260px;
+  max-width: 100%;
+}
+
+.ad-baris.is-lebar textarea {
+  width: 100%;
+  min-height: 62px;
+  resize: vertical;
+}
+
+.ad-kendali textarea {
+  line-height: 1.55;
+}
+
+.ad-kendali input:focus-visible,
+.ad-kendali textarea:focus-visible,
+.ad-kendali select:focus-visible {
+  outline: 1.5px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* ── Penggeser + angka ─────────────────────────────────────────────────── */
+.ad-geser {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ad-geser input[type='range'] {
+  width: 132px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.ad-angka {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 3px 7px;
+  background: var(--background);
+}
+
+.ad-angka input {
+  font: 600 12.5px/1 var(--font-mono, ui-monospace, monospace);
+  width: 46px;
+  border: 0;
+  background: none;
+  color: var(--foreground);
+  padding: 2px 0;
+  appearance: textfield;
+}
+
+.ad-angka input::-webkit-outer-spin-button,
+.ad-angka input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.ad-angka input:focus-visible {
+  outline: none;
+}
+
+.ad-angka span {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.ad-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.ad-reset:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--border);
+}
+
+.ad-reset:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+/* ── Pilihan segmen ────────────────────────────────────────────────────── */
+.ad-pilihan {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ad-pilihan button {
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.ad-pilihan button + button {
+  border-left: 1px solid var(--border);
+}
+
+.ad-pilihan button:hover {
+  color: var(--foreground);
+}
+
+.ad-pilihan button[data-active='true'] {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── Sakelar, warna, tanda ─────────────────────────────────────────────── */
+.ad-sakelar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ad-sakelar-status {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  min-width: 52px;
+  text-align: right;
+}
+
+.ad-warna {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 3px 8px 3px 4px;
+  background: var(--background);
+}
+
+.ad-warna input[type='color'] {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ad-warna input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.ad-warna input[type='color']::-webkit-color-swatch {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.ad-warna code {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.ad-tanda {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.ad-tanda.is-nyala {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+}

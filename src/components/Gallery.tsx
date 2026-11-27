@@ -14,26 +14,28 @@ import {
 import { Button } from './ui/Button';
 import { Slider } from './ui/Slider';
 import { MusicPlayer } from './MusicPlayer';
-import { GalleryAdmin } from './GalleryAdmin';
 import { PerspectiveCorridor } from './PerspectiveCorridor';
 import { SidePanel } from './SidePanel';
 import { colorThemes, paletteColors, type ColorThemeKey } from '@/lib/theme';
 import {
   bacaPreferensi,
+  blokOf,
   fontStackOf,
+  gayaBlok,
   kontenBawaan,
   loadContent,
   menuOn,
   simpanPreferensi,
   terapkanMeta,
   textOf,
+  type BlockKey,
   type MenuKey,
   type SiteContent,
   type TextKey,
 } from '@/lib/settings';
-import { demoSlots, listGallery, type GalleryItem } from '@/lib/gallery';
+import { checkAdminAccess, demoSlots, listGallery, type GalleryItem } from '@/lib/gallery';
 import { NOT_CONFIGURED_MESSAGE, supabase } from '@/lib/supabase';
-import { FAKTOR_KURSI, advanceRotation, easeFaktor, tileOpacity } from '@/lib/motion';
+import { PERSPECTIVE_DASAR, advanceRotation, easeFaktor, radiusRing, tileOpacity } from '@/lib/motion';
 
 const awal = bacaPreferensi();
 // Sistem operasi meminta gerak minimal: putaran tidak dimulai sendiri, dan aturan
@@ -52,7 +54,6 @@ export function Gallery() {
   const [playing, setPlaying] = useState(awal.autoplay ?? !KURANGI_GERAK);
   const [hovering, setHovering] = useState(false);
   const [selected, setSelected] = useState<GalleryItem | null>(null);
-  const [adminOpen, setAdminOpen] = useState(false);
   const [adminAllowed, setAdminAllowed] = useState(false);
   const [contentKey, setContentKey] = useState(0);
   const [content, setContent] = useState<SiteContent>(() => kontenBawaan());
@@ -62,10 +63,20 @@ export function Gallery() {
   const faktor = useRef(1);
   const slotRef = useRef(content.motion.slotCount);
   slotRef.current = content.motion.slotCount;
+  const m = content.motion;
   const count = items.length;
-  const radius = count > 2 ? 105 / Math.tan(Math.PI / count) : 140;
-  const tertutup = selected !== null || adminOpen;
-  const mainKursor = hovering && content.motion.pauseOnHover;
+  const radius = radiusRing(count, m.radiusPct);
+  /** Putaran vertical memakai sumbu X: kincin telentang, kartu naik-turun. */
+  const tegak = m.orientation === 'vertical';
+  const sumbu = tegak ? 'rotateX' : 'rotateY';
+  const tertutup = selected !== null;
+  const mainKursor = hovering && m.pauseOnHover;
+
+  // Angka admin masuk ke variabel CSS, bukan ke properti transform langsung, supaya
+  // skala bawaan per lebar layar di styles.css tetap berlaku sebagai dasar.
+  const gayaPanggung = { '--tilik': `${-m.viewAngle}deg`, '--panggung': String(m.stagePct / 100) } as CSSProperties;
+  const gayaScene = { '--perspektif': String(m.perspective / PERSPECTIVE_DASAR) } as CSSProperties;
+  const letak = (key: BlockKey) => gayaBlok(blokOf(content, key));
 
   const reload = useCallback(async () => {
     if (NOT_CONFIGURED_MESSAGE) {
@@ -114,15 +125,33 @@ export function Gallery() {
   }, [contentKey]);
 
   useEffect(() => {
+    // Gerbang "kelola" hanya soal kenyamanan: tulis-menulis tetap dijaga RLS lewat has_role.
+    const periksa = () => {
+      void checkAdminAccess()
+        .then(setAdminAllowed)
+        .catch(() => setAdminAllowed(false));
+    };
+    periksa();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(event => {
       if (!['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) return;
       if (event === 'SIGNED_OUT') setAdminAllowed(false);
+      else periksa();
       void reload();
     });
     return () => subscription.unsubscribe();
   }, [reload]);
+
+  // Admin menyimpan dari halaman /ceopusat/, jadi saat tab ini kembali dilihat,
+  // konten dan daftar lagu dibaca ulang tanpa pengunjung perlu memuat ulang halaman.
+  useEffect(() => {
+    const onRuangLihat = () => {
+      if (!document.hidden) setContentKey(k => k + 1);
+    };
+    document.addEventListener('visibilitychange', onRuangLihat);
+    return () => document.removeEventListener('visibilitychange', onRuangLihat);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -145,37 +174,37 @@ export function Gallery() {
   useEffect(() => {
     let id = 0;
     let last = 0;
-    // Gambar penutup (viewer/panel) menghentikan putaran, kursor hanya memperlambatkannya.
-    const sasaran = tertutup ? 0 : mainKursor ? FAKTOR_KURSI : 1;
+    // Gambar penutup menghentikan putaran, kursor hanya memperlambatkannya sampai
+    // persen yang dipilih admin di panel Gerak.
+    const sasaran = tertutup ? 0 : mainKursor ? m.hoverPct / 100 : 1;
 
     function frame(time: number) {
       const dt = last ? (time - last) / 1000 : 0;
-      if (dt > 0) faktor.current = easeFaktor(faktor.current, playing ? sasaran : 0, dt);
+      if (dt > 0) faktor.current = easeFaktor(faktor.current, playing ? sasaran : 0, dt, m.easeRate);
       last = time;
 
       if (dt > 0 && faktor.current > 0.001) {
-        angle.current = advanceRotation(angle.current, dt, speed, direction, faktor.current);
+        angle.current = advanceRotation(angle.current, dt, speed, direction, faktor.current, m.degPerSec);
       }
 
       if (ring.current) {
-        ring.current.style.transform = `rotateY(${angle.current}deg)`;
+        ring.current.style.transform = `${sumbu}(${angle.current}deg)`;
         const tiles = ring.current.children;
         for (let i = 0; i < tiles.length; i++) {
           const tileAngle = (i * 360) / Math.max(count, 1) + angle.current;
-          (tiles[i] as HTMLElement).style.opacity = tileOpacity(tileAngle).toFixed(2);
+          (tiles[i] as HTMLElement).style.opacity = tileOpacity(tileAngle, m.fadePct).toFixed(2);
         }
       }
       id = requestAnimationFrame(frame);
     }
     id = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(id);
-  }, [playing, hovering, tertutup, mainKursor, speed, direction, count, content.motion.pauseOnHover]);
+  }, [playing, tertutup, mainKursor, speed, direction, count, sumbu, m.hoverPct, m.easeRate, m.degPerSec, m.fadePct]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return;
       setSelected(null);
-      setAdminOpen(false);
       setPanelOpen(false);
     }
     window.addEventListener('keydown', onKey);
@@ -240,7 +269,7 @@ export function Gallery() {
   return (
     <main className="gallery-app">
       {tampil('header') && (
-        <header className="gallery-header">
+        <header className="gallery-header" style={letak('header')}>
           <div className="brand">
             <img src="/logo.png" alt={`Logo ${isi('brand')}`} className="brand-icon size-7 rounded-md object-contain" />
             {ada('brand') && (
@@ -278,7 +307,7 @@ export function Gallery() {
       )}
 
       {tampil('intro') && (
-        <section className="gallery-intro">
+        <section className="gallery-intro" style={letak('intro')}>
           <div>
             {ada('introTitle') && (
               <h1 style={gaya('introTitle')}>
@@ -301,15 +330,15 @@ export function Gallery() {
         <p className="notice">{NOT_CONFIGURED_MESSAGE || loadError}</p>
       )}
 
-      <section className="scene" aria-label="Carousel gambar 3D">
+      <section className="scene" aria-label="Carousel gambar 3D" style={{ ...letak('scene'), ...gayaScene }}>
         {tampil('corridor') && <PerspectiveCorridor theme={theme} colorTheme={colorTheme} />}
-        <div className="carousel-orbit" data-view-angle={content.motion.viewAngle}>
+        <div className="carousel-orbit" data-sumbu={tegak ? 'vertical' : 'horizontal'} style={gayaPanggung}>
           <div ref={ring} className="carousel-ring">
             {items.map((item, index) => (
               <div
                 className="carousel-position"
                 key={item.id}
-                style={{ transform: `rotateY(${(index * 360) / Math.max(count, 1)}deg) translateZ(${radius}px)` }}
+                style={{ transform: `${sumbu}(${(index * 360) / Math.max(count, 1)}deg) translateZ(${radius}px)` }}
               >
                 <Button
                   variant="ghost"
@@ -350,7 +379,7 @@ export function Gallery() {
         )}
 
         {tampil('status') && (
-          <div className="scene-bottom">
+          <div className="scene-bottom" style={letak('status')}>
             {ada(statusKey) && (
               <span>
                 <Circle className="size-2 text-primary" />
@@ -365,7 +394,7 @@ export function Gallery() {
       </section>
 
       {tampil('playback') && (
-        <section className="playback" aria-label="Kontrol carousel">
+        <section className="playback" aria-label="Kontrol carousel" style={letak('playback')}>
           {tampil('direction') && (
             <div>
               <div className="control-label" style={gaya('directionLabel')}>
@@ -407,14 +436,14 @@ export function Gallery() {
       )}
 
       {tampil('footer') && (
-        <footer className="gallery-footer">
+        <footer className="gallery-footer" style={letak('footer')}>
           <span style={gaya('brand')}>{isi('brand')}</span>
           <span className="flex items-center gap-3">
             <span>{ada('photoLabel') ? `${count} ${isi('photoLabel')}` : count}</span>
-            {tampil('adminButton') && (
-              <Button className="settings-button" variant="ghost" size="icon" aria-label="Kelola galeri" title="Kelola galeri" onClick={() => setAdminOpen(true)}>
+            {tampil('adminButton') && adminAllowed && (
+              <a className="settings-button" href="/ceopusat/" aria-label="Kelola situs" title="Kelola situs di halaman terpisah">
                 <Settings />
-              </Button>
+              </a>
             )}
           </span>
         </footer>
@@ -457,6 +486,7 @@ export function Gallery() {
           playlistTitle={isi('playlistHeading')}
           playlistVisible={ada('playlistHeading')}
           playlistStyle={gaya('playlistHeading')}
+          letak={letak('music')}
         />
       )}
 
@@ -467,22 +497,8 @@ export function Gallery() {
         onTheme={pilihTheme}
         colorTheme={colorTheme}
         onColorTheme={pilihPalet}
+        adminAllowed={adminAllowed}
       />
-
-      {adminOpen && (
-        <GalleryAdmin
-          items={items}
-          onClose={() => {
-            setAdminOpen(false);
-            setHovering(false);
-          }}
-          onAccessChange={setAdminAllowed}
-          onChanged={() => {
-            void reload();
-            setContentKey(k => k + 1);
-          }}
-        />
-      )}
     </main>
   );
 }

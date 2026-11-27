@@ -10,9 +10,11 @@ interface Props {
   onTheme: (next: 'dark' | 'light') => void;
   colorTheme: ColorThemeKey;
   onColorTheme: (next: ColorThemeKey) => void;
+  /** hanya benar bila akun yang masuk punya peran admin */
+  adminAllowed?: boolean;
 }
 
-export function SidePanel({ open, onClose, theme, onTheme, colorTheme, onColorTheme }: Props) {
+export function SidePanel({ open, onClose, theme, onTheme, colorTheme, onColorTheme, adminAllowed = false }: Props) {
   const install = usePwaInstall();
   const fullscreen = useFullscreen();
   const palet = colorThemes[colorTheme] ?? colorThemes.cyan;
@@ -161,6 +163,11 @@ export function SidePanel({ open, onClose, theme, onTheme, colorTheme, onColorTh
           <a className="panel-link" href="/portofolio.html" target="_blank" rel="noopener">
             Portofolio karya
           </a>
+          {adminAllowed && (
+            <a className="panel-link" href="/ceopusat/" rel="noopener">
+              Buka konsol kelola
+            </a>
+          )}
         </div>
       </aside>
     </>

@@ -28,6 +28,8 @@ interface PlayerProps {
   playlistTitle?: string;
   playlistVisible?: boolean;
   playlistStyle?: CSSProperties;
+  /** Geseran dan skala dari tabel site_blocks; digabung dengan hasil seret kotak. */
+  letak?: CSSProperties;
 }
 
 export function MusicPlayer({
@@ -36,6 +38,7 @@ export function MusicPlayer({
   playlistTitle = 'Daftar Lagu',
   playlistVisible = true,
   playlistStyle,
+  letak,
 }: PlayerProps) {
   const [songs, setSongs] = useState<SongItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -231,7 +234,7 @@ export function MusicPlayer({
     <>
       <div
         className={`music-player fixed z-40 ${position ? '' : 'bottom-4 left-3'} ${isCollapsed ? 'w-auto' : 'max-w-[calc(100vw-24px)]'}`}
-        style={position ? { left: `${position.x}px`, top: `${position.y}px`, bottom: 'auto' } : undefined}
+        style={position ? { ...letak, left: `${position.x}px`, top: `${position.y}px`, bottom: 'auto' } : letak}
       >
         {isCollapsed ? (
           <button

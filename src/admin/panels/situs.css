@@ -1,0 +1,103 @@
+/* Panel Tampilan dan Basis Data. */
+
+.ad-palet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+  gap: 8px;
+  padding: 10px 0 4px;
+}
+
+.ad-palet-kartu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 9px 9px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--background);
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+
+.ad-palet-kartu:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
+}
+
+.ad-palet-kartu[data-active='true'] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
+.ad-palet-kartu:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ad-palet-loreng {
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.ad-palet-kartu strong {
+  font-size: 11.5px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.ad-palet-kartu small {
+  font: 500 10.5px/1 ui-monospace, monospace;
+  color: var(--muted-foreground);
+}
+
+/* ── Daftar tabel ──────────────────────────────────────────────────────── */
+.ad-db {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.ad-db-baris {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) 62px 168px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.ad-db-baris:last-child {
+  border-bottom: 0;
+}
+
+.ad-db-baris.is-kepala {
+  font-size: 10.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--secondary) 55%, transparent);
+}
+
+.ad-db-baris code {
+  font: 600 11.5px/1.4 ui-monospace, monospace;
+  color: var(--primary);
+}
+
+.ad-db-baris > span {
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ad-db-baris b {
+  font: 600 12.5px/1 ui-monospace, monospace;
+  text-align: right;
+}
+
+.ad-db-waktu {
+  font-size: 11px;
+  text-align: right;
+}

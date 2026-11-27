@@ -15,9 +15,11 @@ export default defineConfig({
     rollupOptions: {
       // Dua halaman: galeri (SPA React) dan halaman portofolio yang kontennya sudah ada
       // di HTML awal sehingga terbaca mesin cari dan pratinjau tautan.
+      // ceopusat dibangun ke dist/ceopusat/index.html sehingga alamatnya /ceopusat/ tanpa .html.
       input: {
         utama: fileURLToPath(new URL('./index.html', import.meta.url)),
         portofolio: fileURLToPath(new URL('./portofolio.html', import.meta.url)),
+        ceopusat: fileURLToPath(new URL('./ceopusat/index.html', import.meta.url)),
       },
       output: {
         manualChunks(id) {

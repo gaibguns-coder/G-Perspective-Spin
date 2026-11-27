@@ -1,0 +1,215 @@
+/* Kanvas perkiraan tata letak pada konsol /ceopusat/. */
+
+.ad-letak-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ad-letak-ket {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.ad-kanvas {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    linear-gradient(color-mix(in srgb, var(--border) 45%, transparent) 1px, transparent 1px) 0 0 / 100% 10%,
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 45%, transparent) 1px, transparent 1px) 0 0 / 10% 100%,
+    var(--background);
+  touch-action: none;
+}
+
+.ad-kanvas-blok {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 40%, var(--border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--foreground);
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.ad-kanvas-blok:hover {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.ad-kanvas-blok.is-aktif {
+  cursor: grabbing;
+  box-shadow: 0 0 0 1.5px var(--primary), 0 8px 22px color-mix(in srgb, var(--primary) 25%, transparent);
+  z-index: 40 !important;
+}
+
+.ad-kanvas-blok:focus-visible {
+  outline: 1.5px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.ad-kanvas-blok.is-mati {
+  border-style: dashed;
+  opacity: 0.4;
+  background: none;
+}
+
+.ad-kanvas-blok > span {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ad-kanvas-blok > em {
+  font: 500 10px/1 ui-monospace, monospace;
+  font-style: normal;
+  color: var(--muted-foreground);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── Daftar angka per bagian ───────────────────────────────────────────── */
+.ad-letak-tabel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ad-letak-baris {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.ad-letak-baris:last-child {
+  border-bottom: 0;
+}
+
+.ad-letak-baris.is-bersih {
+  opacity: 0.72;
+}
+
+.ad-letak-nama {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 148px;
+  flex: 1;
+}
+
+.ad-letak-urut {
+  font: 600 10.5px/1 ui-monospace, monospace;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 5px;
+}
+
+.ad-letak-nama strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ad-letak-nama small {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.ad-letak-kendali {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ad-letak-angka {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px 6px;
+  background: var(--background);
+}
+
+.ad-letak-angka > span {
+  font: 500 10.5px/1 ui-monospace, monospace;
+  color: var(--muted-foreground);
+}
+
+.ad-letak-angka input {
+  font: 600 12px/1 ui-monospace, monospace;
+  width: 44px;
+  border: 0;
+  background: none;
+  color: var(--foreground);
+  padding: 3px 0;
+  appearance: textfield;
+}
+
+.ad-letak-angka input::-webkit-outer-spin-button,
+.ad-letak-angka input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.ad-letak-angka input:focus-visible {
+  outline: none;
+}
+
+.ad-letak-aksi {
+  display: flex;
+  gap: 3px;
+}
+
+.ad-letak-aksi button,
+.ad-letak-nyala {
+  font: inherit;
+  font-size: 11px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.ad-letak-aksi button:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ad-letak-aksi button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.ad-letak-nyala {
+  border-radius: 999px;
+}
+
+.ad-letak-nyala.is-nyala {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}

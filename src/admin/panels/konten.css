@@ -1,0 +1,243 @@
+/* Baris teks dan menu pada konsol. */
+
+.ad-cari {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: var(--background);
+  color: var(--muted-foreground);
+  flex: none;
+}
+
+.ad-cari input {
+  font: inherit;
+  font-size: 12.5px;
+  width: 148px;
+  border: 0;
+  background: none;
+  color: var(--foreground);
+}
+
+.ad-cari input:focus-visible {
+  outline: none;
+}
+
+.ad-cari button {
+  display: inline-flex;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 0;
+}
+
+.ad-cari button:hover {
+  color: var(--primary);
+}
+
+.ad-kosong {
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  padding: 18px 0;
+}
+
+/* ── Baris teks ────────────────────────────────────────────────────────── */
+.ad-teks {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+  overflow: hidden;
+}
+
+.ad-teks + .ad-teks {
+  margin-top: 7px;
+}
+
+.ad-teks > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ad-teks > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ad-teks > summary:hover {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.ad-teks-nama {
+  font-size: 12.5px;
+  font-weight: 600;
+  min-width: 168px;
+  flex: none;
+}
+
+.ad-teks-isi {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ad-teks-badan {
+  border-top: 1px solid var(--border);
+  padding: 2px 12px 10px;
+}
+
+.ad-teks-badan input[type='text'] {
+  font: inherit;
+  font-size: 12.5px;
+  width: 260px;
+  max-width: 100%;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 9px;
+}
+
+.ad-teks-badan input[type='text']:focus-visible {
+  outline: 1.5px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.ad-teks-badan input:disabled,
+.ad-teks-badan select:disabled,
+.ad-teks-badan input[type='color']:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ad-teks-warna {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 3px 8px 3px 4px;
+  background: var(--background);
+}
+
+.ad-teks-warna input[type='color'] {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ad-teks-warna input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.ad-teks-warna input[type='color']::-webkit-color-swatch {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.ad-teks-warna code {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.ad-teks-font {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ad-teks-font select {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 9px;
+}
+
+.ad-teks-contoh {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Baris menu ────────────────────────────────────────────────────────── */
+.ad-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.ad-menu:last-child {
+  border-bottom: 0;
+}
+
+.ad-menu-nama {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ad-menu-nama strong {
+  display: block;
+  font-size: 12.5px;
+}
+
+.ad-menu-nama small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.45;
+}
+
+.ad-menu-aksi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.ad-menu-aksi button {
+  font: inherit;
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.ad-menu-aksi button:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ad-menu-aksi button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}

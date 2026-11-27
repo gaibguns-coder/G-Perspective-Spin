@@ -25,3 +25,18 @@ export function paletteColors(key: ColorThemeKey, dark: boolean) {
   const theme = colorThemes[key] ?? colorThemes.cyan;
   return dark ? { line: theme.line, glow: theme.glow } : { line: theme.lineLight, glow: theme.glowLight };
 }
+
+/**
+ * Menulis palet terpilih ke variabel CSS dokumen supaya garis, glow, tombol, dan
+ * slider ikut berubah. Dipakai galeri dan konsol /ceopusat/ agar keduanya tampak sama.
+ */
+export function terapkanPalet(key: ColorThemeKey, dark: boolean) {
+  const active = colorThemes[key] ?? colorThemes.cyan;
+  const { line, glow } = paletteColors(key, dark);
+  const root = document.documentElement;
+  root.style.setProperty('--primary', line);
+  root.style.setProperty('--primary-foreground', key === 'monochrome' ? '#09090b' : '#ffffff');
+  root.style.setProperty('--card-glow', dark ? glow : `color-mix(in srgb, ${glow} 45%, transparent)`);
+  if (dark) root.style.setProperty('--background', active.bg);
+  else root.style.removeProperty('--background');
+}

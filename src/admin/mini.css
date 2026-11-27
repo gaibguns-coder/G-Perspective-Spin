@@ -1,0 +1,53 @@
+/* Miniatur kincin pada panel Gerak: mengikuti angka yang sama dengan halaman depan. */
+
+.ad-mini {
+  position: relative;
+  height: 186px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 80% at 50% 40%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 70%),
+    var(--background);
+  perspective: var(--kedalaman, 900px);
+}
+
+.ad-mini-orbit {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilik, -17deg));
+}
+
+.ad-mini-orbit.is-tegak {
+  transform: rotateY(var(--tilik, -17deg));
+}
+
+.ad-mini-ring {
+  position: relative;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.ad-mini-kartu {
+  position: absolute;
+  width: 54px;
+  height: 66px;
+  left: -27px;
+  top: -33px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  background: linear-gradient(155deg, color-mix(in srgb, var(--primary) 28%, transparent), transparent 65%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.ad-mini-catat {
+  position: absolute;
+  bottom: 7px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}

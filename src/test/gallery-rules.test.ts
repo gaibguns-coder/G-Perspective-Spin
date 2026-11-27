@@ -1,9 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { advanceRotation, canEditGallery, FAKTOR_KURSI, easeFaktor, INITIAL_SLOT_COUNT, tileOpacity, VIEW_ANGLE } from '@/lib/motion';
+import {
+  advanceRotation,
+  canEditGallery,
+  DEG_PER_DETIK,
+  FAKTOR_KURSI,
+  easeFaktor,
+  INITIAL_SLOT_COUNT,
+  radiusRing,
+  tileOpacity,
+  VIEW_ANGLE,
+} from '@/lib/motion';
 import { dalamWebview, kenaliPeranti, langkahPemasangan } from '@/lib/pwa';
 import { ALLOWED_AUDIO_EXT, ALLOWED_IMAGE_TYPES, nextPosition } from '@/lib/gallery';
 import {
+  DEFAULT_MOTION,
+  DEFAULT_BLOCKS,
   DEFAULT_SETTINGS,
+  blokOf,
   fontStackOf,
   gabung,
   kontenBawaan,
@@ -49,6 +62,26 @@ describe('geometri dan gerbang peran', () => {
   it('sudut pandang 17 derajat dengan 15 slot awal', () => {
     expect(VIEW_ANGLE).toBe(17);
     expect(INITIAL_SLOT_COUNT).toBe(15);
+  });
+
+  it('jari-jari mengikuti jumlah slot dan pengali persen', () => {
+    expect(radiusRing(15)).toBeCloseTo(radiusRing(15, 100), 6);
+    expect(radiusRing(15, 200)).toBeCloseTo(radiusRing(15) * 2, 6);
+    expect(radiusRing(1)).toBeGreaterThan(0);
+    expect(radiusRing(15) > radiusRing(6)).toBe(true);
+  });
+
+  it('kelajuan dasar derajat per detik dapat diubah', () => {
+    // Delta selalu dipangkas ke 0,05 detik, jadi satu langkah = kelajuan × 0,05.
+    expect(advanceRotation(0, 0.05, 1, 'right')).toBeCloseTo(DEG_PER_DETIK * 0.05, 4);
+    expect(advanceRotation(0, 0.05, 1, 'right', 1, 20)).toBeCloseTo(20 * 0.05, 4);
+  });
+
+  it('redup kedalaman nol berarti tetap seperti bawaan', () => {
+    expect(tileOpacity(0, 0)).toBeCloseTo(2, 4);
+    expect(tileOpacity(0, 40)).toBeCloseTo(1, 4);
+    expect(tileOpacity(180, 40)).toBeCloseTo(0.6, 4);
+    expect(tileOpacity(180, 500)).toBeCloseTo(0.1, 4);
   });
 
   it('hanya peran admin yang boleh mengelola', () => {
@@ -104,9 +137,48 @@ describe('pengaturan teks dan menu', () => {
     expect(hasil.menus.music.on).toBe(false);
     expect(hasil.menus.footer.on).toBe(true);
     expect(hasil.appearance).toEqual({ theme: 'light', colorTheme: 'synthwave' });
-    expect(hasil.motion).toEqual({ direction: 'right', speed: 2.5, autoplay: false, pauseOnHover: false, viewAngle: 24, slotCount: 9 });
+    expect(hasil.motion).toEqual({ ...DEFAULT_MOTION, direction: 'right', speed: 2.5, autoplay: false, pauseOnHover: false, viewAngle: 24, slotCount: 9 });
     expect(hasil.info.pageTitle).toBe('Galeri Keluarga');
     expect(hasil.info.ogImage).toBe('/logo.png');
+  });
+
+  it('baris gerak yang baru dipangkas ke rentang aman', () => {
+    const hasil = gabung([], [], null, {
+      orientation: 'vertical',
+      perspective: 90,
+      stage_pct: 150,
+      radius_pct: 120,
+      hover_pct: 40,
+      ease_rate: '9.5',
+      fade_pct: 200,
+      deg_per_sec: 0,
+    });
+    expect(hasil.motion.orientation).toBe('vertical');
+    expect(hasil.motion.perspective).toBe(400);
+    expect(hasil.motion.stagePct).toBe(150);
+    expect(hasil.motion.radiusPct).toBe(120);
+    expect(hasil.motion.hoverPct).toBe(40);
+    expect(hasil.motion.easeRate).toBe(9.5);
+    expect(hasil.motion.fadePct).toBe(90);
+    expect(hasil.motion.degPerSec).toBe(1);
+  });
+
+  it('sudut pandang negatif berarti melihat dari bawah', () => {
+    expect(gabung([], [], null, { view_angle: -30 }).motion.viewAngle).toBe(-30);
+    expect(gabung([], [], null, { view_angle: -80 }).motion.viewAngle).toBe(-45);
+    expect(gabung([], [], null, { orientation: 'miring' }).motion.orientation).toBe('horizontal');
+  });
+
+  it('blok tak dikenal diabaikan dan nilai di luar rentang dipangkas', () => {
+    const hasil = gabung([], [], null, null, null, [
+      { key: 'scene', label: 'Panggung', hint: 'Ring 3D.', x: '12.5', y: -8, scale: 1.25, z: 4 },
+      { key: 'tidakDikenal', x: 99 },
+      { key: 'footer', x: 900, y: 'bukan angka', scale: 9 },
+    ]);
+    expect(Object.keys(hasil.blocks)).toHaveLength(Object.keys(DEFAULT_BLOCKS).length);
+    expect(hasil.blocks.scene).toEqual({ label: 'Panggung', hint: 'Ring 3D.', x: 12.5, y: -8, scale: 1.25, z: 4 });
+    expect(hasil.blocks.footer).toEqual({ ...DEFAULT_BLOCKS.footer, x: 50, y: 0, scale: 2 });
+    expect(blokOf(hasil, 'header')).toEqual(DEFAULT_BLOCKS.header);
   });
 
   it('nilai di luar rentang atau bertipe salah dikembalikan ke bawaan', () => {
@@ -114,7 +186,7 @@ describe('pengaturan teks dan menu', () => {
       [{ key: 'brand', body: 123 }, { key: 'tidakDikenal', body: 'x' }],
       [{ key: 'footer', enabled: 'ya' }],
       { theme: 'neon' },
-      { speed: 99, view_angle: -5, slot_count: 500 },
+      { speed: 99, view_angle: -90, slot_count: 500 },
       null,
     );
     expect(hasil.texts.brand.text).toBe('G-Perspective-Spin');
@@ -122,7 +194,7 @@ describe('pengaturan teks dan menu', () => {
     expect(hasil.menus.footer.on).toBe(true);
     expect(hasil.appearance.theme).toBe('dark');
     expect(hasil.motion.speed).toBe(3);
-    expect(hasil.motion.viewAngle).toBe(0);
+    expect(hasil.motion.viewAngle).toBe(-45);
     expect(hasil.motion.slotCount).toBe(40);
   });
 
