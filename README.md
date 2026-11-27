@@ -50,6 +50,10 @@ Tanpa `.env`, aplikasi tetap tampil dan menampilkan pesan bahwa backend belum di
 | `src/lib/motion.ts` | Aturan putaran bawaan, perlambatan hover, gerbang peran admin |
 | `public/sw.js` | Cache inti agar situs bisa dipasang dan dibuka luring |
 | `src/styles.css` | Token tema light/dark + palet + seluruh gaya galeri |
+| `produk.html` | Halaman produk: nilai jual, dua paket harga, FAQ, JSON-LD |
+| `src/produk.css` | Gaya halaman produk, menyalin token warna galeri |
+| `src/produk.ts` | Pengisi tahun di kaki halaman produk (satu-satunya skrip di sana) |
+| `tools/og-produk.cjs` | Pemotong kartu berbagi 1200×630 tanpa dependensi gambar |
 
 Tabel konten: `site_texts`, `site_menus`, `site_appearance`, `site_motion`, `site_info` — setiap data pada halaman punya barisnya sendiri, dibaca saat boot dan ditulis ulang dari tab **Teks & Menu**.
 
@@ -63,6 +67,16 @@ Panel pengaturan (ikon slider di kanan atas) punya grup **Aplikasi**.
 - **Webview** (halaman yang dibuka di dalam aplikasi lain, termasuk jendela Qoder): tombol tetap nonaktif dan panel menampilkan peringatan serta kolom alamat siap salin. Buka alamat itu di Chrome/Edge untuk memasang.
 
 Persyaratannya sudah dipenuhi: `manifest.webmanifest`, ikon 192px dan 512px, HTTPS, dan service worker `sw.js` dengan handler `fetch`. Service worker hanya didaftarkan pada hasil build (`import.meta.env.PROD`) agar dev server tetap bisa hot reload.
+
+## Halaman produk (pemasaran)
+
+`produk.html` adalah halaman penjualan terpisah yang dibangun dari entri kedua di `vite.config.ts` (`utama` + `produk`). Seluruh isinya — judul, dua paket harga, FAQ, dan data terstruktur JSON-LD — ditulis langsung di HTML, jadi mesin cari dan pratinjau tautan membacanya tanpa menjalankan JavaScript; `src/produk.ts` hanya mengisi tahun di kaki halaman dan `src/produk.css` menyalin token warna galeri.
+
+Sebelum halaman ini dipakai beriklan:
+
+- Ganti seluruh `628xxxxxxxxxx` di `produk.html` dengan nomor WhatsApp asli berkode negara (contoh `6281234567890`). Ada enam tempat: empat tombol, satu teks catatan, satu tautan kaki.
+- Sesuaikan angka `Rp 850.000` / `Rp 1.750.000`, batas jumlah foto, lama pengerjaan, dan masa tayang dengan layanan yang benar-benar Anda berikan — angka sekarang contoh bawaan, bukan janji.
+- `public/og-produk.png` (1200×630, 499 kB) adalah kartu berbagi. Untuk menggantinya: `node tools/og-produk.cjs gambar-asli.png "" public/og-produk.png 6` — perkakas itu memotong gambar 16:9 apa pun menjadi 1200×630 dan mengompresnya, tanpa dependensi gambar pihak ketiga.
 
 ## Aturan teknis
 

@@ -10,6 +10,12 @@
 - Instalasi aplikasi memakai `beforeinstallprompt` (Chrome/Edge/Android). Webview, iOS, dan Firefox tidak pernah mengirim event tersebut, jadi `src/lib/pwa.ts` wajib tetap memberi petunjuk manual per peranti dan salin alamat sebagai jalan pintas — jangan menghilangkan fallback itu meski tombol instal sudah aktif.
 - Setiap teks antarmuka, judul meta, dan nama brand memakai **G-Perspective-Spin**. Jangan memperkenalkan kembali nama atau dependensi pembangun pihak ketiga lama.
 
+## Halaman produk
+
+- `produk.html` adalah entri build kedua (`utama` + `produk` di `vite.config.ts`) dan sengaja **bukan** React: seluruh isinya harus tetap terbaca di HTML awal supaya mesin cari dan pratinjau tautan bekerja. Memindahkan teks harga atau FAQ ke komponen yang di-render saat runtime adalah kesalahan yang harus dicegah, bukan fitur.
+- Isinya tidak diambil dari lima tabel konten. Angka harga, batas foto, lama pengerjaan, dan nomor WhatsApp adalah klaim pemilik: jangan mengarang nilai baru, dan jangan menghapus `628xxxxxxxxxx` tanpa menggantinya dengan nomor nyata — tautan `wa.me` yang salah membuat tombol pesan mati.
+- `public/sw.js` menyimpan kedua halaman secara terpisah (`url.pathname` sebagai kunci cache), jadi menambah halaman baru berarti menaikkan `INTI` sekaligus `NAMA_CACHE`.
+
 ## Berkas yang tidak boleh sembarangan diubah
 - `supabase/migrations/0001_init.sql` — idempoten dan boleh dijalankan ulang. Jika menambah kolom atau policy, tambahkan migrasi bernomor baru daripada mengubah yang sudah dijalankan.
 - `src/lib/motion.ts` — `VIEW_ANGLE` 17 derajat dan `INITIAL_SLOT_COUNT` 15 adalah aturan yang sudah divalidasi; ubah hanya bila diminta.

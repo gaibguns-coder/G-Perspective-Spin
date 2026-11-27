@@ -1,0 +1,482 @@
+/* Gaya halaman produk. Ditulis tangan, tidak memakai Tailwind, supaya isi halaman
+   sudah terbaca sebelum skrip apa pun jalan. Token oklch-nya disamakan dengan
+   src/styles.css agar palet galeri dan halaman pemasaran terlihat satu keluarga. */
+
+:root {
+  --latar: oklch(0.145 0.004 130);
+  --depan: oklch(0.94 0.005 120);
+  --utama: oklch(0.84 0.18 225);
+  --utama-depan: oklch(0.14 0.02 230);
+  --kotak: oklch(0.21 0.006 130);
+  --redup: oklch(0.59 0.008 120);
+  --batas: oklch(0.4 0.008 130);
+  --cahaya: oklch(0.86 0.18 225 / 0.4);
+  --lebar: 1040px;
+}
+
+* {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(90rem 42rem at 50% -12rem, oklch(0.34 0.12 235 / 0.32), transparent 70%),
+    var(--latar);
+  color: var(--depan);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  line-height: 1.15;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(30px, 6vw, 54px);
+  max-width: 20ch;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: clamp(21px, 3.4vw, 30px);
+}
+
+h3 {
+  font-size: 17px;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+/* ── kepala ─────────────────────────────────────────────────────────────── */
+.lp-topi {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px clamp(16px, 4vw, 40px);
+  background: oklch(0.145 0.004 130 / 0.86);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--batas);
+}
+
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 19px;
+  letter-spacing: 1.2px;
+  text-decoration: none;
+}
+
+.lp-brand img {
+  border-radius: 6px;
+}
+
+.lp-menu {
+  display: flex;
+  gap: 20px;
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.lp-menu a {
+  color: var(--redup);
+  text-decoration: none;
+}
+
+.lp-menu a:hover {
+  color: var(--utama);
+}
+
+.lp-kecil {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--utama);
+  text-decoration: none;
+  border: 1px solid var(--batas);
+  border-radius: 999px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.lp-hero,
+.lp-kotak,
+.lp-langkah,
+.lp-harga,
+.lp-tanya,
+.lp-penutup {
+  width: 100%;
+  max-width: var(--lebar);
+  margin: 0 auto;
+  padding: clamp(38px, 7vw, 76px) clamp(16px, 4vw, 40px);
+}
+
+.lp-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--utama);
+  margin-bottom: 14px;
+}
+
+.lp-sub {
+  max-width: 62ch;
+  margin-top: 18px;
+  color: var(--redup);
+}
+
+.lp-aksi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.lp-tombol {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.lp-utama {
+  background: var(--utama);
+  color: var(--utama-depan);
+  box-shadow: 0 0 22px var(--cahaya);
+}
+
+.lp-utama:hover {
+  box-shadow: 0 0 34px var(--cahaya);
+}
+
+.lp-garis {
+  border-color: var(--batas);
+  color: var(--depan);
+}
+
+.lp-garis:hover {
+  border-color: var(--utama);
+  color: var(--utama);
+}
+
+.lp-ico {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.lp-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--redup);
+}
+
+.lp-key li {
+  padding-left: 16px;
+  position: relative;
+}
+
+.lp-key li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--utama);
+}
+
+/* ── isi paket ──────────────────────────────────────────────────────────── */
+.lp-kotak {
+  border-top: 1px solid var(--batas);
+  display: grid;
+  gap: 28px;
+}
+
+.lp-kotak h2 {
+  margin-bottom: 12px;
+}
+
+.lp-kotak > div > p {
+  color: var(--redup);
+  max-width: 40ch;
+}
+
+.lp-kotak dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--batas);
+  border: 1px solid var(--batas);
+}
+
+.lp-kotak dl > div {
+  background: var(--latar);
+  padding: 20px;
+}
+
+.lp-kotak dt {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.lp-kotak dd {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--redup);
+}
+
+/* ── langkah ────────────────────────────────────────────────────────────── */
+.lp-langkah ol {
+  counter-reset: langkah;
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 22px;
+}
+
+.lp-nomor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--utama);
+  color: var(--utama);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.lp-langkah h3,
+.lp-kotak h3 {
+  margin-bottom: 6px;
+}
+
+.lp-langkah p {
+  font-size: 13.5px;
+  color: var(--redup);
+}
+
+/* ── harga ──────────────────────────────────────────────────────────────── */
+.lp-harga {
+  border-top: 1px solid var(--batas);
+}
+
+.lp-catat-atas,
+.lp-catat {
+  color: var(--redup);
+  font-size: 13.5px;
+  margin-top: 10px;
+}
+
+.lp-catat {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--batas);
+}
+
+.lp-kartu-harga {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.lp-kartu-harga article {
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  border: 1px solid var(--batas);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--kotak), transparent);
+}
+
+.lp-kartu-harga .lp-unggulan {
+  border-color: var(--utama);
+  box-shadow: 0 0 30px oklch(0.86 0.18 225 / 0.16);
+}
+
+.lp-tag {
+  font-size: 12.5px;
+  color: var(--redup);
+  margin-top: 5px;
+}
+
+.lp-nilai {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.5px;
+  margin: 18px 0 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.lp-nilai span {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--redup);
+}
+
+.lp-isi {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  font-size: 13.5px;
+  flex: 1;
+}
+
+.lp-isi li {
+  position: relative;
+  padding: 6px 0 6px 20px;
+  border-bottom: 1px solid oklch(0.4 0.008 130 / 0.45);
+}
+
+.lp-isi li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 13px;
+  width: 8px;
+  height: 3px;
+  background: var(--utama);
+}
+
+/* ── pertanyaan ─────────────────────────────────────────────────────────── */
+.lp-tanya {
+  border-top: 1px solid var(--batas);
+}
+
+.lp-tanya details {
+  border-bottom: 1px solid var(--batas);
+  padding: 16px 0;
+}
+
+.lp-tanya summary {
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lp-tanya summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-tanya summary::after {
+  content: '+';
+  color: var(--utama);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.lp-tanya details[open] summary::after {
+  content: '−';
+}
+
+.lp-tanya details p {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--redup);
+  max-width: 70ch;
+}
+
+/* ── penutup ────────────────────────────────────────────────────────────── */
+.lp-penutup {
+  border-top: 1px solid var(--batas);
+  text-align: center;
+}
+
+.lp-penutup p {
+  color: var(--redup);
+  max-width: 56ch;
+  margin: 12px auto 0;
+}
+
+.lp-penutup .lp-aksi {
+  justify-content: center;
+}
+
+.lp-bawah {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px 16px 40px;
+  border-top: 1px solid var(--batas);
+  font-size: 12.5px;
+  color: var(--redup);
+}
+
+.lp-bawah a {
+  color: var(--redup);
+  text-decoration: none;
+}
+
+.lp-bawah a:hover {
+  color: var(--utama);
+}
+
+@media (max-width: 560px) {
+  .lp-menu {
+    display: none;
+  }
+
+  .lp-tombol {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

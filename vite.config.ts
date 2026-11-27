@@ -13,6 +13,12 @@ export default defineConfig({
   server: { port: 5175, strictPort: false },
   build: {
     rollupOptions: {
+      // Dua halaman: galeri (SPA React) dan halaman produk yang kontennya sudah ada
+      // di HTML awal sehingga terbaca mesin cari dan pratinjau tautan.
+      input: {
+        utama: fileURLToPath(new URL('./index.html', import.meta.url)),
+        produk: fileURLToPath(new URL('./produk.html', import.meta.url)),
+      },
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
