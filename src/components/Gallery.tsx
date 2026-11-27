@@ -444,14 +444,10 @@ export function Gallery() {
                       {ada('tileEmpty') && <span className="tile-label" style={gaya('tileEmpty')}>{isi('tileEmpty')}</span>}
                     </>
                   )}
+                  {/* Kartu sengaja tanpa teks: judul dan deskripsi baru dibaca setelah kartu
+                      diklik, supaya panggung tetap berisi gambar seperti album cetak. */}
                   <span className="tile-number">{String(index + 1).padStart(2, '0')}</span>
                   <Expand className="tile-corner" />
-                  <div className="tile-info">
-                    <strong>{item.title}</strong>
-                    {(item.description || ada('tileNoDesc')) && (
-                      <p style={item.description ? undefined : gaya('tileNoDesc')}>{item.description || isi('tileNoDesc')}</p>
-                    )}
-                  </div>
                 </Button>
               </div>
             ))}

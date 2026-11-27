@@ -5,9 +5,13 @@ export interface GalleryItem {
   id: string;
   title: string;
   description: string;
+  /** Berkas di bucket gallery-images; kosong bila kartu memakai alamat gambar. */
   image_path: string | null;
   position: number;
+  /** Alamat lain: relatif (mis. /karya/galeri-3d.png) atau https. */
   image_url: string | null;
+  /** Isi kolom image_url apa adanya — `image_url` di atas sudah ditambah URL bucket. */
+  image_ref: string | null;
 }
 
 export interface SongItem {
@@ -53,14 +57,15 @@ function publicUrl(bucket: string, path: string) {
 export async function listGallery(): Promise<GalleryItem[]> {
   const { data, error } = await supabase
     .from('gallery_items')
-    .select('id,title,description,image_path,position')
+    .select('id,title,description,image_path,image_url,position')
     .order('position', { ascending: true })
     .order('created_at', { ascending: true });
 
   if (error) throw new Error('Galeri tidak dapat dimuat.');
   return (data ?? []).map(item => ({
     ...item,
-    image_url: item.image_path ? publicUrl(IMAGE_BUCKET, item.image_path) : null,
+    image_ref: item.image_url ?? null,
+    image_url: item.image_url || (item.image_path ? publicUrl(IMAGE_BUCKET, item.image_path) : null),
   }));
 }
 
@@ -115,6 +120,8 @@ export interface GalleryDraft {
   description: string;
   file: File | null;
   removeImage: boolean;
+  /** Alamat gambar lain (mis. /karya/galeri-3d.png). Mengisi ini mengosongkan unggahan. */
+  url: string;
 }
 
 /**
@@ -134,6 +141,13 @@ export async function saveGalleryItem(
   nextPosition: number,
 ): Promise<string[]> {
   if (!draft.file && !draft.title.trim()) throw new Error('Judul wajib diisi.');
+
+  const alamat = draft.url.trim();
+  /* Hanya alamat relatif atau https: `javascript:` dan `data:` masuk lewat kolom ini
+     dan di-render sebagai <img src>, jadi ditolak di sini, bukan di UI. */
+  if (alamat && !/^(\/[^/]|https:\/\/)/.test(alamat)) {
+    throw new Error('Alamat gambar harus diawali "/" atau "https://".');
+  }
 
   let newPath: string | null = null;
   const oldPath = existing?.image_path ?? null;
@@ -158,6 +172,7 @@ export async function saveGalleryItem(
     title: draft.title.trim().slice(0, 160),
     description: draft.description.trim().slice(0, 5000),
     image_path: newPath ?? (draft.removeImage ? null : oldPath),
+    image_url: newPath ? null : alamat.slice(0, 600) || null,
   };
 
   const query = existing
@@ -282,5 +297,6 @@ export function demoSlots(jumlah: number = INITIAL_SLOT_COUNT): GalleryItem[] {
     image_path: null,
     position: i + 1,
     image_url: null,
+    image_ref: null,
   }));
 }

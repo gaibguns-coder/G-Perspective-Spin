@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import {
   Check,
   ImageIcon,
+  Link as LinkIcon,
   Loader2,
   Music,
   PanelLeftClose,
@@ -57,6 +58,7 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
   const [judul, setJudul] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
   const [berkas, setBerkas] = useState<File | null>(null);
+  const [alamat, setAlamat] = useState('');
   const [hapusGambar, setHapusGambar] = useState(false);
   const [sedang, setSedang] = useState(false);
   const [menghapus, setMenghapus] = useState<GalleryItem | null>(null);
@@ -83,6 +85,7 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
     setJudul(item === 'baru' ? '' : item.title);
     setDeskripsi(item === 'baru' ? '' : item.description);
     setBerkas(null);
+    setAlamat(item === 'baru' ? '' : item.image_ref ?? '');
     setHapusGambar(false);
     setPapan('');
   };
@@ -96,6 +99,9 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
   /* Pratinjau berkas yang belum diunggah: URL objek dibuat dan dilepas bersama berkasnya. */
   const pratinjau = useMemo(() => (berkas ? URL.createObjectURL(berkas) : ''), [berkas]);
   useEffect(() => () => void (pratinjau && URL.revokeObjectURL(pratinjau)), [pratinjau]);
+  /* Alamat yang sedang diketik ikut ditampilkan walau belum disimpan, supaya pengguna
+     alih-alih menebak apakah tautan gambarnya benar. Berkas unggahan lebih diprioritaskan. */
+  const pratinjauAlamat = !berkas && alamat.trim() ? alamat.trim() : '';
 
   async function simpan(e: React.FormEvent) {
     e.preventDefault();
@@ -104,7 +110,7 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
     try {
       const yatim = await saveGalleryItem(
         rapi(aktif),
-        { title: judul, description: deskripsi, file: berkas, removeImage: hapusGambar },
+        { title: judul, description: deskripsi, file: berkas, removeImage: hapusGambar, url: alamat },
         nextPosition(items),
       );
       await baca();
@@ -218,6 +224,8 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
                   <span className="ad-kepala-kotak">
                     {pratinjau ? (
                       <img src={pratinjau} alt="" />
+                    ) : pratinjauAlamat ? (
+                      <img src={pratinjauAlamat} alt="" />
                     ) : aktif !== 'baru' && aktif.image_url && !hapusGambar ? (
                       <img src={aktif.image_url} alt="" />
                     ) : (
@@ -246,8 +254,26 @@ export function PanelGambar({ padaBerubah }: { padaBerubah: () => void }) {
                 </label>
                 <label>
                   <span className="ad-form-berkas">
+                    <LinkIcon className="size-3.5" />
+                    Alamat gambar
+                  </span>
+                  <input
+                    type="text"
+                    maxLength={600}
+                    value={alamat}
+                    onChange={e => setAlamat(e.target.value)}
+                    placeholder="/karya/galeri-3d.png atau https://…/gambar.jpg"
+                  />
+                  <small>
+                    Isi ini untuk memakai gambar yang sudah ada di web, tanpa mengunggah ulang. Kolom
+                    alamat hanya menerima awalan <code>/</code> atau <code>https://</code>. Bila berkas di
+                    bawah ikut dipilih, berkas yang dipakai dan alamat ini dikosongkan.
+                  </small>
+                </label>
+                <label>
+                  <span className="ad-form-berkas">
                     <Upload className="size-3.5" />
-                    Gambar
+                    Unggah berkas
                   </span>
                   <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={e => setBerkas(e.target.files?.[0] ?? null)} />
                 </label>

@@ -298,7 +298,11 @@ h1 {
   top: 15px;
   font-family: var(--font-display);
   font-size: 11px;
-  opacity: 0.6;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tile-corner {
   position: absolute;
@@ -306,47 +310,35 @@ h1 {
   top: 14px;
   width: 12px;
   height: 12px;
-  opacity: 0.4;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Penanda nomor dan ikon melebar baru terlihat ketika kartu disorot: keadaan
+   diamnya harus gambar penuh, judul dan deskripsi dibaca setelah diklik. */
+.gallery-tile:hover .tile-number,
+.gallery-tile:focus-visible .tile-number,
+.gallery-tile:hover .tile-corner,
+.gallery-tile:focus-visible .tile-corner {
+  opacity: 0.75;
+  transform: translateY(0);
+}
+/* Nomor dan ikon berada di atas foto, bukan di atas kartu gelap, jadi perlu
+   garis tipis supaya tetap terbaca pada gambar yang terang. */
+.gallery-tile:hover .tile-number,
+.gallery-tile:focus-visible .tile-number {
+  text-shadow: 0 1px 3px rgb(0 0 0 / 55%);
+}
+.gallery-tile:hover .tile-corner,
+.gallery-tile:focus-visible .tile-corner {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 60%));
 }
 .gallery-tile img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.tile-info {
-  position: absolute;
-  inset: auto 0 0;
-  padding: 15px;
-  background: var(--background);
-  border-top: 1px solid var(--border);
-  color: var(--foreground);
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 0.5s ease 0.12s,
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.12s;
-  text-align: left;
-  width: 100%;
-}
-.gallery-tile:hover .tile-info,
-.gallery-tile:focus-visible .tile-info {
-  opacity: 1;
-  transform: translateY(0);
-}
-.tile-info strong {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-}
-.tile-info p {
-  font-size: 10px;
-  color: var(--muted-foreground);
-  margin: 5px 0 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .scene-bottom {
   position: absolute;

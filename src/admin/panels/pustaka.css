@@ -308,6 +308,22 @@
   gap: 6px;
 }
 
+/* Petunjuk kecil di bawah kolom: ikut label supaya tidak melebar sendiri. */
+.ad-form label small {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.ad-form label small code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10.5px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--muted-foreground) 12%, transparent);
+}
+
 .ad-form input[type='text'],
 .ad-form textarea,
 .ad-form input[type='file'] {

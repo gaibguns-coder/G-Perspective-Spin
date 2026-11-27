@@ -416,6 +416,12 @@ a {
   padding: 3px 8px;
 }
 
+/* Tanda nama teknologi hanya untuk pemilik yang sedang login. `src/portofolio.ts`
+   memasang atribut data-admin pada <html> setelah sesi admin dipastikan. */
+html:not([data-admin='1']) [data-khusus-admin] {
+  display: none;
+}
+
 .lp-tautan {
   margin-top: auto;
   padding-top: 8px;
